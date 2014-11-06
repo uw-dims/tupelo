@@ -1,0 +1,77 @@
+11/6/14: Creating manageably-sized disk images with known content.
+These files can then be used as DiskImage objects in Tupelo demos.
+
+# Create a 1GB 'disk'
+
+dd if=/dev/zero of=DISK bs=1M count=1024
+
+# Query for a free loop device. Find result is the first free loop device 
+losetup --find
+
+# Set up a loop device on the result of the find above, e.g.
+losetup /dev/loop0 DISK
+
+# Inspect all loop devices, should show our DISK file now attached
+losetup --all
+
+# Make an ext3 fs in there (could also use mkfs -t TYPE for various types)
+mkfs.ext3 /dev/loop0
+
+# Recall now there is NO volume system (i.e. partition table) here, 
+# just a filesystem. So tools like fsstat, fls will work but mmls will not.
+fsstat /dev/loop0
+fls /dev/loop0
+mmls /dev/loop0
+
+# And mount the filesys, needs root
+mkdir mount
+sudo mount /dev/loop0 mount
+ls mount
+
+# Add some known content to the filesystem
+mkdir mount/data
+cp SOMEFILE mount/data
+
+# and unmount 
+sudo umount mount
+
+# detach the loop device
+losetup --detach /dev/loop0
+
+# check that loop0 is indeed free
+losetup --find
+
+# Now have a file, DISK, that is a valid disk image with known content.
+
+# Use Sleuthkit to locate the data in the disk image
+fls -r DISK
+
+
+# Now, copy this DISK image to a place where Tupelo tools can work on
+  it and
+
+$ cd /path/to/tupelo/cli
+$ mkdir test-store
+$ putdata DISK
+
+will use stream-optimized managed disk, so see size of .tmd file in
+the store
+
+$ ls -lR test-store
+
+To force a 'flat disk', do this
+
+putdata -f DISK
+
+which should show a managed disk of size 512 bytes bigger than the
+unmanaged disk image.
+
+# Check the disk was added to the store
+
+# ./storeinfo
+
+Note that there is likely no attributes for any managed disk
+
+Next, with the image managed, hash its contents
+
+hashdata DISK SESSION
