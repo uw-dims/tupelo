@@ -75,3 +75,6 @@ Note that there is likely no attributes for any managed disk
 Next, with the image managed, hash its contents
 
 hashdata DISK SESSION
+
+********************************************************************************
+
