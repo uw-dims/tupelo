@@ -78,3 +78,40 @@ hashdata DISK SESSION
 
 ********************************************************************************
 
+2/3/15:
+
+STIX tools for Tupelo search help:
+
+1 author a STIX doc based on file content, ie
+
+stixFileHash /path/to/some/file
+
+would produce Observables with the md5, perhaps sha1 hash of the file
+content.  Then, need
+
+2 tupelo.amqp.filehashquery to ingest STIX docs directly.
+
+2/4/15:
+
+Need to address issue in filehashquery, which posts over amqp and
+waits for FIRST reply.
+
+1. There may be many Tupelo stores out there, each would have a search response.
+
+2. There may be NO stores up, then we get NO reply, currently client
+waits for ever.
+
+Tupelo docs:
+
+to build, test:
+
+javac, mvn
+
+
+to install:
+
+from Jenkins
+
+via Ansible:
+
+tupelo-shell-install
