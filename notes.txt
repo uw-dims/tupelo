@@ -115,3 +115,29 @@ from Jenkins
 via Ansible:
 
 tupelo-shell-install
+
+********************************************************************************
+
+Mar 2015:
+
+Acquiring a disk is only as quick as we can read off the disk.  We are
+using FileInputStream.read.  We want ALL bytes, so no skipping being
+done. Anything quicker? NIO ???  Do a comparison test??? In a branch ??
+
+250GB at 100MBsec-1 is 1GB in 10secs so 250GB is 2500secs = ~40mins.
+Claimed GBsec-1 for some devices??  sata??  Test on many machine w
+Tupelo/Cain and /dev/null for store.  Can see elapsed time.
+
+Caine ISO?
+
+amqp client expansion + STIX incorporation:
+
+toSTIX: takes a file name or inode name into a managed disk file
+system, or even into an unmanaged disk, and produces content.
+e.g. icat.  Need to know WHICH inode.
+
+searchSTIX: takes a stix document (URL, file?) and submits it to
+tupelo amqp for search.
+
+
+packer-based windows machines.
