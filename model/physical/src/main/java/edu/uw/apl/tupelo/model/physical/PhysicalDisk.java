@@ -1,4 +1,4 @@
-package edu.uw.apl.tupelo.model;
+package edu.uw.apl.tupelo.model.physical;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.IOException;
 
 import edu.uw.apl.nativelibloader.NativeLoader;
+import edu.uw.apl.tupelo.model.UnmanagedDisk;
 
 /*
   TODO: the JNI code needed for deriving device size in bytes and disk

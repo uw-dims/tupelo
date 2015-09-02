@@ -67,8 +67,8 @@ import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.model.ManagedDiskDigest;
 import edu.uw.apl.tupelo.model.DiskImage;
 import edu.uw.apl.tupelo.model.FlatDisk;
-import edu.uw.apl.tupelo.model.PhysicalDisk;
-import edu.uw.apl.tupelo.model.VirtualDisk;
+import edu.uw.apl.tupelo.model.physical.PhysicalDisk;
+import edu.uw.apl.tupelo.model.virtual.VirtualDisk;
 import edu.uw.apl.tupelo.model.ProgressMonitor;
 import edu.uw.apl.tupelo.model.StreamOptimizedDisk;
 import edu.uw.apl.tupelo.model.UnmanagedDisk;
@@ -635,7 +635,6 @@ public class Main extends Shell {
 		} else {
 			final long sz = ud.size();
 			ProgressMonitor.Callback cb = new ProgressMonitor.Callback() {
-					@Override
 					public void update( long in, long out, long elapsed ) {
 						double pc = in / (double)sz * 100;
 						System.out.print( (int)pc + "% " );

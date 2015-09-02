@@ -1,4 +1,4 @@
-package edu.uw.apl.tupelo.model;
+package edu.uw.apl.tupelo.model.virtual;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.util.List;
 
+import edu.uw.apl.tupelo.model.UnmanagedDisk;
 import edu.uw.apl.vmvols.model.VirtualMachine;
 import edu.uw.apl.vmvols.model.virtualbox.VBoxVM;
 import edu.uw.apl.vmvols.model.virtualbox.VDIDisk;

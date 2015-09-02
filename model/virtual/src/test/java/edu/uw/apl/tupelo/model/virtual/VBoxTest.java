@@ -1,6 +1,8 @@
-package edu.uw.apl.tupelo.model;
+package edu.uw.apl.tupelo.model.virtual;
 
 import java.io.File;
+
+import edu.uw.apl.tupelo.model.UnmanagedDisk;
 
 public class VBoxTest extends junit.framework.TestCase {
 

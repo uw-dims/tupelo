@@ -1,4 +1,4 @@
-package edu.uw.apl.tupelo.model;
+package edu.uw.apl.tupelo.model.physical;
 
 import java.io.File;
 import java.io.InputStream;

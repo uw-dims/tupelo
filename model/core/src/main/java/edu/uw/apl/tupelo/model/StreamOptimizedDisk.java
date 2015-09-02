@@ -20,7 +20,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.UUID;
-import java.util.zip.Deflater;;
+import java.util.zip.Deflater;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 import java.util.zip.GZIPInputStream;
