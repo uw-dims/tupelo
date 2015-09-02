@@ -4,4 +4,8 @@ target
 maven-metadata-local.xml
 pom.xml.versionsBackup
 
+.project
+.settings
+.classpath
+
 # eof
