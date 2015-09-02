@@ -12,3 +12,4 @@ pom.xml.versionsBackup
 logging
 test.log
 test-store/
+.DS_Store
