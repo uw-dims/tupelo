@@ -9,3 +9,6 @@ pom.xml.versionsBackup
 .classpath
 
 # eof
+logging
+test.log
+test-store/
