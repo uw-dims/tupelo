@@ -1,48 +1,18 @@
 package edu.uw.apl.tupelo.shell;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Calendar;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TimeZone;
-import java.util.Properties;
-import java.util.Map;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.FileInputStream;
-import java.net.URI;
-
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import javax.swing.*;
-
-/*
-  import org.apache.log4j.Logger;
-import org.apache.log4j.Level;
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.SimpleLayout;
-*/
-//import com.google.gson.Gson;
 
 import org.apache.commons.cli.*;
 
@@ -59,7 +29,6 @@ import edu.uw.apl.commons.sleuthkit.digests.VolumeSystemHashCodec;
 
 import edu.uw.apl.vmvols.model.VirtualMachine;
 import edu.uw.apl.vmvols.fuse.VirtualMachineFileSystem;
-
 
 import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.model.ManagedDisk;
@@ -473,8 +442,7 @@ public class Main extends Shell {
 	
 	Store buildStore() {
 		Store s = null;
-		if( false ) {
-		} else if( storeLocation.equals( "/dev/null" ) ) {
+		if( storeLocation.equals( "/dev/null" ) ) {
 			s = new NullStore();
 		} else if( storeLocation.startsWith( "http" ) ) {
 			s = new HttpStoreProxy( storeLocation );

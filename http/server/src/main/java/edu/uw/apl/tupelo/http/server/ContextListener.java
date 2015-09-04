@@ -1,14 +1,12 @@
 package edu.uw.apl.tupelo.http.server;
 
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.Properties;
 
 import edu.uw.apl.tupelo.store.Store;

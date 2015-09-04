@@ -37,7 +37,7 @@ public class FileHashQueryTest extends junit.framework.TestCase {
 		assertEquals( q1.hashes.size(), q2.hashes.size() );
 	}
 
-	private void report( FileHashQuery q ) {
+	public void report( FileHashQuery q ) {
 		System.out.println( q.algorithm );
 		System.out.println( q.hashes.size() );
 	}

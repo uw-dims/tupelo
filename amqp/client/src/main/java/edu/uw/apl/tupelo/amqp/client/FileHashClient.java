@@ -23,8 +23,6 @@ import edu.uw.apl.tupelo.amqp.objects.FileHashQuery;
 import edu.uw.apl.tupelo.amqp.objects.FileHashResponse;
 import edu.uw.apl.tupelo.amqp.objects.RPCObject;
 import edu.uw.apl.tupelo.amqp.objects.Utils;
-import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
-import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.utils.Discovery;
 
 /**

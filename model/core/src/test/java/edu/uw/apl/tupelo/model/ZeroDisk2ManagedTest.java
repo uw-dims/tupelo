@@ -2,7 +2,6 @@ package edu.uw.apl.tupelo.model;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Testing conversion of {@link ZeroDisk}, an unmanaged disk

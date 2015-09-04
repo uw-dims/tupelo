@@ -13,8 +13,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.BufferOverflowException;
 
 import fuse.*;
 
@@ -401,20 +399,17 @@ public class ManagedDiskFileSystem extends AbstractFilesystem3 {
 			*/
 			byte[] ba;
 			int nin;
-			if( true ) {
-				ba = readBuffers.get( fh );
-				if( ba == null || buf.remaining() > ba.length ) {
-					ba = new byte[buf.remaining()];
-					readBuffers.put( fh, ba );
-					if( log.isInfoEnabled() )
-						log.info( "New read buffer for " + path +
-								  " = " + ba.length );
-				}
-				nin = sis.read( ba, 0, buf.remaining() );
-			} else {
+			ba = readBuffers.get( fh );
+			if( ba == null || buf.remaining() > ba.length ) {
 				ba = new byte[buf.remaining()];
-				nin = sis.read( ba );
+				readBuffers.put( fh, ba );
+				if( log.isInfoEnabled() )
+					log.info( "New read buffer for " + path +
+							  " = " + ba.length );
 			}
+			nin = sis.read( ba, 0, buf.remaining() );
+//			ba = new byte[buf.remaining()];
+//			nin = sis.read( ba );
 			
 			if( log.isDebugEnabled() ) {
 				log.debug( "sis.read " + nin );

@@ -11,7 +11,6 @@ import java.io.OutputStream;
 import java.io.FilenameFilter;
 import java.io.FileInputStream;
 import java.text.ParseException;
-import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.logging.Log;

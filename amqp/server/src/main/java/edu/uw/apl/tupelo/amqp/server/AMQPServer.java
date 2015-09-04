@@ -1,27 +1,15 @@
 package edu.uw.apl.tupelo.amqp.server;
 
 import java.io.File;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.ByteArrayInputStream;
-import java.io.LineNumberReader;
-import java.io.InputStreamReader;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.UUID;
 
 import org.apache.commons.cli.*;
-import org.apache.log4j.Logger;
 
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
-import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.store.Store;
 import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
 import edu.uw.apl.tupelo.http.client.HttpStoreProxy;
@@ -53,7 +41,6 @@ public class AMQPServer {
 	}
 
 	AMQPServer() {
-		log = Logger.getLogger( getClass() );
 		storeLocation = STORELOCATIONDEFAULT;
 		brokerUrl = Discovery.locatePropertyValue( "amqp.url" );
 	}
@@ -142,7 +129,6 @@ public class AMQPServer {
 	private String storeLocation;
 	private Store store;
 	private String brokerUrl;
-	private Logger log;
 	
 	static boolean debug, verbose;
 	

@@ -2,13 +2,11 @@ package edu.uw.apl.tupelo.model;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
@@ -18,16 +16,12 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 import java.util.UUID;
 import java.util.zip.Deflater;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-
-import org.apache.commons.io.FileUtils;
-
 
 import org.xerial.snappy.Snappy;
 
@@ -285,8 +279,14 @@ public class StreamOptimizedDisk extends ManagedDisk {
 			for( int gt = 0; gt < wholeGrainTables; gt++ ) {
 				log.debug( "GDIndex " + gdIndex );
 				int nin = bis.read( readBuffer );
-				if( nin != readBuffer.length )
+				if( nin != readBuffer.length ){
+					try{
+						dos.close();
+					} catch(Exception e){
+						// Ignore
+					}
 					throw new IllegalStateException( "Partial read!" );
+				}
 				gtIndex = 0;
 
 				if( true ) {
@@ -788,7 +788,7 @@ public class StreamOptimizedDisk extends ManagedDisk {
 		RandomAccessFile raf = new RandomAccessFile( managedData, "r" );
 		try {
 			raf.seek( raf.length() - 2 * Constants.SECTORLENGTH );
-			Header h = new Header( raf );
+			// Header h = new Header( raf );
 			byte[] ba = new byte[Constants.SECTORLENGTH];
 			raf.readFully( ba );
 			for( int i = 0; i < ba.length; i++ ) {
@@ -832,6 +832,11 @@ public class StreamOptimizedDisk extends ManagedDisk {
 		case SNAPPY:
 			result = Snappy.compress( ba, offset, len, output, 0 );
 			break;
+		case NONE:
+			// No compression
+			return len - offset;
+		default:
+			break;
 		}
 		return result;
 	}
@@ -864,12 +869,15 @@ public class StreamOptimizedDisk extends ManagedDisk {
 			result = total;
 			break;
 		case SNAPPY:
-			if( true ) {
-				if( !Snappy.isValidCompressedBuffer( ba, offset, len ) )
+			if( !Snappy.isValidCompressedBuffer( ba, offset, len ) ){
 				throw new DataFormatException( "!isValidCompressedBuffer" );
 			}
 			result = Snappy.uncompress( ba, offset, len, output, 0 );
 			// to do
+			break;
+		case NONE:
+			break;
+		default:
 			break;
 		}
 		return result;
@@ -968,8 +976,7 @@ public class StreamOptimizedDisk extends ManagedDisk {
 			while( total < actual ) {
 				int left = actual - total;
 				long[] gt = grainDirectory[gdIndex];
-				if( false ) {
-				} else if( gt == ZEROGDE ) {
+				if( gt == ZEROGDE ) {
 					if( log.isDebugEnabled() )
 						log.debug( "Zero GD : " + gdIndex );
 					int grainTableOffset = (int)
@@ -997,8 +1004,7 @@ public class StreamOptimizedDisk extends ManagedDisk {
 								   inGrain +
 								   " " + fromGrain );
 					long gte = gt[gtIndex];
-					if( false ) {
-					} else if( gte == 0 ) {
+					if( gte == 0 ) {
 						if( log.isDebugEnabled() )
 							log.debug( "Zero GT : "+ gdIndex + " " + gtIndex );
 						System.arraycopy( zeroGrain, 0,
@@ -1164,6 +1170,7 @@ public class StreamOptimizedDisk extends ManagedDisk {
 			dos.writeInt( type );
 			dos.write( PADDING );
 		}
+		@SuppressWarnings("unused")
 		static MetadataMarker readFrom( DataInput di ) throws IOException {
 			long numSectors = di.readLong();
 			int size = di.readInt();

@@ -12,6 +12,11 @@ import java.util.regex.Pattern;
 public class Session implements java.io.Serializable,
 								Comparable<Session> {
 
+	/**
+	 * Auto-generated
+	 */
+	private static final long serialVersionUID = -7254189294384369858L;
+
 	public Session( UUID source, Calendar c, int i ) {
 		this.source = source;
 		date = (Calendar)c.clone();

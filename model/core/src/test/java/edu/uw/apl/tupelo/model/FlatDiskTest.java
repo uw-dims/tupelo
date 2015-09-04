@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+@SuppressWarnings("unused")
 public class FlatDiskTest extends junit.framework.TestCase {
 
 	public void testNull() {

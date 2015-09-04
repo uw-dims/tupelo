@@ -7,7 +7,6 @@ import java.io.InputStream;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.DigestInputStream;
 
 /**
  * Given a ManagedDisk, as would be stored on disk in a Tupelo store,

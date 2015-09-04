@@ -1,28 +1,15 @@
 package edu.uw.apl.tupelo.http.server;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.File;
 import java.io.OutputStream;
 import java.io.ObjectOutputStream;
-import java.io.InputStream;
 import java.io.PrintWriter;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.Map;
 import java.util.UUID;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -31,13 +18,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonSerializer;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonPrimitive;
 
-import edu.uw.apl.tupelo.model.ManagedDisk;
-import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.store.Store;
 
@@ -57,7 +38,12 @@ import edu.uw.apl.tupelo.store.Store;
  */
 public class MiscServlet extends HttpServlet {
 
-    public void init( ServletConfig config ) throws ServletException {
+    /**
+	 * Auto-generated
+	 */
+	private static final long serialVersionUID = -2480560783103716950L;
+
+	public void init( ServletConfig config ) throws ServletException {
         super.init( config );
 		log = LogFactory.getLog( getClass().getPackage().getName() );
 
@@ -139,8 +125,7 @@ public class MiscServlet extends HttpServlet {
 		ServletContext sc = getServletConfig().getServletContext();
 		String result = (String)sc.getAttribute( ContextListener.VERSIONKEY );
 		
-		if( false ) {
-		} else if( Utils.acceptsJavaObjects( req ) ) {
+		if( Utils.acceptsJavaObjects( req ) ) {
 			res.setContentType( "application/x-java-serialized-object" );
 			OutputStream os = res.getOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream( os );
@@ -163,8 +148,7 @@ public class MiscServlet extends HttpServlet {
 
 		UUID result = store.getUUID();
 		
-		if( false ) {
-		} else if( Utils.acceptsJavaObjects( req ) ) {
+		if( Utils.acceptsJavaObjects( req ) ) {
 			res.setContentType( "application/x-java-serialized-object" );
 			OutputStream os = res.getOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream( os );
@@ -186,8 +170,7 @@ public class MiscServlet extends HttpServlet {
 		
 		long result = store.getUsableSpace();
 		
-		if( false ) {
-		} else if( Utils.acceptsJavaObjects( req ) ) {
+		if( Utils.acceptsJavaObjects( req ) ) {
 			res.setContentType( "application/x-java-serialized-object" );
 			OutputStream os = res.getOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream( os );
@@ -210,8 +193,7 @@ public class MiscServlet extends HttpServlet {
 		// NOTHING to do with an HttpSession!
 		Session session = store.newSession();
 
-		if( false ) {
-		} else if( Utils.acceptsJavaObjects( req ) ) {
+		if( Utils.acceptsJavaObjects( req ) ) {
 			res.setContentType( "application/x-java-serialized-object" );
 			OutputStream os = res.getOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream( os );

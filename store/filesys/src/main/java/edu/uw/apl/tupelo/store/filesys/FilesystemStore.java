@@ -1,7 +1,6 @@
 package edu.uw.apl.tupelo.store.filesys;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -10,11 +9,8 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.DigestInputStream;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Collection;
@@ -121,6 +117,12 @@ public class FilesystemStore implements Store {
 			} catch( ParseException pe ) {
 				log.warn( pe );
 				result = new Session( uuid, now, 1 );
+			} finally {
+				try{
+					br.close();
+				} catch(Exception e){
+					// Ignore
+				}
 			}
 		} else {
 			result = new Session( uuid, now, 1 );
@@ -433,7 +435,6 @@ public class FilesystemStore implements Store {
 	@Override
 	public byte[] getAttribute( ManagedDiskDescriptor mdd, String key )
 		throws IOException {
-		String fileName = key;
 		File dir = attrDir( root, mdd );
 		if( !dir.isDirectory() )
 			return null;
@@ -570,7 +571,7 @@ public class FilesystemStore implements Store {
 		return dir;
 	}
 
-	static private File managedDataFile( File root,
+	static protected File managedDataFile( File root,
 										 ManagedDiskDescriptor mdd ) {
 		File dir = diskDataDir( root, mdd );
 		File result = new File( dir, dataFileName( mdd ) );

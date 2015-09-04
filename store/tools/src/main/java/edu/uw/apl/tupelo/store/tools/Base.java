@@ -1,19 +1,10 @@
 package edu.uw.apl.tupelo.store.tools;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 import org.apache.commons.cli.*;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import edu.uw.apl.tupelo.store.Store;
 import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
-import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 
 /**
  * A container for state common to all command line-driven tools in

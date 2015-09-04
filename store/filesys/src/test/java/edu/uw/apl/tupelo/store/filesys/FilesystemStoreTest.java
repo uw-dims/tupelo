@@ -1,10 +1,7 @@
 package edu.uw.apl.tupelo.store.filesys;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
-import java.util.Collection;
 
 import edu.uw.apl.tupelo.model.DiskImage;
 import edu.uw.apl.tupelo.model.FlatDisk;

@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+@SuppressWarnings("unused")
 public class StreamOptimizedDiskTest extends junit.framework.TestCase {
 
 	public void testNull() {

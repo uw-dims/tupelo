@@ -1,6 +1,5 @@
 package edu.uw.apl.tupelo.model.physical;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -56,15 +55,11 @@ public class PhysicalDisk implements UnmanagedDisk {
 	
 	@Override
 	public InputStream getInputStream() throws IOException {
-		if( true) {
-			return new FileInputStream( disk );
-		} else {
-			FileInputStream fis = new FileInputStream( disk );
-			int sz = 1024 * 1024 * 32;
-			BufferedInputStream bis = new BufferedInputStream( fis, sz );
-			return bis;
-		}
-			   
+		return new FileInputStream( disk );
+//		FileInputStream fis = new FileInputStream( disk );
+//		int sz = 1024 * 1024 * 32;
+//		BufferedInputStream bis = new BufferedInputStream( fis, sz );
+//		return bis;
 	}
 
 	@Override

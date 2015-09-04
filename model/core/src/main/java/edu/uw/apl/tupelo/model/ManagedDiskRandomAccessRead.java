@@ -1,6 +1,5 @@
 package edu.uw.apl.tupelo.model;
 
-import java.io.InputStream;
 import java.io.IOException;
 
 /**

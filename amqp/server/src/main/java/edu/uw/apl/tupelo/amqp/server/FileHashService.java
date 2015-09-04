@@ -1,7 +1,6 @@
 package edu.uw.apl.tupelo.amqp.server;
 
 import java.lang.reflect.Type;
-import java.io.File;
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
 import java.io.LineNumberReader;
@@ -9,15 +8,12 @@ import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.UUID;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.codec.binary.Base64;
 
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
@@ -33,12 +29,10 @@ import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.client.AMQP.BasicProperties;
 
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
-import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.store.Store;
 
 import edu.uw.apl.tupelo.amqp.objects.FileHashQuery;
 import edu.uw.apl.tupelo.amqp.objects.FileHashResponse;
-import edu.uw.apl.tupelo.amqp.objects.JSONSerializers;
 import edu.uw.apl.tupelo.amqp.objects.RPCObject;
 import edu.uw.apl.tupelo.amqp.objects.Utils;
 

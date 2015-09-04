@@ -1,15 +1,8 @@
 package edu.uw.apl.tupelo.fuse;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.cli.*;
-
-import fuse.FuseMount;
 
 import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
 
@@ -51,8 +44,8 @@ import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
 			System.exit(1);
 		}
 		String storeLocation = STORELOCATIONDEFAULT;
-		boolean dryrun = cl.hasOption( "n" );
-		boolean verbose = cl.hasOption( "v" );
+//		boolean dryrun = cl.hasOption( "n" );
+//		boolean verbose = cl.hasOption( "v" );
 		if( cl.hasOption( "s" ) ) {
 			storeLocation = cl.getOptionValue( "s" );
 		}

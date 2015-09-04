@@ -48,9 +48,8 @@ public class Version {
 			(PATCH & 0xff);
 
 		// Do we really want to report this ??
-		if( false )
-			System.out.println( "Version: " +
-								MAJOR + "." + MINOR + "." + PATCH );
+//		System.out.println( "Version: " +
+//							MAJOR + "." + MINOR + "." + PATCH );
 		
 	}
 	

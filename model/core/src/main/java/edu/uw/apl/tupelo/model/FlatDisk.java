@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
@@ -79,12 +78,9 @@ public class FlatDisk extends ManagedDisk {
 
 		header.writeTo( os );
 		// IOUtils uses 4k buffers, pah!
-		if( false ) {
-			byte[] ba = new byte[1024*1024*16];
-			IOUtils.copyLarge( is, os, ba );
-		} else {
-			IOUtils.copyLarge( is, os );
-		}
+//		byte[] ba = new byte[1024*1024*16];
+//		IOUtils.copyLarge( is, os, ba );
+		IOUtils.copyLarge( is, os );
 		is.close();
 	}
 
@@ -98,17 +94,14 @@ public class FlatDisk extends ManagedDisk {
 	public void readFromWriteTo( InputStream is, OutputStream os )
 		throws IOException {
 		header.writeTo( os );
-		if( true ) {
-			IOUtils.copyLarge( is, os );
-		} else {
-			byte[] ba = new byte[1024*1024];
-			while( true ) {
-				int nin = is.read( ba );
-				if( nin < 0 )
-					break;
-				os.write( ba, 0, nin );
-			}
-		}
+		IOUtils.copyLarge( is, os );
+//		byte[] ba = new byte[1024*1024];
+//		while( true ) {
+//			int nin = is.read( ba );
+//			if( nin < 0 )
+//				break;
+//			os.write( ba, 0, nin );
+//		}
 	}
 
 	/**
@@ -126,16 +119,12 @@ public class FlatDisk extends ManagedDisk {
 	@Override
 	public void verify() throws IOException {
 		if( unmanagedData == null ) {
-			if( true ) {
-				/*
-				  Over http, we would have no unmanaged data access,
-				  so cannot attempt a verify at all.  The result is then what?
-				*/
-				return;
-			} else {
-				throw new IllegalStateException
-					( "Verify failed. noUnmanagedData" );
-			}
+			/*
+			  Over http, we would have no unmanaged data access,
+			  so cannot attempt a verify at all.  The result is then what?
+			*/
+			return;
+//			throw new IllegalStateException( "Verify failed. noUnmanagedData" );
 		}
 		if( managedData == null )
 			throw new IllegalStateException( "Verify failed. noManagedData" );
