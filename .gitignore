@@ -8,8 +8,13 @@ pom.xml.versionsBackup
 .settings
 .classpath
 
-# eof
 logging
 test.log
 test-store/
 .DS_Store
+
+fuse/mdfs.pb
+model/core/64k.fd
+model/core/64k.sd
+
+filter.properties
