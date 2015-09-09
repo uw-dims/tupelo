@@ -161,6 +161,7 @@ public class FilesystemStore implements Store {
 			FileOutputStream fos = new FileOutputStream( tempFile );
 			BufferedOutputStream bos = new BufferedOutputStream( fos, 1024*64 );
 			md.writeTo( bos );
+			bos.flush();
 			bos.close();
 			fos.close();
 			// Verify for that data written is complete...
