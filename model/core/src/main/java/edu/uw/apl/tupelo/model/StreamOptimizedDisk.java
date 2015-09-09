@@ -44,7 +44,7 @@ import org.xerial.snappy.Snappy;
    used by inputstreams, seekableinputstream.
 
    Now, in writing, we have to write a whole number of grains, even
-   though the lasrt grain may not be able to be 'filled' with
+   though the last grain may not be able to be 'filled' with
    unmanaged data, since it may be at eof.
 
    Do we need to store 512 grains to 'fill' a grain table, or can we
@@ -781,6 +781,7 @@ public class StreamOptimizedDisk extends ManagedDisk {
 	 *
 	 * @throws IllegalStateException
 	 */
+	@SuppressWarnings("unused")
 	@Override
 	public void verify() throws IOException  {
 		if( managedData == null )
@@ -788,7 +789,9 @@ public class StreamOptimizedDisk extends ManagedDisk {
 		RandomAccessFile raf = new RandomAccessFile( managedData, "r" );
 		try {
 			raf.seek( raf.length() - 2 * Constants.SECTORLENGTH );
-			// Header h = new Header( raf );
+			// Read the header from the last -1 sector
+			Header h = new Header( raf );
+			// Now the last sector should be all 0
 			byte[] ba = new byte[Constants.SECTORLENGTH];
 			raf.readFully( ba );
 			for( int i = 0; i < ba.length; i++ ) {
