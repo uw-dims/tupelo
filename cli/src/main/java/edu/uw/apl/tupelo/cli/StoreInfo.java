@@ -8,7 +8,6 @@ import org.apache.log4j.LogManager;
 import org.apache.commons.cli.*;
 
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
-import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.store.Store;
 
 /**
