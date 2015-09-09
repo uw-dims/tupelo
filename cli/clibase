@@ -6,7 +6,7 @@ CLAZZ=$1
 shift
 
 ARTIFACT=tupelo-cli
-VERSION=0.0.1
+VERSION=1.1.0
 JAR=$ARTIFACT-$VERSION.jar
 PACKAGE=edu.uw.apl.tupelo.cli
 
