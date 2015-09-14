@@ -1,6 +1,5 @@
 package edu.uw.apl.tupelo.cli;
 
-import java.io.File;
 import java.io.BufferedWriter;
 import java.io.PrintWriter;
 import java.io.FileWriter;
@@ -10,7 +9,6 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.HashMap;
@@ -20,9 +18,6 @@ import org.apache.commons.cli.*;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.LogManager;
 
-import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
-import edu.uw.apl.tupelo.store.Store;
-import edu.uw.apl.tupelo.fuse.ManagedDiskFileSystem;
 import edu.uw.apl.commons.sleuthkit.image.Image;
 import edu.uw.apl.commons.sleuthkit.filesys.Attribute;
 import edu.uw.apl.commons.sleuthkit.filesys.Meta;
@@ -34,27 +29,14 @@ import edu.uw.apl.commons.sleuthkit.volsys.Partition;
 import edu.uw.apl.commons.sleuthkit.volsys.VolumeSystem;
 
 /**
- * Simple Tupelo Utility: Hash some previously added ManagedDisk,
- * using tsk4j/Sleuthkit routines and a FUSE filesystem to access the
- * managed data.  Store the resultant 'Hash Info' as a Store
+ * Simple Tupelo Utility: Hash a raw disk or image,
+ * using tsk4j/Sleuthkit routines. Store the resultant 'Hash Info' as a Store
  * attribute.
  *
- * Note: This program makes use of fuse4j/fuse and so has an impact on
- * the filesystem as a whole.  In principle, a fuse mount point is
- * created at program start and deleted at program end.  However, if
- * user exits early (Ctrl C), we may have a lasting mount point.  To
- * delete this, do
- *
- * $ fusermount -u test-mount
- *
- * We do have a shutdown hook for the umount installed, but it appears
- * unreliable.
- *
  */
-
 public class HashDisk extends CliBase {
 	
-	String diskPath;
+	private String diskPath;
 	static boolean verbose;
 
 	static byte[] DIGESTBUFFER = new byte[ 1024*1024 ];
@@ -79,7 +61,6 @@ public class HashDisk extends CliBase {
 		} finally {
 			LogManager.shutdown();
 		}
-			  
 	}
 
 	public HashDisk() {
@@ -89,7 +70,7 @@ public class HashDisk extends CliBase {
 		Options os = commonOptions();
 		os.addOption( "v", false, "Verbose" );
 
-		String usage = commonUsage() + "[-v] diskID sessionID";
+		String usage = commonUsage() + "[-v] diskPath";
 		final String HEADER = "";
 		final String FOOTER = "";
 		CommandLineParser clp = new PosixParser();
@@ -106,29 +87,12 @@ public class HashDisk extends CliBase {
 		args = cl.getArgs();
 		if( args.length < 1 ) {
 			printUsage( os, usage, HEADER, FOOTER );
-			// System.exit(1);
-		} else {
-			diskPath = args[0];
+			System.exit(1);
 		}
+		diskPath = args[0];
 	}
 	
 	public void start() throws Exception {
-
-//		Store store = Utils.buildStore( storeLocation );
-//		if( debug )
-//			System.out.println( "Store type: " + store );
-//
-//		Collection<ManagedDiskDescriptor> stored = store.enumerate();
-//		System.out.println( "Stored: " + stored );
-//
-//		ManagedDiskDescriptor managedDiskDescriptor = Utils.locateDescriptor( store, diskID,
-//															sessionID );
-//		if( managedDiskDescriptor == null ) {
-//			System.err.println( "Not stored: " + diskID + "," + sessionID );
-//			System.exit(1);
-//		}
-
-		
 		System.out.println( "Trying to open " + diskPath);
 		Image image = new Image( diskPath );
 
@@ -140,11 +104,10 @@ public class HashDisk extends CliBase {
 				walkFileSystem( image );
 			}
 		} finally {
-			// MUST release i else leaves mdfs non-unmountable
+			// Clean up when done reading everything
 			image.close();
 		}
 	}
-	
 
 	/**
 	 * @return true if a volume system found (and thus traversed), false
@@ -175,7 +138,7 @@ public class HashDisk extends CliBase {
 				record( fileHashes, partition.start(), partition.length() );
 			}
 		} finally {
-			// MUST release volumeSystem else leaves mdfs non-unmountable
+			// Clean up
 			volumeSystem.close();
 		}
 		return true;
