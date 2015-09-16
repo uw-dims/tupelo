@@ -1,7 +1,10 @@
 package edu.uw.apl.tupelo.shell;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -10,15 +13,16 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.cli.*;
+import org.apache.commons.codec.binary.Hex;
 
 import edu.uw.apl.commons.shell.Shell;
 import edu.uw.apl.commons.sleuthkit.image.Image;
-import edu.uw.apl.commons.sleuthkit.filesys.FileSystem;
 import edu.uw.apl.commons.sleuthkit.volsys.Partition;
 import edu.uw.apl.commons.sleuthkit.volsys.VolumeSystem;
 import edu.uw.apl.commons.sleuthkit.digests.BodyFile;
@@ -26,7 +30,7 @@ import edu.uw.apl.commons.sleuthkit.digests.BodyFileBuilder;
 import edu.uw.apl.commons.sleuthkit.digests.BodyFileCodec;
 import edu.uw.apl.commons.sleuthkit.digests.VolumeSystemHash;
 import edu.uw.apl.commons.sleuthkit.digests.VolumeSystemHashCodec;
-
+import edu.uw.apl.commons.sleuthkit.filesys.FileSystem;
 import edu.uw.apl.vmvols.model.VirtualMachine;
 import edu.uw.apl.vmvols.fuse.VirtualMachineFileSystem;
 
@@ -44,6 +48,7 @@ import edu.uw.apl.tupelo.model.UnmanagedDisk;
 import edu.uw.apl.tupelo.http.client.HttpStoreProxy;
 import edu.uw.apl.tupelo.store.Store;
 import edu.uw.apl.tupelo.store.null_.NullStore;
+import edu.uw.apl.tupelo.utils.DiskHashUtils;
 import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
 
 /**
@@ -184,6 +189,66 @@ public class Main extends Shell {
 		commandHelp( "fshash", "unmanagedDisk",
 					 "Hash each filesystem of the identified unmanaged disk.  The resulting bodyfile is stored as a managed disk attribute" );
 		
+		addCommand( "filehash", "(.+)", new Lambda(){
+			public void apply(String args[]) throws Exception {
+				String diskName = args[1].trim();
+				UnmanagedDisk ud = null;
+				try {
+					ud = locateUnmanagedDisk( diskName );
+				} catch( IndexOutOfBoundsException oob ) {
+					System.err.println
+						( "No unmanaged disk " + diskName +
+						  ". Use 'us' to list unmanaged disks" );
+					return;
+				}
+				if( ud == null ) {
+					System.out.println( "No unmanaged disk: " + diskName );
+					return;
+				}
+
+				try{
+					Date start = new Date();
+					DiskHashUtils disk = new DiskHashUtils(ud.getSource().getAbsolutePath());
+					disk.setDebug(verbose);
+
+					List<Partition> partitions = disk.getPartitions();
+					if(partitions != null){
+						for(Partition partition: partitions){
+							FileSystem fs = disk.getFileSystem(partition);
+							if(fs == null){
+								continue;
+							}
+							// Hash it
+							Map<String, byte[]> hashes = disk.hashFileSystem(fs);
+							writeHashData(hashes, diskName+"-"+partition.start()+"-"+partition.length()+".md5");
+						}
+					} else {
+						FileSystem fs = disk.getFileSystem();
+						if(fs == null){
+							System.err.println("No filesystem found");
+							disk.close();
+							return;
+						}
+						Map<String, byte[]> hashes = disk.hashFileSystem(fs);
+						writeHashData(hashes, diskName+".md5");
+					}
+					// Clean up
+					disk.close();
+
+					Date end = new Date();
+					System.out.println("Elapsed time: "+ (end.getTime() - start.getTime()) / 1000 + "sec");
+				} catch(Exception e){
+					log.warn( e );
+					System.err.println( e.toString() );
+					if(verbose){
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+		commandHelp("filehash", "unmanagedDisk",
+				"Hash all the files on all filesystems of the specified disk. The result will be written to a file in the current directory.");
+
 		// putdisk, xfer an unmanaged disk to the store
 		addCommand( "putdisk", "(.+)", new Lambda() {
 				public void apply( String[] args ) throws Exception {
@@ -813,6 +878,28 @@ public class Main extends Shell {
 		}
 	}
 	
+	private void writeHashData(Map<String, byte[]> fileHashes, String fileName) throws IOException{
+		// Replace / with _ so it doesnt try and write the file to some other directory
+		fileName = fileName.replace('/', '_');
+		System.out.println("Writing "+fileHashes.size()+" hashes to "+fileName);
+
+		// Sort the keys
+		List<String> sortedKeys = new ArrayList<String>(fileHashes.keySet());
+		Collections.sort(sortedKeys);
+
+		// Get the writers ready
+		FileWriter fileWriter = new FileWriter(fileName);
+		PrintWriter printWriter = new PrintWriter(new BufferedWriter(fileWriter));
+		for(String file : sortedKeys){
+			byte[] hash = fileHashes.get(file);
+			String stringHash = new String(Hex.encodeHex(hash));
+			printWriter.println(stringHash+" "+ file);
+		}
+		// Flush and close thr writers
+		printWriter.flush();
+		printWriter.close();
+	}
+
 	String storeLocation;
 	Store store;
 	List<PhysicalDisk> physicalDisks;
