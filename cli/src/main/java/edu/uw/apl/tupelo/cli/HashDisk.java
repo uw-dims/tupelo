@@ -100,6 +100,7 @@ public class HashDisk extends CliBase {
 			FileSystem fs = disk.getFileSystem();
 			if(fs == null){
 				System.err.println("No filesystem found");
+				disk.close();
 				System.exit(-1);
 			}
 
