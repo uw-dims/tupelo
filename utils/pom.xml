@@ -18,4 +18,11 @@
 
   <build>
   </build>
+  <dependencies>
+  	<dependency>
+  		<groupId>edu.uw.apl.commons</groupId>
+  		<artifactId>tsk4j-core</artifactId>
+  		<version>413.0.2</version>
+  	</dependency>
+  </dependencies>
 </project>

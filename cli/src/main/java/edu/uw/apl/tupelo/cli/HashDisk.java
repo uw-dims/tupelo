@@ -3,30 +3,19 @@ package edu.uw.apl.tupelo.cli;
 import java.io.BufferedWriter;
 import java.io.PrintWriter;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.cli.*;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.LogManager;
 
-import edu.uw.apl.commons.sleuthkit.image.Image;
-import edu.uw.apl.commons.sleuthkit.filesys.Attribute;
-import edu.uw.apl.commons.sleuthkit.filesys.Meta;
 import edu.uw.apl.commons.sleuthkit.filesys.FileSystem;
-import edu.uw.apl.commons.sleuthkit.filesys.DirectoryWalk;
-import edu.uw.apl.commons.sleuthkit.filesys.Walk;
-import edu.uw.apl.commons.sleuthkit.filesys.WalkFile;
 import edu.uw.apl.commons.sleuthkit.volsys.Partition;
-import edu.uw.apl.commons.sleuthkit.volsys.VolumeSystem;
+import edu.uw.apl.tupelo.utils.DiskHashUtils;
 
 /**
  * Simple Tupelo Utility: Hash a raw disk or image,
@@ -39,14 +28,7 @@ public class HashDisk extends CliBase {
 	private String diskPath;
 	static boolean verbose;
 
-	static byte[] DIGESTBUFFER = new byte[ 1024*1024 ];
-	static MessageDigest MD5 = null;
-	static {
-		try {
-			MD5 = MessageDigest.getInstance( "md5" );
-		} catch( NoSuchAlgorithmException never ) {
-		}
-	}
+
 
 	static public void main( String[] args ) {
 		HashDisk main = new HashDisk();
@@ -93,157 +75,45 @@ public class HashDisk extends CliBase {
 	}
 	
 	public void start() throws Exception {
+		Date start = new Date();
 		System.out.println( "Trying to open " + diskPath);
-		Image image = new Image( diskPath );
+		DiskHashUtils disk = new DiskHashUtils(diskPath);
+		disk.setDebug(debug);
 
-		System.out.println( "Trying volume system on "+ diskPath );
-		try {
-			boolean b = walkVolumeSystem( image );
-			if( !b ) {
-				System.out.println( "Trying file system on " + diskPath );
-				walkFileSystem( image );
-			}
-		} finally {
-			// Clean up when done reading everything
-			image.close();
-		}
-	}
-
-	/**
-	 * @return true if a volume system found (and thus traversed), false
-	 * otherwise.  False result lets us try the image as a standalone
-	 * filesystem
-	 */
-	private boolean walkVolumeSystem( Image image ) throws Exception {
-
-		VolumeSystem volumeSystem = null;
-		try {
-			volumeSystem = new VolumeSystem( image );
-		} catch( Exception iae ) {
-			return false;
-		}
-		
-		List<Partition> partitions = volumeSystem.getPartitions();
-		try {
-			for( Partition partition : partitions ) {
-				if( !partition.isAllocated() )
+		// Get the disk's partitions
+		List<Partition> partitions = disk.getPartitions();
+		if(partitions != null){
+			// If we have paritions, analyze the FileSystems
+			for(Partition partition : partitions){
+				FileSystem fs = disk.getFileSystem(partition);
+				// Skip null FileSystems
+				if(fs == null){
 					continue;
-				System.out.println( "At sector " + partition.start() +
-									", located " + partition.description() );
-				Map<String,byte[]> fileHashes = new HashMap<String,byte[]>();
-				FileSystem fileSystem = new FileSystem( image, partition.start() );
-				walk( fileSystem, fileHashes );
-				fileSystem.close();
-				System.out.println( " FileHashes : " + fileHashes.size() );
-				record( fileHashes, partition.start(), partition.length() );
-			}
-		} finally {
-			// Clean up
-			volumeSystem.close();
-		}
-		return true;
-	}
-
-	/**
-	 * Walk and record all the MD5 hashes of an image 
-	 * @param image
-	 * @throws Exception
-	 */
-	private void walkFileSystem( Image image ) throws Exception {
-		Map<String,byte[]> fileHashes = new HashMap<String,byte[]>();
-		FileSystem fs = new FileSystem( image );
-		try {
-			walk( fs, fileHashes );
-			System.out.println( "FileHashes: " + fileHashes.size() );
-			// signify a standalone file system via a 0,0 sector interval
-			record( fileHashes, 0, 0 );
-		} finally {
-			fs.close();
-		}
-	}
-	
-	/**
-	 * Walk a mounted filesystem
-	 * @param fs
-	 * @param fileHashes
-	 * @throws Exception
-	 */
-	private void walk( FileSystem fs,
-					   final Map<String,byte[]> fileHashes )
-		throws Exception {
-		
-		DirectoryWalk.Callback callBack = new DirectoryWalk.Callback() {
-				public int apply( WalkFile f, String path ) {
-					try {
-						process( f, path, fileHashes );
-						return Walk.WALK_CONT;
-					} catch( Exception e ) {
-						System.err.println( e );
-						return Walk.WALK_ERROR;
-					}
 				}
-			};
-		int flags = DirectoryWalk.FLAG_NONE;
-		// LOOK: visit deleted files too ??
-		flags |= DirectoryWalk.FLAG_ALLOC;
-		flags |= DirectoryWalk.FLAG_RECURSE;
-		flags |= DirectoryWalk.FLAG_NOORPHAN;
-		fs.dirWalk( fs.rootINum(), flags, callBack );
-		fs.close();
-	}
+				// Hash it
+				Map<String, byte[]> hashes = disk.hashFileSystem(fs);
+				// Record it
+				record(hashes, partition.start(), partition.length());
+			}
+		} else {
+			// Get the filesystem
+			FileSystem fs = disk.getFileSystem();
+			if(fs == null){
+				System.err.println("No filesystem found");
+				System.exit(-1);
+			}
 
-	/**
-	 * Process and get the MD5 hash for a file
-	 * @param file the file
-	 * @param path the file's path
-	 * @param fileHashes the map to store the hash
-	 * @throws IOException
-	 */
-	private void process( WalkFile file, String path,
-						  Map<String,byte[]> fileHashes )
-		throws IOException {
-
-		String name = file.getName();
-		if( name == null )
-			return;
-		if(	"..".equals( name ) || ".".equals( name ) ) {
-			return;
+			// Get and record the hashes
+			Map<String, byte[]> hashes = disk.hashFileSystem(fs);
+			record(hashes, 0, 0);
 		}
-		Meta metaData = file.meta();
-		if( metaData == null )
-			return;
-		// LOOK: hash directories too ??
-		if( metaData.type() != Meta.TYPE_REG )
-			return;
-		Attribute attribute = file.getAttribute();
-		// Seen some weirdness where an allocated file has no attribute(s) ??
-		if( attribute == null )
-			return;
+		
+		// Cleanup
+		disk.close();
 
-		if( debug )
-			System.out.println( "'" + path + "' '" + name + "'" );
-
-		String wholeName = path + name;
-		// Put the has in the map
-		byte[] digest = digest( attribute );
-		fileHashes.put( wholeName, digest );
-	}
-	
-	/**
-	 * Get the MD5 has of an attribute
-	 * @param attribute
-	 * @return
-	 * @throws IOException
-	 */
-	private byte[] digest( Attribute attribute ) throws IOException {
-		MD5.reset();
-		InputStream inputStream = attribute.getInputStream();
-		DigestInputStream digestInputStream = new DigestInputStream( inputStream, MD5 );
-		while( true ) {
-			if( digestInputStream.read( DIGESTBUFFER ) < 0 )
-				break;
-		}
-		return MD5.digest();
+		System.out.println("Done");
+		Date end = new Date();
+		System.out.println("Elapsed time: "+(end.getTime() - start.getTime()) / 1000 + "sec");
 	}
 	
 	/**
@@ -263,7 +133,7 @@ public class HashDisk extends CliBase {
 			start + "-" + length + ".md5";
 		// Use underscore instead of /, so we don't write the file under /dev or some other directory somewhere
 		outName = outName.replace('/', '_');
-		System.out.println( "Writing: " + outName );
+		System.out.println( "Writing "+fileHashes.size()+" hashes to: " + outName );
 		
 		// Write all the data out
 		FileWriter fileWriter = new FileWriter( outName );
