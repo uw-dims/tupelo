@@ -80,8 +80,7 @@ public class Main extends Shell {
 		diskImages = new ArrayList<DiskImage>();
 		vmNames = new HashSet<String>();
 		
-		String tmpDirS = System.getProperty( "java.io.tmpdir" );
-		tmpDir = new File( tmpDirS );
+		// String tmpDirS = System.getProperty( "java.io.tmpdir" );
 		storeLocation = "./test-store";
 		verbose = false;
 
@@ -205,11 +204,13 @@ public class Main extends Shell {
 					System.out.println( "No unmanaged disk: " + diskName );
 					return;
 				}
+				// Prep the session
+				checkSession();
 
 				try{
 					Date start = new Date();
 					DiskHashUtils disk = new DiskHashUtils(ud.getSource().getAbsolutePath());
-					disk.setDebug(verbose);
+					disk.setDebug(debug);
 
 					List<Partition> partitions = disk.getPartitions();
 					if(partitions != null){
@@ -220,7 +221,7 @@ public class Main extends Shell {
 							}
 							// Hash it
 							Map<String, byte[]> hashes = disk.hashFileSystem(fs);
-							writeHashData(hashes, diskName+"-"+partition.start()+"-"+partition.length()+".md5");
+							writeHashData(hashes, diskName+"-"+session.toString()+"-"+partition.start()+"-"+partition.length()+".md5");
 						}
 					} else {
 						FileSystem fs = disk.getFileSystem();
@@ -230,7 +231,7 @@ public class Main extends Shell {
 							return;
 						}
 						Map<String, byte[]> hashes = disk.hashFileSystem(fs);
-						writeHashData(hashes, diskName+".md5");
+						writeHashData(hashes, diskName+"-"+session.toString()+".md5");
 					}
 					// Clean up
 					disk.close();
@@ -239,8 +240,7 @@ public class Main extends Shell {
 					System.out.println("Elapsed time: "+ (end.getTime() - start.getTime()) / 1000 + "sec");
 				} catch(Exception e){
 					log.warn( e );
-					System.err.println( e.toString() );
-					if(verbose){
+					if(debug){
 						e.printStackTrace();
 					}
 				}
@@ -900,16 +900,15 @@ public class Main extends Shell {
 		printWriter.close();
 	}
 
-	String storeLocation;
-	Store store;
-	List<PhysicalDisk> physicalDisks;
-	List<VirtualDisk> virtualDisks;
-	List<DiskImage> diskImages;
-	File tmpDir;
-	static boolean verbose, debug;
-	Session session;
-	VirtualMachineFileSystem vmfs;
-	Set<String> vmNames;
+	private String storeLocation;
+	private Store store;
+	private List<PhysicalDisk> physicalDisks;
+	private List<VirtualDisk> virtualDisks;
+	private List<DiskImage> diskImages;
+	private static boolean verbose, debug;
+	private Session session;
+	private VirtualMachineFileSystem vmfs;
+	private Set<String> vmNames;
 	
 	static public final String[] PHYSICALDISKNAMES = {
 		// Linux/Unix...
