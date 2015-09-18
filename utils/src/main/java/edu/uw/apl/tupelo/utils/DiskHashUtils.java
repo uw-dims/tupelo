@@ -10,15 +10,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.uw.apl.commons.sleuthkit.filesys.Attribute;
-import edu.uw.apl.commons.sleuthkit.filesys.DirectoryWalk;
-import edu.uw.apl.commons.sleuthkit.filesys.FileSystem;
-import edu.uw.apl.commons.sleuthkit.filesys.Meta;
-import edu.uw.apl.commons.sleuthkit.filesys.Walk;
-import edu.uw.apl.commons.sleuthkit.filesys.WalkFile;
-import edu.uw.apl.commons.sleuthkit.image.Image;
-import edu.uw.apl.commons.sleuthkit.volsys.Partition;
-import edu.uw.apl.commons.sleuthkit.volsys.VolumeSystem;
+import edu.uw.apl.commons.tsk4j.filesys.Attribute;
+import edu.uw.apl.commons.tsk4j.filesys.DirectoryWalk;
+import edu.uw.apl.commons.tsk4j.filesys.FileSystem;
+import edu.uw.apl.commons.tsk4j.filesys.Meta;
+import edu.uw.apl.commons.tsk4j.filesys.Walk;
+import edu.uw.apl.commons.tsk4j.filesys.WalkFile;
+import edu.uw.apl.commons.tsk4j.image.Image;
+import edu.uw.apl.commons.tsk4j.volsys.Partition;
+import edu.uw.apl.commons.tsk4j.volsys.VolumeSystem;
 
 /**
  * Class for accessing and hashing information on a disk not managed in

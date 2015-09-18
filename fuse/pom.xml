@@ -47,9 +47,9 @@
     </dependency>
 
     <dependency>
-      <groupId>edu.uw.apl.commons</groupId>
+      <groupId>fuse4j</groupId>
       <artifactId>fuse4j-core</artifactId>
-      <version>2400.0.1</version>
+      <version>3.0.0</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>

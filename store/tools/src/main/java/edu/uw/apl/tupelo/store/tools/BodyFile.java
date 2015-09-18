@@ -8,15 +8,14 @@ import org.apache.log4j.LogManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.uw.apl.commons.tsk4j.digests.BodyFileBuilder;
+import edu.uw.apl.commons.tsk4j.digests.BodyFileCodec;
+import edu.uw.apl.commons.tsk4j.filesys.FileSystem;
+import edu.uw.apl.commons.tsk4j.image.Image;
+import edu.uw.apl.commons.tsk4j.volsys.Partition;
+import edu.uw.apl.commons.tsk4j.volsys.VolumeSystem;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.store.Store;
-
-import edu.uw.apl.commons.sleuthkit.image.Image;
-import edu.uw.apl.commons.sleuthkit.filesys.FileSystem;
-import edu.uw.apl.commons.sleuthkit.volsys.Partition;
-import edu.uw.apl.commons.sleuthkit.volsys.VolumeSystem;
-import edu.uw.apl.commons.sleuthkit.digests.BodyFileBuilder;
-import edu.uw.apl.commons.sleuthkit.digests.BodyFileCodec;
 
 /**
  * Given the identified ManagedDiskDescriptors (either one supplied on
@@ -96,7 +95,7 @@ public class BodyFile {
 								  p.length() + " " +
 								  p.description() );
 						fs = new FileSystem( i, p.start() );
-						edu.uw.apl.commons.sleuthkit.digests.BodyFile bf =
+						edu.uw.apl.commons.tsk4j.digests.BodyFile bf =
 							BodyFileBuilder.create( fs );
 						StringWriter sw = new StringWriter();
 						BodyFileCodec.format( bf, sw );

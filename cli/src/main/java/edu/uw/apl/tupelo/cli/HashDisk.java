@@ -13,8 +13,8 @@ import org.apache.commons.cli.*;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.LogManager;
 
-import edu.uw.apl.commons.sleuthkit.filesys.FileSystem;
-import edu.uw.apl.commons.sleuthkit.volsys.Partition;
+import edu.uw.apl.commons.tsk4j.filesys.FileSystem;
+import edu.uw.apl.commons.tsk4j.volsys.Partition;
 import edu.uw.apl.tupelo.utils.DiskHashUtils;
 
 /**
