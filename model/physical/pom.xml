@@ -56,7 +56,7 @@
 		  <configuration>
 		    <javahClassNames>
 		      <javahClassName>
-			edu.uw.apl.tupelo.model.PhysicalDisk
+			edu.uw.apl.tupelo.model.physical.PhysicalDisk
 		      </javahClassName>
 		    </javahClassNames>
 		  </configuration>
@@ -84,7 +84,7 @@
 		    <executable>make</executable>
 		    <commandlineArgs>install</commandlineArgs>
 		    <environmentVariables>
-		      <PACKAGE>edu.uw.apl.tupelo.model</PACKAGE>
+		      <PACKAGE>edu.uw.apl.tupelo.model.physical</PACKAGE>
 		      <ARTIFACT>${project.artifactId}</ARTIFACT>
 		    </environmentVariables>
 		  </configuration>
@@ -103,7 +103,7 @@
 		    <executable>make</executable>
 		    <commandlineArgs>clean</commandlineArgs>
 		    <environmentVariables>
-		      <PACKAGE>edu.uw.apl.tupelo.model</PACKAGE>
+		      <PACKAGE>edu.uw.apl.tupelo.model.physical</PACKAGE>
 		      <ARTIFACT>${project.artifactId}</ARTIFACT>
 		    </environmentVariables>
 		  </configuration>
