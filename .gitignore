@@ -3,6 +3,7 @@ target
 *.tmd
 maven-metadata-local.xml
 pom.xml.versionsBackup
+*~
 
 .project
 .settings
