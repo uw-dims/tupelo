@@ -57,7 +57,7 @@ public class HttpStoreServlet extends HttpServlet {
 		  ContextListener puts it there
 		*/
 		ServletContext sc = config.getServletContext();
-		store = (Store)sc.getAttribute( ContextListener.STOREKEY );
+		store = (Store)sc.getAttribute( ContextListener.STORE_KEY );
 
 		// gson object claimed thread-safe, so can be a member...
 		GsonBuilder gsonb = new GsonBuilder();

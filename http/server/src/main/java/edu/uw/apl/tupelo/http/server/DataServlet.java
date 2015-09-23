@@ -68,7 +68,7 @@ public class DataServlet extends HttpServlet {
 		  ContextListener puts it there
 		*/
 		ServletContext sc = config.getServletContext();
-		store = (Store)sc.getAttribute( ContextListener.STOREKEY );
+		store = (Store)sc.getAttribute( ContextListener.STORE_KEY );
 	}
 	
 	@Override

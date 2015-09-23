@@ -71,7 +71,7 @@ public class ToolsServlet extends HttpServlet {
 		  Unlike other servlets which use just the Store api, we HAVE to
 		  view it as a FilesystemStore, to be able to invoke e.g. computeDigest()
 		*/
-		store = (FilesystemStore)sc.getAttribute( ContextListener.STOREKEY );
+		store = (FilesystemStore)sc.getAttribute( ContextListener.STORE_KEY );
 
 	}
 	
@@ -292,10 +292,10 @@ public class ToolsServlet extends HttpServlet {
 	private synchronized ManagedDiskFileSystem getMDFS() {
 		ServletContext sc = this.getServletContext();
 		ManagedDiskFileSystem mdfs = (ManagedDiskFileSystem)
-			sc.getAttribute( ContextListener.MDFSOBJKEY );
+			sc.getAttribute( ContextListener.MDFS_OBJ_KEY );
 		if( mdfs == null ) {
 			File dataRoot = (File)sc.getAttribute
-				( ContextListener.DATAROOTKEY );
+				( ContextListener.DATA_ROOT_KEY );
 			File mountPoint = new File( dataRoot, "mdfs" );
 			mountPoint.mkdirs();
 			mdfs = new ManagedDiskFileSystem( store );
@@ -314,8 +314,8 @@ public class ToolsServlet extends HttpServlet {
 			  Make both the mdfs object AND mount point available
 			  for clean up at context destroy time
 			*/
-			sc.setAttribute( ContextListener.MDFSOBJKEY, mdfs );
-			sc.setAttribute( ContextListener.MDFSMOUNTKEY, mountPoint );
+			sc.setAttribute( ContextListener.MDFS_OBJ_KEY, mdfs );
+			sc.setAttribute( ContextListener.MDFS_MOUNT_KEY, mountPoint );
 		}
 		return mdfs;
 	}
