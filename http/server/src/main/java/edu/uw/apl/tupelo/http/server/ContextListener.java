@@ -134,7 +134,9 @@ public class ContextListener implements ServletContextListener {
 		    // No store root specified in the servlet context, try and find it elsewhere
 		    storeRoot = Discovery.locatePropertyValue(DATA_ROOT_KEY);
 		    // If it still isn't defined, use the default
-		    storeRoot = getDefaultDataStorePath();
+		    if(storeRoot == null){
+		        storeRoot = getDefaultDataStorePath();
+		    }
 		}
 		File dataRoot = new File( storeRoot ).getCanonicalFile();
 		dataRoot.mkdirs();
