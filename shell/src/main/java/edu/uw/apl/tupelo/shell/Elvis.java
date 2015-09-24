@@ -56,11 +56,11 @@ import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
    bash...
 */
 
-public class Main extends Shell {
+public class Elvis extends Shell {
 
     static public void main( String[] args ) {
 		try {
-			Main main = new Main();
+			Elvis main = new Elvis();
 			main.readConfig();
 			main.readArgs( args );
 			main.start();
@@ -73,7 +73,7 @@ public class Main extends Shell {
 		}
 	}
 
-	public Main() {
+	public Elvis() {
 		super();
 		physicalDisks = new ArrayList<PhysicalDisk>();
 		virtualDisks = new ArrayList<VirtualDisk>();
@@ -322,7 +322,7 @@ public class Main extends Shell {
 		os.addOption( "u", true, "path to unmanaged disk" );
 		os.addOption( "V", false, "show version number and exit" );
 
-		String USAGE = Main.class.getName() + " [-c] [-d] [-s] [-u] [-V]";
+		String USAGE = Elvis.class.getName() + " [-c] [-d] [-s] [-u] [-V]";
 		final String HEADER = "";
 		final String FOOTER = "";
 
