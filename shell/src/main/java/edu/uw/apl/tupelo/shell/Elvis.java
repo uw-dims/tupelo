@@ -48,6 +48,7 @@ import edu.uw.apl.tupelo.model.UnmanagedDisk;
 import edu.uw.apl.tupelo.http.client.HttpStoreProxy;
 import edu.uw.apl.tupelo.store.Store;
 import edu.uw.apl.tupelo.store.null_.NullStore;
+import edu.uw.apl.tupelo.utils.Discovery;
 import edu.uw.apl.tupelo.utils.DiskHashUtils;
 import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
 
@@ -55,8 +56,39 @@ import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
    A cmd line shell for the Tupelo system. Works along the lines of
    bash...
 */
-
 public class Elvis extends Shell {
+
+    private String storeLocation;
+    private Store store;
+    private List<PhysicalDisk> physicalDisks;
+    private List<VirtualDisk> virtualDisks;
+    private List<DiskImage> diskImages;
+    private static boolean verbose, debug;
+    private Session session;
+    private VirtualMachineFileSystem vmfs;
+    private Set<String> vmNames;
+
+    /**
+     * Path to check for potential disks
+     */
+    static public final String[] PHYSICAL_DISK_NAMES = {
+        // Linux/Unix...
+        "/dev/sda", "/dev/sdb", "/dev/sdc",
+        "/dev/sdd", "/dev/sde", "/dev/sdf",
+        // MacOS...
+        "/dev/disk0", "/dev/disk1", "/dev/disk2"
+    };
+
+    private static final String UNMANAGED_DISK_REPORT_FORMAT = "%2s %42s %16s %16s";
+
+    private static final String MANAGED_DISK_REPORT_FORMAT = "%2s %42s %17s";
+
+    private static final String ATTRIBUTE_REPORT_FORMAT = "%2s %42s";
+
+    /**
+     * Property name for defining the Tupelo store location
+     */
+    public static final String STORE_PROPERTY = "store-location";
 
     static public void main( String[] args ) {
 		try {
@@ -80,8 +112,12 @@ public class Elvis extends Shell {
 		diskImages = new ArrayList<DiskImage>();
 		vmNames = new HashSet<String>();
 		
-		// String tmpDirS = System.getProperty( "java.io.tmpdir" );
-		storeLocation = "./test-store";
+		// Try and load the store location via the Discovery class
+		storeLocation = Discovery.locatePropertyValue(STORE_PROPERTY);
+		if(storeLocation == null){
+		    // Use the default if not defined
+		    storeLocation = "./test-store";
+		}
 		verbose = false;
 
 		// report available Java memory...
@@ -474,7 +510,7 @@ public class Elvis extends Shell {
 	}
 
 	private void identifyPhysicalDisks() {
-		for( String pdName : PHYSICALDISKNAMES ) {
+		for( String pdName : PHYSICAL_DISK_NAMES ) {
 			File pdf = new File( pdName );
 			if( !pdf.exists() )
 				continue;
@@ -504,7 +540,7 @@ public class Elvis extends Shell {
 			return;
 		System.out.println( msg );
 	}
-	
+
 	Store buildStore() {
 		Store s = null;
 		if( storeLocation.equals( "/dev/null" ) ) {
@@ -527,9 +563,9 @@ public class Elvis extends Shell {
 		System.out.print( "tupelo> " );
 		System.out.flush();
 	}
-	
+
 	void reportManagedDisks( Collection<ManagedDiskDescriptor> mdds ) {
-		String header = String.format( MANAGEDDISKREPORTFORMAT,
+		String header = String.format( MANAGED_DISK_REPORT_FORMAT,
 									   "N", "ID", "Session" );
 		System.out.println( header );
 		int n = 1;
@@ -537,7 +573,7 @@ public class Elvis extends Shell {
 			new ArrayList<ManagedDiskDescriptor>( mdds );
 		Collections.sort( sorted, ManagedDiskDescriptor.DEFAULTCOMPARATOR );
 		for( ManagedDiskDescriptor mdd : sorted ) {
-			String fmt = String.format( MANAGEDDISKREPORTFORMAT, n,
+			String fmt = String.format( MANAGED_DISK_REPORT_FORMAT, n,
 										mdd.getDiskID(),
 										mdd.getSession() );
 			System.out.println( fmt );
@@ -546,21 +582,21 @@ public class Elvis extends Shell {
 	}
 
 	void reportAttributes( Collection<String> attrNames ) {
-		String header = String.format( ATTRIBUTEREPORTFORMAT,
+		String header = String.format( ATTRIBUTE_REPORT_FORMAT,
 									   "N", "Name" );
 		System.out.println( header );
 		int n = 1;
 		List<String> sorted = new ArrayList<String>( attrNames );
 		Collections.sort( sorted );
 		for( String s : sorted ) {
-			String fmt = String.format( ATTRIBUTEREPORTFORMAT, n, s );
+			String fmt = String.format( ATTRIBUTE_REPORT_FORMAT, n, s );
 			System.out.println( fmt );
 			n++;
 		}
 	}
 
 	void reportUnmanagedDisks() {
-		String header = String.format( UNMANAGEDDISKREPORTFORMAT,
+		String header = String.format( UNMANAGED_DISK_REPORT_FORMAT,
 									   "N", "ID", "Size", "Path" );
 		System.out.println( header );
 		reportPhysicalDisks( 1 );
@@ -570,7 +606,7 @@ public class Elvis extends Shell {
 
 	void reportPhysicalDisks( int n ) {
 		for( PhysicalDisk pd : physicalDisks ) {
-			String fmt = String.format( UNMANAGEDDISKREPORTFORMAT,
+			String fmt = String.format( UNMANAGED_DISK_REPORT_FORMAT,
 										n, pd.getID(), pd.size(),
 										pd.getSource() );
 			System.out.println( fmt );
@@ -580,7 +616,7 @@ public class Elvis extends Shell {
 
 	void reportVirtualDisks( int n ) {
 		for( VirtualDisk vd : virtualDisks ) {
-			String fmt = String.format( UNMANAGEDDISKREPORTFORMAT,
+			String fmt = String.format( UNMANAGED_DISK_REPORT_FORMAT,
 										n, vd.getID(), vd.size(),
 										vd.getSource().getName() );
 			System.out.println( fmt );
@@ -590,7 +626,7 @@ public class Elvis extends Shell {
 
 	void reportDiskImages( int n ) {
 		for( DiskImage di : diskImages ) {
-			String fmt = String.format( UNMANAGEDDISKREPORTFORMAT,
+			String fmt = String.format( UNMANAGED_DISK_REPORT_FORMAT,
 										n, di.getID(), di.size(),
 										di.getSource().getName() );
 			System.out.println( fmt );
@@ -604,7 +640,7 @@ public class Elvis extends Shell {
 			report( "Session: " + session );
 		}
 	}
-	
+
 	private void putDisk( UnmanagedDisk ud ) throws IOException {
 		checkSession();
 		Collection<ManagedDiskDescriptor> existing = store.enumerate();
@@ -708,7 +744,6 @@ public class Elvis extends Shell {
 								dotDecimal.getBytes() );
 		} catch( UnknownHostException uhe ) {
 		}
-			
 	}
 
 	private void hashVolumeSystem( UnmanagedDisk ud ) throws IOException {
@@ -720,7 +755,6 @@ public class Elvis extends Shell {
 		}
 	}
 
-		
 	private void checkVMFS() throws IOException {
 		if( vmfs == null ) {
 			vmfs = new VirtualMachineFileSystem();
@@ -744,7 +778,7 @@ public class Elvis extends Shell {
 			}
 		}
 	}
-	
+
 	private void hashVolumeSystemVirtual( VirtualDisk ud ) throws IOException {
 		checkVMFS();
 		VirtualMachine vm = ud.getVM();
@@ -760,7 +794,7 @@ public class Elvis extends Shell {
 		}
 
 	}
-	
+
 	private void hashVolumeSystemNonVirtual( UnmanagedDisk ud )
 		throws IOException {
 		Image i = new Image( ud.getSource() );
@@ -770,7 +804,6 @@ public class Elvis extends Shell {
 			i.close();
 		}
 	}
-
 
 	private void hashVolumeSystemImpl( Image i, UnmanagedDisk ud )
 		throws IOException {
@@ -796,7 +829,7 @@ public class Elvis extends Shell {
 			vs.close();
 		}
 	}
-	
+
 	private void hashFileSystems( UnmanagedDisk ud ) throws IOException {
 		checkSession();
 		if( ud instanceof VirtualDisk ) {
@@ -834,7 +867,7 @@ public class Elvis extends Shell {
 			i.close();
 		}
 	}
-	
+
 	private void hashFileSystemsImpl( Image i, UnmanagedDisk ud )
 		throws IOException {
 		VolumeSystem vs = null;
@@ -877,7 +910,13 @@ public class Elvis extends Shell {
 			vs.close();
 		}
 	}
-	
+
+	/**
+	 * Write the fileHash data to a file
+	 * @param fileHashes the map of file path to hash
+	 * @param fileName the output file name
+	 * @throws IOException
+	 */
 	private void writeHashData(Map<String, byte[]> fileHashes, String fileName) throws IOException{
 		// Replace / with _ so it doesnt try and write the file to some other directory
 		fileName = fileName.replace('/', '_');
@@ -895,35 +934,9 @@ public class Elvis extends Shell {
 			String stringHash = new String(Hex.encodeHex(hash));
 			printWriter.println(stringHash+" "+ file);
 		}
-		// Flush and close thr writers
+		// Flush and close the writers
 		printWriter.flush();
 		printWriter.close();
 	}
 
-	private String storeLocation;
-	private Store store;
-	private List<PhysicalDisk> physicalDisks;
-	private List<VirtualDisk> virtualDisks;
-	private List<DiskImage> diskImages;
-	private static boolean verbose, debug;
-	private Session session;
-	private VirtualMachineFileSystem vmfs;
-	private Set<String> vmNames;
-	
-	static public final String[] PHYSICALDISKNAMES = {
-		// Linux/Unix...
-		"/dev/sda", "/dev/sdb", "/dev/sdc",
-		"/dev/sdd", "/dev/sde", "/dev/sdf",
-		// MacOS...
-		"/dev/disk0", "/dev/disk1", "/dev/disk2"
-	};
-
-	static final String UNMANAGEDDISKREPORTFORMAT = "%2s %42s %16s %16s";
-
-	static final String MANAGEDDISKREPORTFORMAT = "%2s %42s %17s";
-
-	static final String ATTRIBUTEREPORTFORMAT = "%2s %42s";
 }
-
-
-// eof
