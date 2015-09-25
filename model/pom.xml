@@ -14,7 +14,6 @@
   <packaging>pom</packaging>
 
   <name>Tupelo Disk Management - Model (Parent)</name>
-  <url>http://maven.apache.org</url>
 
   <modules>
     <module>core</module>

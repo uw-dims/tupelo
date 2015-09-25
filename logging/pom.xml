@@ -11,7 +11,6 @@
   <artifactId>tupelo-logging</artifactId>
   <version>1.1.1</version>
   <name>Tupelo Disk Management - Logging Infrastructure</name>
-  <url>http://maven.apache.org</url>
 
   <repositories>
     <repository>
