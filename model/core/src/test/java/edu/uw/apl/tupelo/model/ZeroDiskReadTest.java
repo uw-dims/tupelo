@@ -19,18 +19,19 @@ public class ZeroDiskReadTest extends junit.framework.TestCase {
 	}
 
 	// A typical real disk size, 128GB
-	// Making as private to skip for now. This just takes too long for jenkins
-	@SuppressWarnings("unused")
-    private void test_128G() {
+	/*
+	 * Skipping test, this takes too long on jenkins
+    public void test_128G() {
 		long sz = 1024L * 1024 * 1024 * 128;
 		ZeroDisk zd = new ZeroDisk( sz );
 
 		/*
 		  Expected: dd if=/dev/zero bs=1M count=128K | md5sum
 		  Warning: this may take a while, took 5+ mins on rejewski
-		*/
+		* /
 		test( zd, sz, "35a06e21f6bbb512aedac9671904ffd8" );
 	}
+    */
 
 	private void test( ZeroDisk zd, long sz, String expectedMD5 ) {
 		testRead2EOF( zd, sz );
