@@ -3,7 +3,6 @@ package edu.uw.apl.tupelo.store.tools;
 import java.io.File;
 import java.io.InputStream;
 
-import org.apache.commons.cli.*;
 import org.apache.log4j.LogManager;
 
 import edu.uw.apl.tupelo.model.ManagedDisk;

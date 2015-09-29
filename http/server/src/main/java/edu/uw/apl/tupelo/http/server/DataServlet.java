@@ -1,7 +1,6 @@
 package edu.uw.apl.tupelo.http.server;
 
 import java.io.IOException;
-import java.io.File;
 import java.io.OutputStream;
 import java.io.ObjectOutputStream;
 import java.io.InputStream;
@@ -12,27 +11,16 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.Map;
 import java.util.UUID;
-
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonSerializer;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonPrimitive;
 
 import edu.uw.apl.tupelo.model.ManagedDisk;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
@@ -51,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
  *
  * The expected url layout (i.e. path entered into web.xml) for this
  * servlet is (where DID is 'disk id' and SID is 'session id', both
- * strings:
+ * strings):
  *
  * /disks/data/enumerate
  * /disks/data/put/DID/SID
@@ -60,10 +48,15 @@ import org.apache.commons.logging.LogFactory;
  * /disks/data/digest/DID/SID
  *
  *
- * /disks/data/get/DID/SID (todo, currently no support for retrieving managed data)
+ * /disks/data/get/DID/SID (TODO, currently no support for retrieving managed data)
  *
  */
 public class DataServlet extends HttpServlet {
+
+	/**
+	 * Auto-generated
+	 */
+	private static final long serialVersionUID = 6793791633653694862L;
 
 	@Override
     public void init( ServletConfig config ) throws ServletException {
@@ -75,7 +68,7 @@ public class DataServlet extends HttpServlet {
 		  ContextListener puts it there
 		*/
 		ServletContext sc = config.getServletContext();
-		store = (Store)sc.getAttribute( ContextListener.STOREKEY );
+		store = (Store)sc.getAttribute( ContextListener.STORE_KEY );
 	}
 	
 	@Override
@@ -87,8 +80,7 @@ public class DataServlet extends HttpServlet {
 		String pi = req.getPathInfo();
 		log.debug( "Get.PathInfo: " + pi );
 
-		if( false ) {
-		} else if( pi.equals( "/enumerate" ) ) {
+		if( pi.equals( "/enumerate" ) ) {
 			enumerate( req, res );
 		} else if( pi.startsWith( "/digest/" ) ) {
 			String details = pi.substring( "/digest/".length() );
@@ -119,8 +111,7 @@ public class DataServlet extends HttpServlet {
 		String pi = req.getPathInfo();
 		log.debug( "Post.PathInfo: " + pi );
 
-		if( false ) {
-		} else if( pi.startsWith( "/put/" ) ) {
+		if( pi.startsWith( "/put/" ) ) {
 			String details = pi.substring( "/put/".length() );
 			putData( req, res, details );
 		} else {
@@ -135,8 +126,7 @@ public class DataServlet extends HttpServlet {
 
 		Collection<ManagedDiskDescriptor> mdds = store.enumerate();
 		
-		if( false ) {
-		} else if( Utils.acceptsJavaObjects( req ) ) {
+		if( Utils.acceptsJavaObjects( req ) ) {
 			res.setContentType( "application/x-java-serialized-object" );
 			OutputStream os = res.getOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream( os );
@@ -189,7 +179,7 @@ public class DataServlet extends HttpServlet {
 		}
 
 		// LOOK: check the content type...
-		String hdr = req.getHeader( "Content-Encoding" );
+		// String hdr = req.getHeader( "Content-Encoding" );
 
 		log.debug( "MDD: " + mdd );
 		InputStream is = req.getInputStream();
@@ -215,14 +205,13 @@ public class DataServlet extends HttpServlet {
 		}
 
 		// LOOK: check the content type...
-		String hdr = req.getHeader( "Content-Encoding" );
+		// String hdr = req.getHeader( "Content-Encoding" );
 
 		long size = store.size( mdd );
 		log.debug( "size.result: " + size );
 		
 		
-		if( false ) {
-		} else if( Utils.acceptsJavaObjects( req ) ) {
+		if( Utils.acceptsJavaObjects( req ) ) {
 			res.setContentType( "application/x-java-serialized-object" );
 			OutputStream os = res.getOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream( os );
@@ -259,13 +248,11 @@ public class DataServlet extends HttpServlet {
 		}
 
 		// LOOK: check the content type...
-		String hdr = req.getHeader( "Content-Encoding" );
+		//String hdr = req.getHeader( "Content-Encoding" );
 
 		UUID uuid = store.uuid( mdd );
-		
-		
-		if( false ) {
-		} else if( Utils.acceptsJavaObjects( req ) ) {
+
+		if( Utils.acceptsJavaObjects( req ) ) {
 			res.setContentType( "application/x-java-serialized-object" );
 			OutputStream os = res.getOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream( os );
@@ -300,7 +287,7 @@ public class DataServlet extends HttpServlet {
 		}
 
 		// LOOK: check the content type...
-		String hdr = req.getHeader( "Content-Encoding" );
+		//String hdr = req.getHeader( "Content-Encoding" );
 
 		ManagedDiskDigest digest = store.digest( mdd );
 		if( digest == null ) {
@@ -309,13 +296,13 @@ public class DataServlet extends HttpServlet {
 			return;
 		}
 		
-		if( false ) {
-		} else if( false && Utils.acceptsJavaObjects( req ) ) {
-			res.setContentType( "application/x-java-serialized-object" );
-			OutputStream os = res.getOutputStream();
-			ObjectOutputStream oos = new ObjectOutputStream( os );
-			oos.writeObject( digest );
-		} else if( Utils.acceptsJson( req ) ) {
+//		if( Utils.acceptsJavaObjects( req ) ) {
+//			res.setContentType( "application/x-java-serialized-object" );
+//			OutputStream os = res.getOutputStream();
+//			ObjectOutputStream oos = new ObjectOutputStream( os );
+//			oos.writeObject( digest );
+//		} 
+		if( Utils.acceptsJson( req ) ) {
 			res.setContentType( "application/json" );
 			String json = gson.toJson( digest );
 			PrintWriter pw = res.getWriter();

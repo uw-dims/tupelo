@@ -1,7 +1,6 @@
 package edu.uw.apl.tupelo.http.server;
 
 import java.io.IOException;
-import java.io.File;
 import java.io.OutputStream;
 import java.io.ObjectOutputStream;
 import java.io.InputStream;
@@ -12,17 +11,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.Map;
 import java.util.UUID;
 
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -48,7 +43,12 @@ import org.apache.commons.logging.LogFactory;
 */
 public class HttpStoreServlet extends HttpServlet {
 
-    public void init( ServletConfig config ) throws ServletException {
+    /**
+	 * Auto-generated
+	 */
+	private static final long serialVersionUID = -5695118798456209490L;
+
+	public void init( ServletConfig config ) throws ServletException {
         super.init( config );
 		log = LogFactory.getLog( getClass() );
 
@@ -57,7 +57,7 @@ public class HttpStoreServlet extends HttpServlet {
 		  ContextListener puts it there
 		*/
 		ServletContext sc = config.getServletContext();
-		store = (Store)sc.getAttribute( ContextListener.STOREKEY );
+		store = (Store)sc.getAttribute( ContextListener.STORE_KEY );
 
 		// gson object claimed thread-safe, so can be a member...
 		GsonBuilder gsonb = new GsonBuilder();
@@ -107,8 +107,7 @@ public class HttpStoreServlet extends HttpServlet {
 		String pi = req.getPathInfo();
 		System.out.println( "PathInfo: " + pi );
 		log.debug( "Get.PathInfo: " + pi );
-		if( false ) {
-		} else if( pi.equals( "/listvolumes" ) ) {
+		if( pi.equals( "/listvolumes" ) ) {
 			//listVolumes( req, res );
 		} else if( pi.equals( "/list" ) ) {
 			//listVolumes( req, res );
@@ -154,8 +153,7 @@ public class HttpStoreServlet extends HttpServlet {
 		String pi = req.getPathInfo();
 		System.out.println( "PathInfo: " + pi );
 		log.debug( "Post.PathInfo: " + pi );
-		if( false ) {
-		} else if( pi.equals( "/newsession" ) ) {
+		if( pi.equals( "/newsession" ) ) {
 			// newsession as a POST
 			newSession( req, res );
 		} else if( pi.startsWith( "/put/" ) ) {
@@ -176,8 +174,7 @@ public class HttpStoreServlet extends HttpServlet {
 
 		UUID result = store.getUUID();
 		
-		if( false ) {
-		} else if( Utils.acceptsJavaObjects( req ) ) {
+		if( Utils.acceptsJavaObjects( req ) ) {
 			res.setContentType( "application/x-java-serialized-object" );
 			OutputStream os = res.getOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream( os );
@@ -199,8 +196,7 @@ public class HttpStoreServlet extends HttpServlet {
 
 		long result = store.getUsableSpace();
 		
-		if( false ) {
-		} else if( Utils.acceptsJavaObjects( req ) ) {
+		if( Utils.acceptsJavaObjects( req ) ) {
 			res.setContentType( "application/x-java-serialized-object" );
 			OutputStream os = res.getOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream( os );
@@ -223,8 +219,7 @@ public class HttpStoreServlet extends HttpServlet {
 		// NOTHING to do with an HttpSession!
 		Session session = store.newSession();
 
-		if( false ) {
-		} else if( Utils.acceptsJavaObjects( req ) ) {
+		if( Utils.acceptsJavaObjects( req ) ) {
 			res.setContentType( "application/x-java-serialized-object" );
 			OutputStream os = res.getOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream( os );
@@ -247,8 +242,7 @@ public class HttpStoreServlet extends HttpServlet {
 
 		Collection<ManagedDiskDescriptor> mdds = store.enumerate();
 		
-		if( false ) {
-		} else if( Utils.acceptsJavaObjects( req ) ) {
+		if( Utils.acceptsJavaObjects( req ) ) {
 			res.setContentType( "application/x-java-serialized-object" );
 			OutputStream os = res.getOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream( os );
@@ -304,7 +298,7 @@ public class HttpStoreServlet extends HttpServlet {
 		}
 
 		// LOOK: check the content type...
-		String hdr = req.getHeader( "Content-Encoding" );
+		// String hdr = req.getHeader( "Content-Encoding" );
 
 		log.debug( "MDD: " + mdd );
 		InputStream is = req.getInputStream();
@@ -333,13 +327,12 @@ public class HttpStoreServlet extends HttpServlet {
 		}
 
 		// LOOK: check the content type...
-		String hdr = req.getHeader( "Content-Encoding" );
+		// String hdr = req.getHeader( "Content-Encoding" );
 
 		Object digest = store.digest( mdd );
 		
 		
-		if( false ) {
-		} else if( Utils.acceptsJavaObjects( req ) ) {
+		if( Utils.acceptsJavaObjects( req ) ) {
 			res.setContentType( "application/x-java-serialized-object" );
 			OutputStream os = res.getOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream( os );
@@ -383,15 +376,13 @@ public class HttpStoreServlet extends HttpServlet {
 		}
 
 		// LOOK: check the content type...
-		String hdr = req.getHeader( "Content-Encoding" );
+		// String hdr = req.getHeader( "Content-Encoding" );
 
 		String key = "key";
 			
 		byte[] value = store.getAttribute( mdd, key );
 		
-		
-		if( false ) {
-		} else if( Utils.acceptsJavaObjects( req ) ) {
+		if( Utils.acceptsJavaObjects( req ) ) {
 			res.setContentType( "application/x-java-serialized-object" );
 			OutputStream os = res.getOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream( os );

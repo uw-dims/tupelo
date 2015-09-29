@@ -1,39 +1,21 @@
 package edu.uw.apl.tupelo.store.tools;
 
 import java.io.File;
-import java.io.BufferedWriter;
-import java.io.PrintWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringWriter;
-import java.security.DigestInputStream;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.apache.commons.cli.*;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.LogManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.uw.apl.commons.tsk4j.digests.BodyFileBuilder;
+import edu.uw.apl.commons.tsk4j.digests.BodyFileCodec;
+import edu.uw.apl.commons.tsk4j.filesys.FileSystem;
+import edu.uw.apl.commons.tsk4j.image.Image;
+import edu.uw.apl.commons.tsk4j.volsys.Partition;
+import edu.uw.apl.commons.tsk4j.volsys.VolumeSystem;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
-import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.store.Store;
-
-import edu.uw.apl.commons.sleuthkit.image.Image;
-import edu.uw.apl.commons.sleuthkit.filesys.FileSystem;
-import edu.uw.apl.commons.sleuthkit.volsys.Partition;
-import edu.uw.apl.commons.sleuthkit.volsys.VolumeSystem;
-import edu.uw.apl.commons.sleuthkit.digests.BodyFileBuilder;
-import edu.uw.apl.commons.sleuthkit.digests.BodyFileCodec;
 
 /**
  * Given the identified ManagedDiskDescriptors (either one supplied on
@@ -113,7 +95,7 @@ public class BodyFile {
 								  p.length() + " " +
 								  p.description() );
 						fs = new FileSystem( i, p.start() );
-						edu.uw.apl.commons.sleuthkit.digests.BodyFile bf =
+						edu.uw.apl.commons.tsk4j.digests.BodyFile bf =
 							BodyFileBuilder.create( fs );
 						StringWriter sw = new StringWriter();
 						BodyFileCodec.format( bf, sw );

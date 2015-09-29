@@ -78,3 +78,358 @@ hashdata DISK SESSION
 
 ********************************************************************************
 
+2/3/15:
+
+STIX tools for Tupelo search help:
+
+1 author a STIX doc based on file content, ie
+
+stixFileHash /path/to/some/file
+
+would produce Observables with the md5, perhaps sha1 hash of the file
+content.  Then, need
+
+2 tupelo.amqp.filehashquery to ingest STIX docs directly.
+
+2/4/15:
+
+Need to address issue in filehashquery, which posts over amqp and
+waits for FIRST reply.
+
+1. There may be many Tupelo stores out there, each would have a search response.
+
+2. There may be NO stores up, then we get NO reply, currently client
+waits for ever.
+
+Tupelo docs:
+
+to build, test:
+
+javac, mvn
+
+
+to install:
+
+from Jenkins
+
+via Ansible:
+
+tupelo-shell-install
+
+********************************************************************************
+
+Mar 2015:
+
+Acquiring a disk is only as quick as we can read off the disk.  We are
+using FileInputStream.read.  We want ALL bytes, so no skipping being
+done. Anything quicker? NIO ???  Do a comparison test??? In a branch ??
+
+250GB at 100MBsec-1 is 1GB in 10secs so 250GB is 2500secs = ~40mins.
+Claimed GBsec-1 for some devices??  sata??  Test on many machine w
+Tupelo/Cain and /dev/null for store.  Can see elapsed time.
+
+Caine ISO?
+
+amqp client expansion + STIX incorporation:
+
+toSTIX: takes a file name or inode name into a managed disk file
+system, or even into an unmanaged disk, and produces content.
+e.g. icat.  Need to know WHICH inode.
+
+searchSTIX: takes a stix document (URL, file?) and submits it to
+tupelo amqp for search.
+
+
+packer-based windows machines.
+
+Thus Mar 19:  acquire of rejewski:/dev/sda to
+rejewski:/lv1/tupelo/store
+
+% 98% 98% 98% 98% 99% 99% 99% 99% 99% 99% 99% 99% 99% 100% 
+Unmanaged size: 250000000000
+Managed   size: 137471441920
+Elapsed: 3245
+tupelo> 
+
+Doing it again on Friday mar 20, trying to put decent amount of data
+into the store.
+
+TODO: PhysicalDisk IDs can have whitespace, making those strings
+tricky to use in store tools like tup.bodyfile, etc.  Revisit how the
+strings are formed in model.core.physical.  Will have to hose any
+existing stores???
+
+TODO: more visibility, via logging?, into store tools like Digester,
+BodyFile creator etc.  Currently too opaque.
+
+3/23/15:
+
+Nice way to use find, xargs and elvis to acquire e.g. all vagrant box
+vmdks.  Put this in the user/dev manual.  it shows how useful the -c
+option is.
+
+find  /lv1/vagrant.d/boxes/ -name *.vmdk| xargs -n 1 ./elvis -s /lv1/tupelo/store/ -c "putdisk 3" -u
+
+Could not do this with vbox VMs, since would not pick up 'active' disk
+if named the orig vmdk file.  Does elvis always locate active disk??
+CHECK.  Yes, appears to.  CHECK: use a snapshotted disk and name base
+disk.
+
+Snapshotted recent win7_office VM:
+
+[stuart@rejewski shell (master)]$ tree ~/VBox/win7_office/
+/home/stuart/VBox/win7_office/
+├── Logs
+│   ├── VBox.log
+│   ├── VBox.log.1
+│   ├── VBox.log.2
+│   └── VBox.log.3
+├── Snapshots
+│   └── {7d8d2fc9-7d3d-4e7c-8ef1-559a3194788e}.vdi
+├── win7_office.vbox
+├── win7_office.vbox-prev
+└── win7_office.vdi
+
+yes appears to work:  WE provide a -u option to elvis with the vm dir
+only, and code locates and use the active disk: 7d82...
+
+Need a UI for store management:  best if NOT the acquirer's ui,
+e.g. elvis.
+
+TEST: run raw md5sum (C program?) on sections of a unmanaged
+disk. compare speed to Java code to do same.
+
+
+Mar 30:  Tupelo tests for DD's Software Test Plan + Test Report:
+
+how to test Tupelo.
+
+1 Install tupelo server, a WAR.  To locate and build
+
+$ git clone git.prisem.washington.edu:/opt/git/tupelo.git
+
+$ cd tupelo
+
+$ mvn install
+
+Software Dependencies:
+
+Code dependencies of this component.
+
+$ cd /path/to/tupelo/http/server
+
+$ mvn depedency:tree
+
+Unit Tests:
+
+For the http server, have some very basic unit tests, NOT really
+excersing http at all:
+
+$ cd /path/to/tupelo/http/server
+
+$ mvn test -Ptester
+
+The -Ptester enables the 'tester' profile, and the unit tests are
+run.  By default, unit tests are skipped.
+
+To start the server, the simplest case is in the build env itself.
+Can be run from Jetty web container plugin for Maven, simply:
+
+$ mvn jetty:run
+
+OR
+
+$ mvn jetty:run-war
+
+to package a war, so code can look up version string and log it.  If
+use just jetty:run, code will report version string as null.
+Remainder of site will work the same whether run as jetty:run or
+jetty:run-war.
+
+
+Once web app running, can test 3 basic pieces of functionality:
+
+1 Does tupelo server announce itself to amqp 'log monitor'?
+
+2 Does tupelo server respond to http requests for various disk
+acquistion functions.
+
+3 Does tupelo server respond to amqp requests for file hash search
+ queries.
+
+
+Server Test 2:
+
+In simplest form, use wget/curl to iterate through a few
+'informational urls', e.g. 
+
+server version string, 
+
+disk space left,
+
+store uuid.
+
+Can do these with just
+
+$ wget http://localhost:8888/tupelo/version
+
+etc.
+
+
+Performance testing:  
+
+how long does a first acquire take?
+
+how long does a digest step take?
+
+how long does a subsequent acquire take?
+
+how much store disk is taken up by each acquire?
+
+for search: how long to answer yes/no?  Need secs per GB/TB stored?
+
+4/7/15:  tests which take too long?
+
+model.ProgressMonitorTest running over a loop 50+ times.
+
+model.CompressionAlgorithmsTest, working on large images, nuga2.dd is 10GB
+
+Useful unit tests:
+
+* That a manageddisk on disk is always 512*N.
+
+* that an image with filesystem(s) actually can be walked to produce:
+
+hashvs
+
+hashfs
+
+bodyfiles
+
+* That compression algorithms do indeed produce a smaller manageddisk
+  footprint.
+
+* That all compression algorithms can be 'round tripped'.  How to
+  test?  Read all data from managedDisk, using getInputStream()
+
+* That digests really do reduce size of 2nd acquisition.
+
+Apr 9:
+
+More testing of single ops:
+
+1 First acquire.  Empty store, various unmanaged disk types:
+
+* virtual
+
+* diskimages
+
+* physical disk ?? Not easy, since large and would be 'live'.  Create
+  loop devices and use those as physical ??  Not sure what ID would
+  be?
+
+Also: test each ManagedDisk type: Flat vs StreamOptimized.
+
+Also: for StreamOptimized, test ALL compression types.
+
+Assertions in each test.
+
+TestData: in separate git repo: tupelo-testdata ??
+
+
+HOTFIX:  http-based cliwnt gets serialization error when web app not
+working, perhaps Tomcat up but web app not deployed.  Need to check
+404 BEFORE reading result.
+
+OSDFCon for Tupelo?
+
+Why Tomcat7/Tupelo webapp failing in Docker whereas was working in
+vagrant+ansible VM:
+
+In the VM, /etc/init.d/tomcat7 is run, it sources
+/etc/default/tomcat7, which is where we forced JAVA_HOME -> 1.7 path.
+Further, the init.d script changes user to tomcat7, daemonizes etc.
+
+But with docker, or at least the Dockerfile we have, the container
+entry point is this
+
+ENTRYPOINT [  "/usr/share/tomcat7/bin/catalina.sh", "run" ]
+
+The catalina.sh is run, essentially in the foreground, as root.  The
+docker entry point into tomcat completely bypasses all the (good) work
+of the init.d script!
+
+Odd thing is that a 'plain' ubuntu:12.04 Docker image has NO java
+installed.  So how is our tomcat in our tupelo container finding a
+'wrong' jre, if there can only be the jre7 we install via apt??
+
+
+A plain tomcat7 Dockerfile (~/playpen/docker/tomcat7) ie NOT with
+Tupelo, started with same
+
+ENTRYPOINT [  "/usr/share/tomcat7/bin/catalina.sh", "run" ]
+
+line, has a ps listing of
+
+/usr/bin/java
+
+which IS valid, since the openjdk7 apt installs adds /usr/bin/java
+(actually as a link to /etc/alternatives/java which ITSELF is a link
+to /usr/lib/jvm/openjdk-7....
+
+So with NO JAVA_HOME set, how does the started process, catalina.sh
+shell script, locate a VM??  It executes $_RUNJAVA ...., but where is
+RUNJAVA var set????  In some included script??  Its in
+CATALINA_HOME/setclasspath.sh. bad name! since seems to be setting env vars!
+
+The flow in Docker is
+
+catalina.sh IS the container init process.  recall the ENV settings
+before it, so it has SOME settings, but NONE are java_home nor jre_home.
+
+Then
+
+. CATALINA_BASE/bin/setenv.sh - in our docker case, no such file, skip
+
+Then
+
+. CATALINA_HOME/bin/setenv.sh - in our docker case, no such file, skip
+
+If we actually bash in to the container which has successfully started
+tomcat7 (we have /usr/bin/java running), and manually run this:
+
+# /usr/share/tomcat7/bin/catalina.sh debug
+
+it prints
+
+root@e00da203fa82:/# /usr/share/tomcat7/bin/catalina.sh debug
+JAVA_HOME should point to a JDK in order to run in debug mode.
+
+So obviously JAVA_HOME is NOT set at this point??
+
+In bash:
+
+[ -z $FOO ] && X
+
+means only do X if env var FOO NOT set
+
+In catalina.sh, if not CATALINA_HOME set, uses prgname to derive it,
+makes sense.
+
+
+
+
+
+Need Tupelo Dev Guide
+
+Need Tupelo Users Guide
+
+Useful 'debug' mode for Elvis: a built-in 'device', one existing
+solely in memory?? or one which gets content from some canned place??
+Can you mkfs on an in-memory disk???  Useful also for acquire tests.
+
+See e.g.
+
+http://unix.stackexchange.com/questions/66329/creating-a-ram-disk-on-linux
+
+use of tmpfs ????

@@ -20,9 +20,9 @@ import edu.uw.apl.tupelo.model.ManagedDiskDigest;
 import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.model.StreamOptimizedDisk;
 import edu.uw.apl.tupelo.model.UnmanagedDisk;
+import edu.uw.apl.tupelo.model.physical.PhysicalDisk;
+import edu.uw.apl.tupelo.model.virtual.VirtualDisk;
 import edu.uw.apl.tupelo.model.ProgressMonitor;
-import edu.uw.apl.tupelo.model.PhysicalDisk;
-import edu.uw.apl.tupelo.model.VirtualDisk;
 import edu.uw.apl.tupelo.store.Store;
 
 /**
@@ -115,8 +115,7 @@ public class PutData extends CliBase {
 		}
 
 		UnmanagedDisk ud = null;
-		if( false ) {
-		} else if( rawData.getPath().startsWith( "/dev/" ) ) {
+		if( rawData.getPath().startsWith( "/dev/" ) ) {
 			ud = new PhysicalDisk( rawData );
 		} else if( VirtualDisk.likelyVirtualDisk( rawData ) ) {
 			ud = new VirtualDisk( rawData );
@@ -189,7 +188,6 @@ public class PutData extends CliBase {
 		} else {
 			final long sz = ud.size();
 			ProgressMonitor.Callback cb = new ProgressMonitor.Callback() {
-					@Override
 					public void update( long in, long out, long elapsed ) {
 						double pc = in / (double)sz * 100;
 						System.out.print( (int)pc + "% " );

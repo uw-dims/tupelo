@@ -1,12 +1,12 @@
-package edu.uw.apl.tupelo.model;
+package edu.uw.apl.tupelo.model.physical;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.IOException;
 
 import edu.uw.apl.nativelibloader.NativeLoader;
+import edu.uw.apl.tupelo.model.UnmanagedDisk;
 
 /*
   TODO: the JNI code needed for deriving device size in bytes and disk
@@ -49,20 +49,17 @@ public class PhysicalDisk implements UnmanagedDisk {
 		String s = serialNumber( disk.getPath() );
 		if( s != null )
 			s = s.trim();
-		return v + "-" + p + "-" + s;
+		String concat = v + "-" + p + "-" + s;
+		return concat.replaceAll( "\\s", "_" );
 	}
 	
 	@Override
 	public InputStream getInputStream() throws IOException {
-		if( true) {
-			return new FileInputStream( disk );
-		} else {
-			FileInputStream fis = new FileInputStream( disk );
-			int sz = 1024 * 1024 * 32;
-			BufferedInputStream bis = new BufferedInputStream( fis, sz );
-			return bis;
-		}
-			   
+		return new FileInputStream( disk );
+//		FileInputStream fis = new FileInputStream( disk );
+//		int sz = 1024 * 1024 * 32;
+//		BufferedInputStream bis = new BufferedInputStream( fis, sz );
+//		return bis;
 	}
 
 	@Override

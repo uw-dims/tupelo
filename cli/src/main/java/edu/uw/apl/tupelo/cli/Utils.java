@@ -3,7 +3,6 @@ package edu.uw.apl.tupelo.cli;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
@@ -45,8 +44,7 @@ public class Utils {
 
 	static public Store buildStore( String storeLocation ) {
 		Store s = null;
-		if( false ) {
-		} else if( storeLocation.equals( "/dev/null" ) ) {
+		if( storeLocation.equals( "/dev/null" ) ) {
 			s = new NullStore();
 		} else if( storeLocation.startsWith( "http" ) ) {
 			s = new HttpStoreProxy( storeLocation );

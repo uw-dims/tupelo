@@ -12,13 +12,14 @@
 
   <groupId>edu.uw.apl</groupId>
   <artifactId>tupelo-parent</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
   <packaging>pom</packaging>
 
   <name>Tupelo Disk Management - Parent</name>
   <url>http://eis.apl.uw.edu</url>
   
   <modules>
+    <module>utils</module>
     <module>model</module>
     <module>logging</module>
     <module>store</module>
@@ -26,6 +27,7 @@
     <module>http</module>
     <module>amqp</module>
     <module>shell</module>
+    <module>cli</module>
   </modules>
 
   <organization>
@@ -57,7 +59,7 @@
       <dependency>
 	<groupId>edu.uw.apl.commons</groupId>
 	<artifactId>tsk4j-digests</artifactId>
-	<version>413.2.0</version>
+	<version>413.3.0</version>
       </dependency>
       <dependency>
 	<groupId>commons-cli</groupId>
@@ -142,7 +144,7 @@
       <plugin>
 	<groupId>org.apache.maven.plugins</groupId>
 	<artifactId>maven-install-plugin</artifactId>
-	<version>2.5.2</version>
+	<version>2.5.2</version><!--$NO-MVN-MAN-VER$-->
       </plugin>
       <plugin>
 	<groupId>org.apache.maven.plugins</groupId>

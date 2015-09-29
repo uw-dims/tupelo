@@ -1,4 +1,4 @@
-#include "edu_uw_apl_tupelo_model_PhysicalDisk.h"
+#include "edu_uw_apl_tupelo_model_physical_PhysicalDisk.h"
 
 #include "impl.h"
 
@@ -9,11 +9,11 @@
 */
 
 /*
- * Class:     edu_uw_apl_tupelo_model_PhysicalDisk
+ * Class:     edu_uw_apl_tupelo_model_physical_PhysicalDisk
  * Method:    size
  * Signature: (Ljava/lang/String;)J
  */
-JNIEXPORT jlong JNICALL Java_edu_uw_apl_tupelo_model_PhysicalDisk_size
+JNIEXPORT jlong JNICALL Java_edu_uw_apl_tupelo_model_physical_PhysicalDisk_size
 (JNIEnv *env, jobject thiz, jstring path ) {
 
   char* pathC = (char*)(*env)->GetStringUTFChars( env, path, NULL );
@@ -29,11 +29,11 @@ JNIEXPORT jlong JNICALL Java_edu_uw_apl_tupelo_model_PhysicalDisk_size
 }
 
 /*
- * Class:     edu_uw_apl_tupelo_model_PhysicalDisk
+ * Class:     edu_uw_apl_tupelo_model_physical_PhysicalDisk
  * Method:    vendorID
  * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_edu_uw_apl_tupelo_model_PhysicalDisk_vendorID
+JNIEXPORT jstring JNICALL Java_edu_uw_apl_tupelo_model_physical_PhysicalDisk_vendorID
 (JNIEnv *env, jobject thiz, jstring path ) {
 
   char* pathC = (char*)(*env)->GetStringUTFChars( env, path, NULL );
@@ -53,11 +53,11 @@ JNIEXPORT jstring JNICALL Java_edu_uw_apl_tupelo_model_PhysicalDisk_vendorID
 }
 
 /*
- * Class:     edu_uw_apl_tupelo_model_PhysicalDisk
+ * Class:     edu_uw_apl_tupelo_model_physical_PhysicalDisk
  * Method:    productID
  * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_edu_uw_apl_tupelo_model_PhysicalDisk_productID
+JNIEXPORT jstring JNICALL Java_edu_uw_apl_tupelo_model_physical_PhysicalDisk_productID
 (JNIEnv *env, jobject thiz, jstring path ) {
 
   char* pathC = (char*)(*env)->GetStringUTFChars( env, path, NULL );
@@ -77,11 +77,11 @@ JNIEXPORT jstring JNICALL Java_edu_uw_apl_tupelo_model_PhysicalDisk_productID
 }
 
 /*
- * Class:     edu_uw_apl_tupelo_model_PhysicalDisk
+ * Class:     edu_uw_apl_tupelo_model_physical_PhysicalDisk
  * Method:    serialNumber
  * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_edu_uw_apl_tupelo_model_PhysicalDisk_serialNumber
+JNIEXPORT jstring JNICALL Java_edu_uw_apl_tupelo_model_physical_PhysicalDisk_serialNumber
 (JNIEnv *env, jobject thiz, jstring path ) {
 
   char* pathC = (char*)(*env)->GetStringUTFChars( env, path, NULL );

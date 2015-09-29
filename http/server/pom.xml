@@ -7,12 +7,12 @@
   <parent>
     <groupId>edu.uw.apl</groupId>
     <artifactId>tupelo-http-parent</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
   </parent>
 
   <groupId>edu.uw.apl</groupId>
   <artifactId>tupelo-http-server</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
   <packaging>war</packaging>
   <name>Tupelo Disk Management - Http Store Servlet</name>
 
@@ -41,6 +41,18 @@
     </dependency>
 
     <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>tupelo-utils</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+	<dependency>
+	    <groupId>javax.servlet</groupId>
+	    <artifactId>jstl</artifactId>
+	    <version>1.2</version>
+	</dependency>
+
+    <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
       <version>2.4</version>
@@ -65,6 +77,16 @@
 	 will not be able to locate the artifact by name.
     -->
     <finalName>tupelo</finalName>
+
+    <resources>
+      <resource>
+	<directory>src/main/resources</directory>
+	<filtering>true</filtering>
+      </resource>
+    </resources>
+    <filters>
+      <filter>filter.properties</filter>
+    </filters>
 
     <plugins>
       <plugin>

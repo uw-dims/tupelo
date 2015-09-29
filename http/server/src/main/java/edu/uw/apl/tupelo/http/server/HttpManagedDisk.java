@@ -4,19 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.IOUtils;
 
 import edu.uw.apl.tupelo.model.ManagedDisk;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.model.ManagedDiskDigest;
 import edu.uw.apl.tupelo.model.SeekableInputStream;
-import edu.uw.apl.tupelo.model.Session;
-import edu.uw.apl.tupelo.store.Store;
 
 
 /**

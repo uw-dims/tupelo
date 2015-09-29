@@ -1,10 +1,6 @@
 package edu.uw.apl.tupelo.fuse;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-
-import fuse.FuseMount;
 
 import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.model.DiskImage;

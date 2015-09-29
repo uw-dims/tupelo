@@ -1,6 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 
 DIRNAME=`dirname $0`
+INSTALL_PATH="/opt/tupelo"
+
+# Check if the script was run from under the install path
+if [[ "$DIRNAME" =~ "$INSTALL_PATH" ]]; then
+   # The tupelo jars will be installed under $INSTALL_PATH/lib
+   DIRNAME="$INSTALL_PATH/lib/"
+else
+   # Running in the maven project directory. The jar is in the target/ directory
+   DIRNAME=$DIRNAME/target
+fi
 
 ARTIFACT=tupelo-shell
 
@@ -8,8 +18,8 @@ ARTIFACT=tupelo-shell
 # hard-coding it here, we locate the jar with the LATEST version. Thus
 # we always run the LATEST code, should many versions be present.
 
-JARNAME=`ls target | grep $ARTIFACT | sort -n -r | head -1`
-JARPATH=$DIRNAME/target/$JARNAME
+JARNAME=`ls $DIRNAME | grep $ARTIFACT | sort -n -r | head -1`
+JARPATH=$DIRNAME/$JARNAME
 
 PACKAGE=edu.uw.apl.tupelo.shell
 #CLAZZ=Main
@@ -18,9 +28,10 @@ CLAZZ=JLine
 
 # Have to align the log4j.properties file with the jars.  
 # Don't keep it in ./target (mvn clean!)
-[ -d $DIRNAME/target ] && cp $DIRNAME/log4j.properties $DIRNAME/target/
+[ ! -f $DIRNAME/log4j.properties ] && cp $DIRNAME/../log4j.properties $DIRNAME/
+
+# echo "Using DIRNAME $DIRNAME"
 
 # This codebase built using JDK 1.7 and requires a JRE 1.7 also...
 exec java $JAVA_OPTS -classpath $JARPATH $PACKAGE.$CLAZZ "$@"
 
-# eof

@@ -1,46 +1,30 @@
 package edu.uw.apl.tupelo.http.server;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.File;
-import java.io.OutputStream;
-import java.io.ObjectOutputStream;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.Map;
-import java.util.UUID;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.uw.apl.tupelo.model.ManagedDisk;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
 import edu.uw.apl.tupelo.store.tools.BodyFile;
 import edu.uw.apl.tupelo.store.tools.HashFS;
 import edu.uw.apl.tupelo.store.tools.HashVS;
-import edu.uw.apl.tupelo.store.tools.HashFS;
 import edu.uw.apl.tupelo.fuse.ManagedDiskFileSystem;
 
 
@@ -68,7 +52,12 @@ import edu.uw.apl.tupelo.fuse.ManagedDiskFileSystem;
  */
 public class ToolsServlet extends HttpServlet {
 
-    public void init( ServletConfig config ) throws ServletException {
+    /**
+	 * Auto-generated
+	 */
+	private static final long serialVersionUID = -749326173154269410L;
+	
+	public void init( ServletConfig config ) throws ServletException {
         super.init( config );
 		log = LogFactory.getLog( getClass().getPackage().getName() );
 
@@ -82,7 +71,7 @@ public class ToolsServlet extends HttpServlet {
 		  Unlike other servlets which use just the Store api, we HAVE to
 		  view it as a FilesystemStore, to be able to invoke e.g. computeDigest()
 		*/
-		store = (FilesystemStore)sc.getAttribute( ContextListener.STOREKEY );
+		store = (FilesystemStore)sc.getAttribute( ContextListener.STORE_KEY );
 
 	}
 	
@@ -94,8 +83,7 @@ public class ToolsServlet extends HttpServlet {
 		String pi = req.getPathInfo();
 		log.debug( "Get.PathInfo: " + pi );
 
-		if( false ) {
-		} else if( pi == null || pi.equals( "/" ) ) {
+		if( pi == null || pi.equals( "/" ) ) {
 			list( req, res );
 		} else {
 			res.sendError( HttpServletResponse.SC_NOT_FOUND,
@@ -115,8 +103,7 @@ public class ToolsServlet extends HttpServlet {
 		String pi = req.getPathInfo();
 		log.debug( "Post.PathInfo: " + pi );
 
-		if( false ) {
-		} else if( pi.startsWith( "/digest/" ) ) {
+		if( pi.startsWith( "/digest/" ) ) {
 			String details = pi.substring( "/digest/".length() );
 			computeDigest( req, res, details );
 		} else if( pi.startsWith( "/hashvs/" ) ) { 
@@ -305,10 +292,10 @@ public class ToolsServlet extends HttpServlet {
 	private synchronized ManagedDiskFileSystem getMDFS() {
 		ServletContext sc = this.getServletContext();
 		ManagedDiskFileSystem mdfs = (ManagedDiskFileSystem)
-			sc.getAttribute( ContextListener.MDFSOBJKEY );
+			sc.getAttribute( ContextListener.MDFS_OBJ_KEY );
 		if( mdfs == null ) {
 			File dataRoot = (File)sc.getAttribute
-				( ContextListener.DATAROOTKEY );
+				( ContextListener.DATA_ROOT_KEY );
 			File mountPoint = new File( dataRoot, "mdfs" );
 			mountPoint.mkdirs();
 			mdfs = new ManagedDiskFileSystem( store );
@@ -327,8 +314,8 @@ public class ToolsServlet extends HttpServlet {
 			  Make both the mdfs object AND mount point available
 			  for clean up at context destroy time
 			*/
-			sc.setAttribute( ContextListener.MDFSOBJKEY, mdfs );
-			sc.setAttribute( ContextListener.MDFSMOUNTKEY, mountPoint );
+			sc.setAttribute( ContextListener.MDFS_OBJ_KEY, mdfs );
+			sc.setAttribute( ContextListener.MDFS_MOUNT_KEY, mountPoint );
 		}
 		return mdfs;
 	}

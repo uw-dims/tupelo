@@ -6,6 +6,7 @@ package edu.uw.apl.tupelo.model;
  * grainSize and grainTableSize are powers of 2.  Then, div and mod
  * can be replaced by shifts and masks.  Validate this logic
  */
+
 public class GrainArithmeticTest extends junit.framework.TestCase {
 
 	public void test32m() {
@@ -38,10 +39,8 @@ public class GrainArithmeticTest extends junit.framework.TestCase {
 			long gOffset = inTable & (grainSizeBytes - 1);
 			long l2 = (gdIndex << log2GrainTableSize) +
 				(gtIndex << log2GrainSize) + gOffset;
-			if( false ) {
-				System.out.println( l + " " + gdIndex + " " + gtIndex + " " +
-									gOffset + " " + l2 );
-			}
+//			System.out.println( l + " " + gdIndex + " " + gtIndex + " " +
+//								gOffset + " " + l2 );
 			assertEquals( l, l2 );
 		}
 	}

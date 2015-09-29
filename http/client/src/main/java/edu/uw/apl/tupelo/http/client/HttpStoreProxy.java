@@ -1,43 +1,26 @@
 package edu.uw.apl.tupelo.http.client;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
-//import java.io.*;
-import java.net.URI;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
-import org.apache.http.Header;
-import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpParams;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,6 +37,7 @@ import edu.uw.apl.tupelo.store.Store;
  * Connects to the http.server.StoreServlet.  Kind of like an RMI
  * stub.
  */
+@SuppressWarnings({"deprecation", "resource", "unused"})
 public class HttpStoreProxy implements Store {
 
 	public HttpStoreProxy( String s ) {
@@ -294,6 +278,7 @@ public class HttpStoreProxy implements Store {
 	}
 
 		
+	@SuppressWarnings("unchecked")
 	@Override
 	public Collection<String> listAttributes( ManagedDiskDescriptor mdd )
 		throws IOException {
@@ -365,6 +350,7 @@ public class HttpStoreProxy implements Store {
 		throw new UnsupportedOperationException( "HttpStoreProxy.locate" );
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Collection<ManagedDiskDescriptor> enumerate() throws IOException {
 		HttpGet g = new HttpGet( server + "disks/data/enumerate" );

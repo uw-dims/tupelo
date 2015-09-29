@@ -3,10 +3,7 @@ package edu.uw.apl.tupelo.amqp.objects;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gson.*;
-
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
-import edu.uw.apl.tupelo.model.Session;
 
 /**
  * For transmission, a FileHashResponse is always wrapped in an

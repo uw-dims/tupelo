@@ -1,4 +1,4 @@
-package edu.uw.apl.tupelo.model;
+package edu.uw.apl.tupelo.model.physical;
 
 import java.io.File;
 import java.io.InputStream;
@@ -43,8 +43,7 @@ public class ReadTest extends junit.framework.TestCase {
 		byte[] ba = new byte[1024*1024];
 		InputStream is = pd.getInputStream();
 		CountingInputStream cis = new CountingInputStream( is ); 
-		int nin = 0;
-		while( (nin = cis.read( ba )) != -1 )
+		while( cis.read( ba ) != -1 )
 			;
 		cis.close();
 		long actual = cis.getByteCount();

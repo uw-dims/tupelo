@@ -8,11 +8,8 @@ import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.LogManager;
 
-import edu.uw.apl.tupelo.model.FlatDisk;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
-import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.store.Store;
-import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
 
 /**
  * Simple Tupelo Utility: Add an attribute to a local Tupelo

@@ -7,7 +7,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.DigestInputStream;
-import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -22,20 +21,18 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.LogManager;
 
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
-import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.store.Store;
-import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
 import edu.uw.apl.tupelo.fuse.ManagedDiskFileSystem;
 
-import edu.uw.apl.commons.sleuthkit.image.Image;
-import edu.uw.apl.commons.sleuthkit.filesys.Attribute;
-import edu.uw.apl.commons.sleuthkit.filesys.Meta;
-import edu.uw.apl.commons.sleuthkit.filesys.FileSystem;
-import edu.uw.apl.commons.sleuthkit.filesys.DirectoryWalk;
-import edu.uw.apl.commons.sleuthkit.filesys.Walk;
-import edu.uw.apl.commons.sleuthkit.filesys.WalkFile;
-import edu.uw.apl.commons.sleuthkit.volsys.Partition;
-import edu.uw.apl.commons.sleuthkit.volsys.VolumeSystem;
+import edu.uw.apl.commons.tsk4j.image.Image;
+import edu.uw.apl.commons.tsk4j.filesys.Attribute;
+import edu.uw.apl.commons.tsk4j.filesys.Meta;
+import edu.uw.apl.commons.tsk4j.filesys.FileSystem;
+import edu.uw.apl.commons.tsk4j.filesys.DirectoryWalk;
+import edu.uw.apl.commons.tsk4j.filesys.Walk;
+import edu.uw.apl.commons.tsk4j.filesys.WalkFile;
+import edu.uw.apl.commons.tsk4j.volsys.Partition;
+import edu.uw.apl.commons.tsk4j.volsys.VolumeSystem;
 
 /**
  * Simple Tupelo Utility: Hash some previously added ManagedDisk,
@@ -113,9 +110,9 @@ public class HashData extends CliBase {
 		Collection<ManagedDiskDescriptor> stored = store.enumerate();
 		System.out.println( "Stored: " + stored );
 
-		ManagedDiskDescriptor mdd = Utils.locateDescriptor( store, diskID,
+		ManagedDiskDescriptor managedDiskDescriptor = Utils.locateDescriptor( store, diskID,
 															sessionID );
-		if( mdd == null ) {
+		if( managedDiskDescriptor == null ) {
 			System.err.println( "Not stored: " + diskID + "," + sessionID );
 			System.exit(1);
 		}
@@ -143,20 +140,20 @@ public class HashData extends CliBase {
 		// LOOK: wait for the fuse mount to finish.  Grr hate arbitrary sleeps!
 		Thread.sleep( 1000 * 2 );
 
-		File f = mdfs.pathTo( mdd );
-		System.out.println( "Located Managed Data: " + f );
-		Image i = new Image( f );
+		File mountedFile = mdfs.pathTo( managedDiskDescriptor );
+		System.out.println( "Located Managed Data: " + mountedFile );
+		Image image = new Image( mountedFile );
 
-		System.out.println( "Trying volume system on " + f );
+		System.out.println( "Trying volume system on " + mountedFile );
 		try {
-			boolean b = walkVolumeSystem( i );
+			boolean b = walkVolumeSystem( image );
 			if( !b ) {
-				System.out.println( "Trying file system on " + f );
-				walkFileSystem( i );
+				System.out.println( "Trying file system on " + mountedFile );
+				walkFileSystem( image );
 			}
 		} finally {
 			// MUST release i else leaves mdfs non-unmountable
-			i.close();
+			image.close();
 		}
 	}
 	
@@ -166,39 +163,44 @@ public class HashData extends CliBase {
 	 * otherwise.  False result lets us try the image as a standalone
 	 * filesystem
 	 */
-	private boolean walkVolumeSystem( Image i ) throws Exception {
+	private boolean walkVolumeSystem( Image image ) throws Exception {
 
-		VolumeSystem vs = null;
+		VolumeSystem volumeSystem = null;
 		try {
-			vs = new VolumeSystem( i );
+			volumeSystem = new VolumeSystem( image );
 		} catch( Exception iae ) {
 			return false;
 		}
 		
-		List<Partition> ps = vs.getPartitions();
+		List<Partition> partitions = volumeSystem.getPartitions();
 		try {
-			for( Partition p : ps ) {
-				if( !p.isAllocated() )
+			for( Partition partition : partitions ) {
+				if( !partition.isAllocated() )
 					continue;
-				System.out.println( "At sector " + p.start() +
-									", located " + p.description() );
+				System.out.println( "At sector " + partition.start() +
+									", located " + partition.description() );
 				Map<String,byte[]> fileHashes = new HashMap<String,byte[]>();
-				FileSystem fs = new FileSystem( i, p.start() );
-				walk( fs, fileHashes );
-				fs.close();
+				FileSystem fileSystem = new FileSystem( image, partition.start() );
+				walk( fileSystem, fileHashes );
+				fileSystem.close();
 				System.out.println( " FileHashes : " + fileHashes.size() );
-				record( fileHashes, p.start(), p.length() );
+				record( fileHashes, partition.start(), partition.length() );
 			}
 		} finally {
-			// MUST release vs else leaves mdfs non-unmountable
-			vs.close();
+			// MUST release volumeSystem else leaves mdfs non-unmountable
+			volumeSystem.close();
 		}
 		return true;
 	}
 
-	private void walkFileSystem( Image i ) throws Exception {
+	/**
+	 * Walk and record all the MD5 hashes of an image 
+	 * @param image
+	 * @throws Exception
+	 */
+	private void walkFileSystem( Image image ) throws Exception {
 		Map<String,byte[]> fileHashes = new HashMap<String,byte[]>();
-		FileSystem fs = new FileSystem( i );
+		FileSystem fs = new FileSystem( image );
 		try {
 			walk( fs, fileHashes );
 			System.out.println( "FileHashes: " + fileHashes.size() );
@@ -209,10 +211,17 @@ public class HashData extends CliBase {
 		}
 	}
 	
+	/**
+	 * Walk a mounted filesystem
+	 * @param fs
+	 * @param fileHashes
+	 * @throws Exception
+	 */
 	private void walk( FileSystem fs,
 					   final Map<String,byte[]> fileHashes )
 		throws Exception {
-		DirectoryWalk.Callback cb = new DirectoryWalk.Callback() {
+		
+		DirectoryWalk.Callback callBack = new DirectoryWalk.Callback() {
 				public int apply( WalkFile f, String path ) {
 					try {
 						process( f, path, fileHashes );
@@ -228,51 +237,71 @@ public class HashData extends CliBase {
 		flags |= DirectoryWalk.FLAG_ALLOC;
 		flags |= DirectoryWalk.FLAG_RECURSE;
 		flags |= DirectoryWalk.FLAG_NOORPHAN;
-		fs.dirWalk( fs.rootINum(), flags, cb );
+		fs.dirWalk( fs.rootINum(), flags, callBack );
 		fs.close();
 	}
 
-	private void process( WalkFile f, String path,
+	/**
+	 * Process and get the MD5 hash for a file
+	 * @param file the file
+	 * @param path the file's path
+	 * @param fileHashes the map to store the hash
+	 * @throws IOException
+	 */
+	private void process( WalkFile file, String path,
 						  Map<String,byte[]> fileHashes )
 		throws IOException {
 
-		String name = f.getName();
+		String name = file.getName();
 		if( name == null )
 			return;
 		if(	"..".equals( name ) || ".".equals( name ) ) {
 			return;
 		}
-		Meta m = f.meta();
-		if( m == null )
+		Meta metaData = file.meta();
+		if( metaData == null )
 			return;
 		// LOOK: hash directories too ??
-		if( m.type() != Meta.TYPE_REG )
+		if( metaData.type() != Meta.TYPE_REG )
 			return;
-		Attribute defa = f.getAttribute();
+		Attribute attribute = file.getAttribute();
 		// Seen some weirdness where an allocated file has no attribute(s) ??
-		if( defa == null )
+		if( attribute == null )
 			return;
 
 		if( debug )
 			System.out.println( "'" + path + "' '" + name + "'" );
 
 		String wholeName = path + name;
-		byte[] digest = digest( defa );
+		// Put the has in the map
+		byte[] digest = digest( attribute );
 		fileHashes.put( wholeName, digest );
 	}
 	
-	private byte[] digest( Attribute a ) throws IOException {
+	/**
+	 * Get the MD5 has of an attribute
+	 * @param attribute
+	 * @return
+	 * @throws IOException
+	 */
+	private byte[] digest( Attribute attribute ) throws IOException {
 		MD5.reset();
-		InputStream is = a.getInputStream();
-		DigestInputStream dis = new DigestInputStream( is, MD5 );
+		InputStream inputStream = attribute.getInputStream();
+		DigestInputStream digestInputStream = new DigestInputStream( inputStream, MD5 );
 		while( true ) {
-			int nin = dis.read( DIGESTBUFFER );
-			if( nin < 0 )
+			if( digestInputStream.read( DIGESTBUFFER ) < 0 )
 				break;
 		}
 		return MD5.digest();
 	}
 	
+	/**
+	 * Write all the hashes and info about this session to a file
+	 * @param fileHashes the file/hash pairs to write
+	 * @param start
+	 * @param length
+	 * @throws Exception
+	 */
 	private void record( Map<String,byte[]> fileHashes,
 						 long start, long length )
 		throws Exception {
@@ -283,15 +312,18 @@ public class HashData extends CliBase {
 			start + "-" + length + ".md5";
 		System.out.println( "Writing: " + outName );
 		
-		FileWriter fw = new FileWriter( outName );
-		BufferedWriter bw = new BufferedWriter( fw, 1024 * 1024 );
-		PrintWriter pw = new PrintWriter( bw );
+		// Write all the data out
+		FileWriter fileWriter = new FileWriter( outName );
+		BufferedWriter bufferedWrite = new BufferedWriter( fileWriter, 1024 * 1024 );
+		PrintWriter printWriter = new PrintWriter( bufferedWrite );
 		for( String fName : sorted ) {
 			byte[] hash = fileHashes.get( fName );
 			String s = new String( Hex.encodeHex( hash ) );
-			pw.println( s + " " + fName );
+			printWriter.println( s + " " + fName );
 		}
-		pw.close();
+		// Flush and close everything
+		printWriter.flush();
+		printWriter.close();
 	}
 	
 

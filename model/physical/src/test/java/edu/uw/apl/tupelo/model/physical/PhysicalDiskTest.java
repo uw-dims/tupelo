@@ -1,7 +1,8 @@
-package edu.uw.apl.tupelo.model;
+package edu.uw.apl.tupelo.model.physical;
 
 import java.io.File;
 
+@SuppressWarnings("unused")
 public class PhysicalDiskTest extends junit.framework.TestCase {
 
 	public void testNull() {

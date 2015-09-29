@@ -4,14 +4,13 @@
   <parent>
     <groupId>edu.uw.apl</groupId>
     <artifactId>tupelo-parent</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.1</version>
   </parent>
 
   <groupId>edu.uw.apl</groupId>
   <artifactId>tupelo-cli</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.1</version>
   <name>Tupelo Disk Management - Command Line Utilities</name>
-  <url>http://maven.apache.org</url>
 
   <repositories>
     <repository>
@@ -62,9 +61,14 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>tupelo-utils</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>edu.uw.apl.commons</groupId>
       <artifactId>tsk4j-core</artifactId>
-      <version>413.0.2</version>
+      <version>413.3.0</version>
     </dependency>
     <dependency>
       <groupId>commons-cli</groupId>
@@ -88,8 +92,8 @@
 	<groupId>org.apache.maven.plugins</groupId>
 	<artifactId>maven-compiler-plugin</artifactId>
 	<configuration>
-	  <source>1.5</source>
-	  <target>1.5</target>
+	  <source>1.7</source>
+	  <target>1.7</target>
 	</configuration>
       </plugin>
       <plugin>

@@ -7,7 +7,6 @@ import com.google.gson.*;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.DecoderException;
 
-import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.model.Session;
 
 public class JSONSerializers {

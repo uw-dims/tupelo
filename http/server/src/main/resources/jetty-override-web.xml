@@ -3,16 +3,21 @@
 <!DOCTYPE web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN" "http://java.sun.com/dtd/web-app_2_3.dtd">
 
 <web-app>
+<!--
+	The store root should be specified in a way that the Discovery class in tupelo-utils can find it
   <context-param>
     <param-name>dataroot</param-name>
     <param-value>./test-store</param-value>
   </context-param>
+-->
 
+<!--
   <context-param>
     <param-name>amqpbroker</param-name>
     <param-value>
-      amqp://rpc_user:rpcm3pwd@rabbitmq.prisem.washington.edu
+      NOT HERE ANY MORE, see ./tupelo.prp for filtered resource approach
     </param-value>
   </context-param>
+-->
 
 </web-app>

@@ -35,6 +35,11 @@ import org.apache.log4j.Level;
  */
 public class LogLevelServlet extends HttpServlet {
 
+	/**
+	 * Auto-generated
+	 */
+	private static final long serialVersionUID = 6883082352658277783L;
+
 	@Override
     public void init( ServletConfig config ) throws ServletException {
         super.init( config );

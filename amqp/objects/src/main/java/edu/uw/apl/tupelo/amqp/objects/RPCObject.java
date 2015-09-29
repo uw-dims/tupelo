@@ -4,10 +4,6 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import com.google.gson.reflect.TypeToken;
-
 /**
  * DD wants all JSON structures put on the AMQP bus to have this basic content.
  *

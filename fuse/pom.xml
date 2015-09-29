@@ -6,15 +6,14 @@
   <parent>
     <groupId>edu.uw.apl</groupId>
     <artifactId>tupelo-parent</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
   </parent>
 
   <artifactId>tupelo-fuse</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
   <packaging>jar</packaging>
 
   <name>Tupelo Disk Management - Mountable FileSystem via Fuse</name>
-  <url>http://maven.apache.org</url>
 
   <repositories>
     <repository>
@@ -47,9 +46,9 @@
     </dependency>
 
     <dependency>
-      <groupId>edu.uw.apl.commons</groupId>
+      <groupId>fuse4j</groupId>
       <artifactId>fuse4j-core</artifactId>
-      <version>2400.0.1</version>
+      <version>3.0.0</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>

@@ -2,13 +2,11 @@ package edu.uw.apl.tupelo.model;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
@@ -18,16 +16,12 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 import java.util.UUID;
-import java.util.zip.Deflater;;
+import java.util.zip.Deflater;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-
-import org.apache.commons.io.FileUtils;
-
 
 import org.xerial.snappy.Snappy;
 
@@ -50,7 +44,7 @@ import org.xerial.snappy.Snappy;
    used by inputstreams, seekableinputstream.
 
    Now, in writing, we have to write a whole number of grains, even
-   though the lasrt grain may not be able to be 'filled' with
+   though the last grain may not be able to be 'filled' with
    unmanaged data, since it may be at eof.
 
    Do we need to store 512 grains to 'fill' a grain table, or can we
@@ -134,8 +128,11 @@ public class StreamOptimizedDisk extends ManagedDisk {
 		  capacity.
 		*/
 		long capacityGrains = lenAligned / Constants.SECTORLENGTH;
+		// Currently we have just a single sector header...
+		long overhead = 1;
 		header = new Header( diskID, session, DiskTypes.STREAMOPTIMIZED,
-							 parentUUID, capacityGrains, grainSize );
+							 parentUUID, capacityGrains, grainSize,
+							 overhead );
 
 		header.padding = padding;
 		header.dataOffset = Header.SIZEOF;
@@ -282,8 +279,14 @@ public class StreamOptimizedDisk extends ManagedDisk {
 			for( int gt = 0; gt < wholeGrainTables; gt++ ) {
 				log.debug( "GDIndex " + gdIndex );
 				int nin = bis.read( readBuffer );
-				if( nin != readBuffer.length )
+				if( nin != readBuffer.length ){
+					try{
+						dos.close();
+					} catch(Exception e){
+						// Ignore
+					}
 					throw new IllegalStateException( "Partial read!" );
+				}
 				gtIndex = 0;
 
 				if( true ) {
@@ -493,6 +496,7 @@ public class StreamOptimizedDisk extends ManagedDisk {
 				gtIndex++;
 				lba += header.grainSize;
 				written += (grainWrite + padLen);
+
 				if( written % Constants.SECTORLENGTH != 0 )
 					throw new IllegalStateException( "" + written );
 			}
@@ -554,7 +558,7 @@ public class StreamOptimizedDisk extends ManagedDisk {
 
 		// This is the grain directory write...
 		for( int gde = 0; gde < grainDirectory.length; gde++ ) {
-			log.debug( "GD: " + gde + " "+ grainDirectory[gde] );
+			log.debug( "GD: " + gde + " " + grainDirectory[gde] );
 			dos.writeInt( (int)grainDirectory[gde] );
 		}
 		written += (4 * grainDirectory.length);
@@ -580,6 +584,9 @@ public class StreamOptimizedDisk extends ManagedDisk {
 		mdm.writeTo( dos );
 		written += MetadataMarker.SIZEOF;
 		
+		if( written % Constants.SECTORLENGTH != 0 )
+			throw new IllegalStateException( "" + written );
+
 		ByteArrayOutputStream hdr = new ByteArrayOutputStream();
 		header.writeTo( hdr );
 		ByteArrayInputStream ftr = new ByteArrayInputStream( hdr.toByteArray() );
@@ -588,11 +595,17 @@ public class StreamOptimizedDisk extends ManagedDisk {
 		footer.writeTo( (DataOutput)dos );
 		written += Header.SIZEOF;
 		
+		if( written % Constants.SECTORLENGTH != 0 )
+			throw new IllegalStateException( "" + written );
+		
 		// Finally, the end-of-stream marker
 		mdm = new MetadataMarker( 0, MetadataMarker.TYPE_EOS );
 		mdm.writeTo( dos );
 		written += MetadataMarker.SIZEOF;
 					 
+		if( written % Constants.SECTORLENGTH != 0 )
+			throw new IllegalStateException( "" + written );
+
 		log.info( "Written " + written );
 		dos.flush();
 		bis.close();
@@ -768,6 +781,7 @@ public class StreamOptimizedDisk extends ManagedDisk {
 	 *
 	 * @throws IllegalStateException
 	 */
+	@SuppressWarnings("unused")
 	@Override
 	public void verify() throws IOException  {
 		if( managedData == null )
@@ -775,7 +789,9 @@ public class StreamOptimizedDisk extends ManagedDisk {
 		RandomAccessFile raf = new RandomAccessFile( managedData, "r" );
 		try {
 			raf.seek( raf.length() - 2 * Constants.SECTORLENGTH );
+			// Read the header from the last -1 sector
 			Header h = new Header( raf );
+			// Now the last sector should be all 0
 			byte[] ba = new byte[Constants.SECTORLENGTH];
 			raf.readFully( ba );
 			for( int i = 0; i < ba.length; i++ ) {
@@ -819,6 +835,11 @@ public class StreamOptimizedDisk extends ManagedDisk {
 		case SNAPPY:
 			result = Snappy.compress( ba, offset, len, output, 0 );
 			break;
+		case NONE:
+			// No compression
+			return len - offset;
+		default:
+			break;
 		}
 		return result;
 	}
@@ -851,12 +872,15 @@ public class StreamOptimizedDisk extends ManagedDisk {
 			result = total;
 			break;
 		case SNAPPY:
-			if( true ) {
-				if( !Snappy.isValidCompressedBuffer( ba, offset, len ) )
+			if( !Snappy.isValidCompressedBuffer( ba, offset, len ) ){
 				throw new DataFormatException( "!isValidCompressedBuffer" );
 			}
 			result = Snappy.uncompress( ba, offset, len, output, 0 );
 			// to do
+			break;
+		case NONE:
+			break;
+		default:
 			break;
 		}
 		return result;
@@ -955,8 +979,7 @@ public class StreamOptimizedDisk extends ManagedDisk {
 			while( total < actual ) {
 				int left = actual - total;
 				long[] gt = grainDirectory[gdIndex];
-				if( false ) {
-				} else if( gt == ZEROGDE ) {
+				if( gt == ZEROGDE ) {
 					if( log.isDebugEnabled() )
 						log.debug( "Zero GD : " + gdIndex );
 					int grainTableOffset = (int)
@@ -984,8 +1007,7 @@ public class StreamOptimizedDisk extends ManagedDisk {
 								   inGrain +
 								   " " + fromGrain );
 					long gte = gt[gtIndex];
-					if( false ) {
-					} else if( gte == 0 ) {
+					if( gte == 0 ) {
 						if( log.isDebugEnabled() )
 							log.debug( "Zero GT : "+ gdIndex + " " + gtIndex );
 						System.arraycopy( zeroGrain, 0,
@@ -1151,6 +1173,7 @@ public class StreamOptimizedDisk extends ManagedDisk {
 			dos.writeInt( type );
 			dos.write( PADDING );
 		}
+		@SuppressWarnings("unused")
 		static MetadataMarker readFrom( DataInput di ) throws IOException {
 			long numSectors = di.readLong();
 			int size = di.readInt();

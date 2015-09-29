@@ -1,0 +1,70 @@
+Packages needed:
+squashfs-tools
+
+
+ISO files are read only, so you have to extract the files, make modifications, then repack it back into an ISO
+You should only need to extract the ISO once. All the modifications are to the squashfs file in the next section.
+
+
+Extracting:
+
+# Create a mount point and mount the ISO
+mkdir iso
+sudo mount -o loop <SOURCE>.iso iso
+# Create a folder for storing the extracted files
+mkdir extracted
+# Copy everything
+cp -r iso/ extracted
+# Unmount
+sudo umount iso
+
+The Caine ISO uses a squashfs file as the filesystem, which is yet another read only FS
+The file is 'casper/filesystem.squashfs'
+Modifing this requires the 'squashfs-tools' package
+
+Resources:
+http://unix.stackexchange.com/questions/80305/mounting-a-squashfs-filesystem-in-read-write
+
+Extracting the FS:
+
+mkdir ~/work
+cp filesystem.squashfs ~/work
+
+# BACK UP THE ORIGINAL SOMEWHERE
+mkdir ~/backup
+cp filesystem.squashfs ~/backup
+
+# Exctact the FS
+cd ~/work
+# Run this as root to prevent any permission errors
+sudo unsquashfs filesystem.squashfs
+# Twiddle thumbs, get coffee, or do something while this is chugging away
+# Note: Uncompressed is 2.5x larger (5.5GB vs 1.8GB compressed)
+
+Make any changes you want
+
+Changes I made:
+Installed tupelo files under /opt
+Added the bin/ folder tot he path in /etc/environment
+Added the caine user to the disks group via /etc/groups (This allows the user to access /dev/sda and so on without elivated permissions)
+
+MAKE SURE THAT PERMISSIONS ARE CORRECT. squashfs preserves the permissions as they are
+
+Repack the FS:
+# If the old filesystem.squashfs is still there, mksquashfs tries to apply your
+# changes against the original. This creates duplicates of most directories
+# Just delete the old one to force the creation of a new file
+rm filesystem.squashfs
+sudo mksquashfs squashfs-root/ filesystem.squashfs
+
+
+Replace the original filesystem.squashfs with the new modified version
+Rebuild the ISO:
+mkisofs -o ../caine-tupelo.iso -b isolinux/isolinux.bin -c isolinux/boot.cat 
+-no-emul-boot -boot-load-size 4 -boot-info-table -J -R -V "Caine - Tupelo" .
+
+
+Create bootable USB however you want (I usually use unetbootin)
+
+FOR FASTER TESTING:
+Once you have a bootable USB made, just update the filesystem.squashfs file on the drive. No need to re-create the ISO or anything

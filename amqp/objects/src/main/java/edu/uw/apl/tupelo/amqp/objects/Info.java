@@ -1,7 +1,6 @@
 package edu.uw.apl.tupelo.amqp.objects;
 
 import com.google.gson.Gson;
-import org.apache.commons.codec.binary.Hex;
 
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.model.Session;
