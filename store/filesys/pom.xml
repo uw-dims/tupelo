@@ -57,6 +57,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <artifactId>tupelo-store-api</artifactId>
       <version>${project.version}</version>
     </dependency>
+	<dependency>
+		<groupId>org.xerial</groupId>
+		<artifactId>sqlite-jdbc</artifactId>
+		<version>3.8.11.1</version>
+	</dependency>
   </dependencies>
   
   <build>
