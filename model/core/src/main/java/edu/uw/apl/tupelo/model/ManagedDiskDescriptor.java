@@ -64,6 +64,13 @@ import java.util.regex.Pattern;
 */
 
 public class ManagedDiskDescriptor implements java.io.Serializable {
+	static final long serialVersionUID = 2833866706524676569L;
+
+	private final String diskID;
+	private final Session session;
+
+	static public final Pattern DISKIDREGEX = Pattern.compile
+		( "[A-Za-z0-9_:\\-\\. ]+" );
 
 	public ManagedDiskDescriptor( String diskID, Session s ) {
 		this.diskID = diskID;
@@ -100,12 +107,6 @@ public class ManagedDiskDescriptor implements java.io.Serializable {
 		return "(" + getDiskID() + "," +
 			getSession().toString() + ")" ;
 	}
-	
-	private final String diskID;
-	private final Session session;
-
-	static public final Pattern DISKIDREGEX = Pattern.compile
-		( "[A-Za-z0-9_:\\-\\. ]+" );
 
 	/*
 	  For a 'sensible' sort ordering that 'looks good' when displaying
@@ -113,7 +114,6 @@ public class ManagedDiskDescriptor implements java.io.Serializable {
 	  (the disk id) followed by time order sort on WHEN (the session)
 
 	*/
-	
 	static public final Comparator<ManagedDiskDescriptor>
 		DEFAULTCOMPARATOR = new Comparator<ManagedDiskDescriptor>() {
 		@Override
@@ -126,7 +126,7 @@ public class ManagedDiskDescriptor implements java.io.Serializable {
 		}
 	};
 
-	static final long serialVersionUID = 2833866706524676569L;
+
 
 }
 

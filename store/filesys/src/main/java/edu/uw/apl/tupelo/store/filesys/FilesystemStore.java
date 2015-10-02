@@ -483,6 +483,23 @@ public class FilesystemStore implements Store {
 			return null;
 		return FileUtils.readFileToByteArray( inFile );
 	}
+
+    @Override
+    public void putFileHash(ManagedDiskDescriptor mdd, Map<String, byte[]> hashes) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public List<ManagedDiskDescriptor> checkForHash(byte[] hash) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean hasFileHash(ManagedDiskDescriptor mdd) {
+        // TODO Auto-generated method stub
+        return false;
+    }
 	
 	/*********************** Private Implementation *********************/
 	
@@ -647,22 +664,4 @@ public class FilesystemStore implements Store {
 	static String asFileBase( ManagedDiskDescriptor mdd ) {
 		return mdd.getDiskID() + "-" + mdd.getSession().toString();
 	}
-	
-    @Override
-    public void putFileHash(ManagedDiskDescriptor mdd, Map<String, byte[]> hashes) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public List<ManagedDiskDescriptor> checkForHash(byte[] hash) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public boolean hasFileHash(ManagedDiskDescriptor mdd) {
-        // TODO Auto-generated method stub
-        return false;
-    }
 }
