@@ -93,21 +93,21 @@ public interface Store {
 	 * @param mdd
 	 * @param hashes
 	 */
-	public void putFileHash(ManagedDiskDescriptor mdd, Map<String, byte[]> hashes);
+	public void putFileHash(ManagedDiskDescriptor mdd, Map<String, byte[]> hashes) throws IOException;
 
 	/**
 	 * Check if which, if any, managed disks contain the specified MD5 file hash
 	 * @param hash the MD5 hash
 	 * @return the list of ManagedDiskDescriptors that contain the hash
 	 */
-	public List<ManagedDiskDescriptor> checkForHash(byte[] hash);
+	public List<ManagedDiskDescriptor> checkForHash(byte[] hash) throws IOException;
 
 	/**
 	 * Check if the store has the hash of the full filesystem available for the Managed Disk
 	 * @param mdd
 	 * @return
 	 */
-	public boolean hasFileHash(ManagedDiskDescriptor mdd);
+	public boolean hasFileHash(ManagedDiskDescriptor mdd) throws IOException;
 
 	/**
 	 * @return size, in bytes, of the managed disk described by the
