@@ -91,20 +91,24 @@ public class FileHashStore implements Closeable {
 	 * @param mdd
 	 * @throws Exception
 	 */
-	public FileHashStore(File dataDir, ManagedDiskDescriptor mdd) throws Exception{
-		this.mdd = mdd;
-		log.info("FileHashStore for "+mdd);
+	public FileHashStore(File dataDir, ManagedDiskDescriptor mdd) throws IOException{
+		try{
+			this.mdd = mdd;
+			log.info("FileHashStore for "+mdd);
 
-		// Get the file name
-		sqlFile = new File(dataDir, DB_FILE);
-		// If the file doesn't already exist, set up the tables
-		boolean setup = !sqlFile.exists();
+			// Get the file name
+			sqlFile = new File(dataDir, DB_FILE);
+			// If the file doesn't already exist, set up the tables
+			boolean setup = !sqlFile.exists();
 
-		// Open a connection
-		connection = DriverManager.getConnection("jdbc:sqlite:"+sqlFile.getAbsolutePath());
+			// Open a connection
+			connection = DriverManager.getConnection("jdbc:sqlite:"+sqlFile.getAbsolutePath());
 
-		if(setup){
-			init();
+			if(setup){
+				init();
+			}
+		} catch(SQLException e){
+			throw new IOException(e);
 		}
 	}
 
@@ -113,17 +117,21 @@ public class FileHashStore implements Closeable {
 	 * @return
 	 * @throws Exception
 	 */
-	public boolean hasData() throws Exception {
-		PreparedStatement count = connection.prepareStatement(COUNT_STATEMENT);
-		ResultSet result = count.executeQuery();
-		return result.getInt(1) > 0;
+	public boolean hasData() throws IOException {
+		try{
+			PreparedStatement count = connection.prepareStatement(COUNT_STATEMENT);
+			ResultSet result = count.executeQuery();
+			return result.getInt(1) > 0;
+		} catch(SQLException e){
+			throw new IOException(e);
+		}
 	}
 
 	/**
 	 * Add all the hashes in the (Filename, hash) map to the database
 	 * @param hashes
 	 */
-	public void addAllHashes(Map<String, byte[]> hashes) throws Exception {
+	public void addAllHashes(Map<String, byte[]> hashes) throws IOException {
 		log.debug("Adding file hashes for disk "+mdd);
 		// Add everything
 		for(String key : hashes.keySet()){
@@ -136,12 +144,16 @@ public class FileHashStore implements Closeable {
 	 * @param hash
 	 * @return
 	 */
-	public boolean containsFileHash(byte[] hash) throws Exception {
-		PreparedStatement query = connection.prepareStatement(COUNT_HASH_STATEMENT);
-		query.setBytes(1, hash);
-		ResultSet result = query.executeQuery();
-		// If the count is != 0, the hash is in there
-		return result.getInt(1) != 0;
+	public boolean containsFileHash(byte[] hash) throws IOException {
+		try{
+			PreparedStatement query = connection.prepareStatement(COUNT_HASH_STATEMENT);
+			query.setBytes(1, hash);
+			ResultSet result = query.executeQuery();
+			// If the count is != 0, the hash is in there
+			return result.getInt(1) != 0;
+		} catch(SQLException e){
+			throw new IOException(e);
+		}
 	}
 
 	/**
@@ -150,11 +162,15 @@ public class FileHashStore implements Closeable {
 	 * @param hash
 	 * @throws SQLException
 	 */
-	public void addHash(String fileName, byte[] hash) throws Exception {
-		PreparedStatement insert = connection.prepareStatement(INSERT_STATEMENT);
-		insert.setString(1, fileName);
-		insert.setBytes(2, hash);
-		insert.execute();
+	public void addHash(String fileName, byte[] hash) throws IOException {
+		try{
+			PreparedStatement insert = connection.prepareStatement(INSERT_STATEMENT);
+			insert.setString(1, fileName);
+			insert.setBytes(2, hash);
+			insert.execute();
+		} catch(SQLException e){
+			throw new IOException(e);
+		}
 	}
 
 	/**

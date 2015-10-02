@@ -485,23 +485,42 @@ public class FilesystemStore implements Store {
 	}
 
     @Override
-    public void putFileHash(ManagedDiskDescriptor mdd, Map<String, byte[]> hashes) {
-        // TODO Auto-generated method stub
+    public void putFileHash(ManagedDiskDescriptor mdd, Map<String, byte[]> hashes) throws IOException {
+        FileHashStore store = getHashStore(mdd);
+        store.addAllHashes(hashes);
     }
 
     @Override
-    public List<ManagedDiskDescriptor> checkForHash(byte[] hash) {
-        // TODO Auto-generated method stub
-        return null;
+    public List<ManagedDiskDescriptor> checkForHash(byte[] hash) throws IOException {
+        Collection<ManagedDiskDescriptor> disks = enumerate();
+        List<ManagedDiskDescriptor> matchingDisks = new ArrayList<ManagedDiskDescriptor>(disks.size());
+        // Iterate over the disks and see if they have a matching hash
+        for (ManagedDiskDescriptor mdd : disks) {
+            FileHashStore store = getHashStore(mdd);
+            if (store.containsFileHash(hash)) {
+                matchingDisks.add(mdd);
+            }
+        }
+        return matchingDisks;
     }
 
     @Override
-    public boolean hasFileHash(ManagedDiskDescriptor mdd) {
-        // TODO Auto-generated method stub
-        return false;
+    public boolean hasFileHash(ManagedDiskDescriptor mdd) throws IOException {
+        FileHashStore store = getHashStore(mdd);
+        return store.hasData();
     }
 	
 	/*********************** Private Implementation *********************/
+
+    /**
+     * Get the FileHashStore associated with the managed disk
+     * @param mdd
+     * @return
+     * @throws Exception
+     */
+    private FileHashStore getHashStore(ManagedDiskDescriptor mdd) throws IOException {
+        return new FileHashStore(diskDir(root, mdd), mdd);
+    }
 	
 	private UUID loadUUID() {
 		UUID result = null;
