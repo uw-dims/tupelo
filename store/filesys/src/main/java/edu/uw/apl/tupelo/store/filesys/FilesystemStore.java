@@ -83,8 +83,14 @@ import edu.uw.apl.tupelo.store.Store;
    when it is time to move into the final Store location do we require
    the 'real' lock.
 */
-
 public class FilesystemStore implements Store {
+    private boolean writable;
+    
+    private final UUID uuid;
+    private final File root, tempDir;
+    private final Map<ManagedDiskDescriptor,ManagedDisk> descriptorMap;
+    private final Map<String,ManagedDisk> pathMap;
+    private final Log log;
 
 	public FilesystemStore( File root ) {
 		this( root, true );
@@ -641,15 +647,22 @@ public class FilesystemStore implements Store {
 	static String asFileBase( ManagedDiskDescriptor mdd ) {
 		return mdd.getDiskID() + "-" + mdd.getSession().toString();
 	}
-
-	private boolean writable;
 	
-	private final UUID uuid;
-	private final File root, tempDir;
-	private final Map<ManagedDiskDescriptor,ManagedDisk> descriptorMap;
-	private final Map<String,ManagedDisk> pathMap;
-	private final Log log;
+    @Override
+    public void putFileHash(ManagedDiskDescriptor mdd, Map<String, byte[]> hashes) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public List<ManagedDiskDescriptor> checkForHash(byte[] hash) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean hasFileHash(ManagedDiskDescriptor mdd) {
+        // TODO Auto-generated method stub
+        return false;
+    }
 }
-
-// eof
-

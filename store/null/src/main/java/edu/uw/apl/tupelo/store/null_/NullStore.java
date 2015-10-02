@@ -35,9 +35,12 @@
 package edu.uw.apl.tupelo.store.null_;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.TimeZone;
 
@@ -173,6 +176,20 @@ public class NullStore implements Store {
 	
 	static public final Session NULLSESSION = new Session
 		( Constants.NULLUUID, EPOCH, 0 );
-}
 
-// eof
+    @Override
+    public void putFileHash(ManagedDiskDescriptor mdd, Map<String, byte[]> hashes) {
+        // Do nothing
+        
+    }
+
+    @Override
+    public List<ManagedDiskDescriptor> checkForHash(byte[] hash) {
+        return new ArrayList<ManagedDiskDescriptor>(0);
+    }
+
+    @Override
+    public boolean hasFileHash(ManagedDiskDescriptor mdd) {
+        return true;
+    }
+}

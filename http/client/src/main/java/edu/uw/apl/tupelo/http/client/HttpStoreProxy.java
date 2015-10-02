@@ -42,6 +42,8 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.http.HttpStatus;
@@ -72,6 +74,8 @@ import edu.uw.apl.tupelo.store.Store;
  */
 @SuppressWarnings({"deprecation", "resource", "unused"})
 public class HttpStoreProxy implements Store {
+    private String server;
+    private final Log log;
 
 	public HttpStoreProxy( String s ) {
 		if( !s.endsWith( "/" ) )
@@ -407,8 +411,21 @@ public class HttpStoreProxy implements Store {
 		}
 	}
 
-	private String server;
-	private final Log log;
-}
+    @Override
+    public void putFileHash(ManagedDiskDescriptor mdd, Map<String, byte[]> hashes) {
+        // TODO Auto-generated method stub
+        
+    }
 
-// eof
+    @Override
+    public List<ManagedDiskDescriptor> checkForHash(byte[] hash) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean hasFileHash(ManagedDiskDescriptor mdd) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+}

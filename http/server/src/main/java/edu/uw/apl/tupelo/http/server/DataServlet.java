@@ -85,6 +85,9 @@ import org.apache.commons.logging.LogFactory;
  *
  */
 public class DataServlet extends HttpServlet {
+    private Store store;
+    private Gson gson;
+    private Log log;
 
 	/**
 	 * Auto-generated
@@ -362,10 +365,5 @@ public class DataServlet extends HttpServlet {
 		return new ManagedDiskDescriptor( diskID, s );
 	}
 
-	private Store store;
-	private Gson gson;
-	private Log log;
 }
-
-// eof
 
