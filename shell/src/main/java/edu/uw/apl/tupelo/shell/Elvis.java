@@ -108,8 +108,10 @@ public class Elvis extends Shell {
         // Linux/Unix...
         "/dev/sda", "/dev/sdb", "/dev/sdc",
         "/dev/sdd", "/dev/sde", "/dev/sdf",
+        "/dev/sdg", "/dev/sdh", "/dev/sdi",
         // MacOS...
-        "/dev/disk0", "/dev/disk1", "/dev/disk2"
+        "/dev/disk0", "/dev/disk1", "/dev/disk2",
+        "/dev/disk3", "/dev/disk4", "/dev/disk5"
     };
 
     private static final String UNMANAGED_DISK_REPORT_FORMAT = "%2s %42s %16s %16s";
