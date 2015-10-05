@@ -37,12 +37,15 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.ObjectOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.UUID;
 
@@ -54,6 +57,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
 
 import edu.uw.apl.tupelo.model.ManagedDisk;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
@@ -76,15 +80,21 @@ import org.apache.commons.logging.LogFactory;
  *
  * /disks/data/enumerate
  * /disks/data/put/DID/SID
+ * /disks/data/put/filehash/DID/SID
  * /disks/data/size/DID/SID
  * /disks/data/uuid/DID/SID
  * /disks/data/digest/DID/SID
+ * /disks/data/filehash/DID/SID
+ * /disks/data/filehash/check
  *
  *
  * /disks/data/get/DID/SID (TODO, currently no support for retrieving managed data)
  *
  */
 public class DataServlet extends HttpServlet {
+    private static final String JAVA_CONTENT = "application/x-java-serialized-object";
+    private static final String JSON_CONTENT = "application/json";
+    private static final String TEXT_CONTENT = "text/plain";
     private Store store;
     private Gson gson;
     private Log log;
@@ -127,6 +137,9 @@ public class DataServlet extends HttpServlet {
 		} else if( pi.startsWith( "/uuid/" ) ) {
 			String details = pi.substring( "/uuid/".length() );
 			uuid( req, res, details );
+		} else if( pi.startsWith("/filehash/")){
+		    String details = pi.substring("/filehash/".length());
+		    hasFileHash(req, res, details);
 		} else {
 			res.sendError( HttpServletResponse.SC_NOT_FOUND,
 						   "Unknown command '" + pi + "'" );
@@ -147,9 +160,14 @@ public class DataServlet extends HttpServlet {
 		String pi = req.getPathInfo();
 		log.debug( "Post.PathInfo: " + pi );
 
-		if( pi.startsWith( "/put/" ) ) {
+		if(pi.startsWith("/put/filehash/")){
+		    String details = pi.substring("/put/filehash".length());
+		    addFileHash(req, res, details);
+		} else if( pi.startsWith( "/put/" ) ) {
 			String details = pi.substring( "/put/".length() );
 			putData( req, res, details );
+		} else if(pi.startsWith("/filehash/check")){
+		    checkForHash(req, res);
 		} else {
 			res.sendError( HttpServletResponse.SC_NOT_FOUND,
 						   "Unknown command '" + pi + "'" );
@@ -163,10 +181,6 @@ public class DataServlet extends HttpServlet {
 		Collection<ManagedDiskDescriptor> mdds = store.enumerate();
 		
 		if( Utils.acceptsJavaObjects( req ) ) {
-			res.setContentType( "application/x-java-serialized-object" );
-			OutputStream os = res.getOutputStream();
-			ObjectOutputStream oos = new ObjectOutputStream( os );
-
 			/*
 			  Having serialization issues with the object returned
 			  from the store, what seems to be a HashMap$KeySet.  So
@@ -174,12 +188,9 @@ public class DataServlet extends HttpServlet {
 			*/
 			List<ManagedDiskDescriptor> asList =
 				new ArrayList<ManagedDiskDescriptor>( mdds );
-			oos.writeObject( asList );
+			respondJava(res, asList);
 		} else if( Utils.acceptsJson( req ) ) {
-			res.setContentType( "application/json" );
-			String json = gson.toJson( mdds );
-			PrintWriter pw = res.getWriter();
-			pw.print( json );
+			respondJson(res, mdds);
 		} else {
 			res.setContentType( "text/plain" );
 			PrintWriter pw = res.getWriter();
@@ -195,7 +206,24 @@ public class DataServlet extends HttpServlet {
 			}
 			pw.close();
 		}
-		
+	}
+
+	private void checkForHash(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
+	    // Get the hash to look for
+	    byte[] hash = new byte[req.getContentLength()];
+	    InputStream is = req.getInputStream();
+	    is.read(hash, 0, hash.length);
+	    is.close();
+
+	    // Get the info from the store
+	    List<ManagedDiskDescriptor> disks = store.checkForHash(hash);
+
+	    // Shove it back
+	    if(Utils.acceptsJavaObjects(req)){
+	        respondJava(res, disks);
+	    } else {
+	        respondJson(res, disks);
+	    }
 	}
 
 	private void putData( HttpServletRequest req, HttpServletResponse res,
@@ -224,6 +252,70 @@ public class DataServlet extends HttpServlet {
 		is.close();
 	}
 
+	@SuppressWarnings("unchecked")
+    private void addFileHash(HttpServletRequest req, HttpServletResponse res, String details)
+            throws IOException, ServletException {
+        ManagedDiskDescriptor mdd = null;
+        try {
+            mdd = fromPathInfo(details);
+        } catch (ParseException e) {
+            log.debug("Error getting disk");
+            res.sendError(HttpServletResponse.SC_NOT_FOUND, "Malformed managed disk descriptor: " + details);
+            return;
+        }
+
+        String contentType = req.getContentType();
+        if (contentType.equals(JAVA_CONTENT)) {
+            try {
+                // Read the map from the input stream
+                ObjectInputStream ois = new ObjectInputStream(req.getInputStream());
+                Map<String, byte[]> hashes = (Map<String, byte[]>) ois.readObject();
+                // Shove it in the store;
+                store.putFileHash(mdd, hashes);
+                // Send a response
+                respondJava(res, true);
+            } catch (ClassNotFoundException e) {
+                throw new IOException(e);
+            }
+        } else if (contentType.equals(JSON_CONTENT)) {
+            JsonReader reader = new JsonReader(new InputStreamReader(req.getInputStream()));
+            reader.setLenient(true);
+            // Read the hashes
+            Map<String, byte[]> hashes = gson.fromJson(reader, Map.class);
+            // Stick it in the store
+            store.putFileHash(mdd, hashes);
+            // Send a response
+            respondJson(res, true);
+        } else {
+            // Unknown type
+            res.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, "Unknown content type");
+        }
+    }
+
+	private void hasFileHash(HttpServletRequest req, HttpServletResponse res,
+	        String details) throws IOException, ServletException {
+	    log.debug("Checking if disk has a filehash");
+
+	    ManagedDiskDescriptor mdd = null;
+	    try {
+	        mdd = fromPathInfo(details);
+	    } catch(ParseException e){
+	        log.debug("Error getting disk");
+	        res.sendError(HttpServletResponse.SC_NOT_FOUND,
+	                "Malformed managed disk descriptor: " + details);
+	        return;
+	    }
+
+	    boolean hasFileHash = store.hasFileHash(mdd);
+	    if(Utils.acceptsJavaObjects(req)){
+	        respondJava(res, hasFileHash);
+	    } else if(Utils.acceptsJson(req)){
+            respondJson(res, hasFileHash);
+	    } else {
+            respondText(res, hasFileHash);
+	    }
+	}
+
 	private void size( HttpServletRequest req, HttpServletResponse res,
 					   String details )
 		throws IOException, ServletException {
@@ -248,21 +340,11 @@ public class DataServlet extends HttpServlet {
 		
 		
 		if( Utils.acceptsJavaObjects( req ) ) {
-			res.setContentType( "application/x-java-serialized-object" );
-			OutputStream os = res.getOutputStream();
-			ObjectOutputStream oos = new ObjectOutputStream( os );
-			oos.writeObject( size );
-			oos.flush();
+			respondJava(res, size);
 		} else if( Utils.acceptsJson( req ) ) {
-			res.setContentType( "application/json" );
-			String json = gson.toJson( size );
-			PrintWriter pw = res.getWriter();
-			pw.print( json );
-			pw.flush();
+			respondJson(res, size);
 		} else {
-			res.setContentType( "text/plain" );
-			PrintWriter pw = res.getWriter();
-			pw.println( "" + size );
+			respondText(res, size);
 		}
 
 	}
@@ -289,19 +371,11 @@ public class DataServlet extends HttpServlet {
 		UUID uuid = store.uuid( mdd );
 
 		if( Utils.acceptsJavaObjects( req ) ) {
-			res.setContentType( "application/x-java-serialized-object" );
-			OutputStream os = res.getOutputStream();
-			ObjectOutputStream oos = new ObjectOutputStream( os );
-			oos.writeObject( uuid );
+			respondJava(res, uuid);
 		} else if( Utils.acceptsJson( req ) ) {
-			res.setContentType( "application/json" );
-			String json = gson.toJson( uuid );
-			PrintWriter pw = res.getWriter();
-			pw.print( json );
+			respondJson(res, uuid);
 		} else {
-			res.setContentType( "text/plain" );
-			PrintWriter pw = res.getWriter();
-			pw.println( "" + uuid );
+			respondText(res, uuid);
 		}
 
 	}
@@ -349,7 +423,32 @@ public class DataServlet extends HttpServlet {
 			digest.writeTo( pw );
 			//			pw.println( "TODO: Store.digest text/plain" );
 		}
+	}
 
+	private void respondJava(HttpServletResponse res, Object o) throws IOException {
+        res.setContentType( JAVA_CONTENT );
+        OutputStream os = res.getOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream( os );
+        oos.writeObject( o );
+        oos.flush();
+        oos.close();
+	}
+
+	private void respondJson(HttpServletResponse res, Object o) throws IOException {
+        res.setContentType( JSON_CONTENT );
+        String json = gson.toJson( o );
+        PrintWriter pw = res.getWriter();
+        pw.print( json );
+        pw.flush();
+        pw.close();
+	}
+
+	private void respondText(HttpServletResponse res, Object o) throws IOException {
+	    res.setContentType( TEXT_CONTENT );
+        PrintWriter pw = res.getWriter();
+        pw.println( "" + o );
+        pw.flush();
+        pw.close();
 	}
 
 	private ManagedDiskDescriptor fromPathInfo( String pathInfo )

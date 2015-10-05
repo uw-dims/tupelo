@@ -54,9 +54,12 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
+
+import com.google.gson.Gson;
+
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
-
+import org.apache.http.entity.StringEntity;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -412,20 +415,70 @@ public class HttpStoreProxy implements Store {
 	}
 
     @Override
-    public void putFileHash(ManagedDiskDescriptor mdd, Map<String, byte[]> hashes) {
-        // TODO Auto-generated method stub
-        
+    public void putFileHash(ManagedDiskDescriptor mdd, Map<String, byte[]> hashes) throws IOException {
+        HttpPost post = new HttpPost(server + "disks/data/put/filehash/" + mdd.getDiskID() +
+                "/" + mdd.getSession());
+        log.debug(post.getRequestLine());
+
+        post.setHeader("content-type", "application/json");
+        // Get the body ready
+        Gson gson = new Gson();
+        post.setEntity(new StringEntity(gson.toJson(hashes)));
+        // Make the request
+        HttpClient req = new DefaultHttpClient();
+        HttpResponse res = req.execute(post);
+        // Check the response code
+        if(res.getStatusLine().getStatusCode() != HttpStatus.SC_OK){
+            log.error("Error putting file hash");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<ManagedDiskDescriptor> checkForHash(byte[] hash) throws IOException {
+        HttpPost post = new HttpPost(server + "disks/data/filehash/check");
+        post.addHeader( "Accept", "application/x-java-serialized-object" );
+        log.debug(post.getRequestLine());
+
+        post.setHeader("content-type", "application/json");
+        // Get the body ready
+        ByteArrayInputStream bais = new ByteArrayInputStream( hash );
+        InputStreamEntity ise = new InputStreamEntity
+            ( bais, hash.length, ContentType.APPLICATION_OCTET_STREAM );
+        post.setEntity( ise );
+        // Make the request
+        HttpClient req = new DefaultHttpClient();
+        HttpResponse res = req.execute(post);
+        // Get the response
+        ObjectInputStream ois = new ObjectInputStream(res.getEntity().getContent());
+        try{
+            List<ManagedDiskDescriptor> disks = (List<ManagedDiskDescriptor>) ois.readObject();
+            ois.close();
+
+            return disks;
+        } catch (ClassNotFoundException e){
+            log.error("Error getting list of disks with hash");
+            return null;
+        }
     }
 
     @Override
-    public List<ManagedDiskDescriptor> checkForHash(byte[] hash) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public boolean hasFileHash(ManagedDiskDescriptor mdd) {
-        // TODO Auto-generated method stub
-        return false;
+    public boolean hasFileHash(ManagedDiskDescriptor mdd) throws IOException {
+        HttpGet g = new HttpGet( server + "disks/data/filehash/"+mdd.getDiskID()+"/"+mdd.getSession() );
+        g.addHeader( "Accept", "application/x-java-serialized-object" );
+        log.debug( g.getRequestLine() );
+        HttpClient req = new DefaultHttpClient( );
+        HttpResponse res = req.execute( g );
+        HttpEntity he = res.getEntity();
+        InputStream is = he.getContent();
+        ObjectInputStream ois = new ObjectInputStream( is );
+        try {
+            Boolean result = (Boolean)ois.readObject();
+            return result;
+        } catch( ClassNotFoundException cnfe ) {
+            throw new IOException( cnfe );
+        } finally {
+            ois.close();
+        }
     }
 }
