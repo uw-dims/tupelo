@@ -44,6 +44,7 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -101,6 +102,10 @@ public class Elvis extends Shell {
     private VirtualMachineFileSystem vmfs;
     private Set<String> vmNames;
 
+    // Filehashes for unmanaged disks
+    // This is only hashes done this session
+    private Map<UnmanagedDisk, Map<String, byte[]>> diskFileHashes;
+
     /**
      * Path to check for potential disks
      */
@@ -146,6 +151,7 @@ public class Elvis extends Shell {
 		virtualDisks = new ArrayList<VirtualDisk>();
 		diskImages = new ArrayList<DiskImage>();
 		vmNames = new HashSet<String>();
+		diskFileHashes = new HashMap<UnmanagedDisk, Map<String, byte[]>>();
 		
 		// Try and load the store location via the Discovery class
 		storeLocation = Discovery.locatePropertyValue(STORE_PROPERTY);
@@ -303,6 +309,8 @@ public class Elvis extends Shell {
 						}
 						Map<String, byte[]> hashes = disk.hashFileSystem(fs);
 						writeHashData(hashes, diskName+"-"+session.toString()+".md5");
+						// Keep the hashes around
+						diskFileHashes.put(ud, hashes);
 					}
 					// Clean up
 					disk.close();
@@ -724,15 +732,17 @@ public class Elvis extends Shell {
 		if( useFlatDisk ) {
 			md = new FlatDisk( ud, session );
 		} else {
-			if( uuid != null )
+			if( uuid != null ){
 				md = new StreamOptimizedDisk( ud, session, uuid );
-			else
+			} else {
 				md = new StreamOptimizedDisk( ud, session );
+			}
 			md.setCompression( ManagedDisk.Compressions.SNAPPY );
 		}
 
-		if( digest != null )
+		if( digest != null ) {
 			md.setParentDigest( digest );
+		}
 		
 		if( !isInteractive() ) {
 			store.put( md );
@@ -778,6 +788,13 @@ public class Elvis extends Shell {
 			store.setAttribute( mdd, "unmanaged.inetaddress",
 								dotDecimal.getBytes() );
 		} catch( UnknownHostException uhe ) {
+		}
+
+		// If the disk's files have been hashed, add them too
+		if(diskFileHashes.containsKey(ud)){
+		    store.putFileHash(md.getDescriptor(), diskFileHashes.get(ud));
+		} else {
+		    // TODO - Check for a hash file and read/add it
 		}
 	}
 
