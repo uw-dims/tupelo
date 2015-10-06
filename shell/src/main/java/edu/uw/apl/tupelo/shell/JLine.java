@@ -49,6 +49,6 @@ public class JLine {
 			jlineArgs[i+1] = args[i];
 		}
 		// Run it
-		jline.ConsoleRunner.main( jlineArgs );
+		jline.console.internal.ConsoleRunner.main( jlineArgs );
 	}
 }
