@@ -390,6 +390,57 @@ public class Elvis extends Shell {
 			} );
 		commandHelp( "as", "managedDiskIndex",
 					 "List attributes of an identified managed disk" );
+
+		addCommand("findhash", "(.+)", new Lambda() {
+            @Override
+            public void apply(String[] args) throws Exception {
+                try {
+                    // Get and verify the hashes
+                    String input = args[0];
+                    String[] hashes = input.split("\\s+");
+
+                    // Check which managed disks have file hash data
+                    Collection<ManagedDiskDescriptor> disks = store.enumerate();
+                    for (ManagedDiskDescriptor mdd : disks) {
+                        // Let the user know which disks are missing file hash
+                        // data
+                        if (!store.hasFileHash(mdd)) {
+                            System.out.println("Warning: disk is missing file hash data: " + mdd);
+                        }
+                    }
+
+                    // Start looking for the hashes
+                    Set<ManagedDiskDescriptor> matchingDisks = new HashSet<ManagedDiskDescriptor>();
+                    for (String hash : hashes) {
+                        hash = hash.toLowerCase();
+                        // A MD5 hash is a 32 character hex string
+                        if(!hash.matches("^[a-f0-9]{32}$")){
+                            System.err.println("Error: Invalid hash: "+hash);
+                            continue;
+                        }
+                        byte[] byteHash = Hex.decodeHex(hash.toCharArray());
+                        // Add all matching disks to the set
+                        matchingDisks.addAll(store.checkForHash(byteHash));
+                    }
+
+                    // Report our results
+                    if(matchingDisks.isEmpty()){
+                        System.out.println("Hash not found.");
+                    } else {
+                        System.out.println("Hash found on the following disks:");
+                        for(ManagedDiskDescriptor mdd : matchingDisks){
+                            System.out.println("\t"+mdd.toString());
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn(e);
+                    System.out.println("" + e);
+                }
+            }
+		});
+		commandHelp("findhash", "MD5 hashes",
+		        "Check all managed disks to see which ones contain the specified MD5 file hash. "+
+		        "Seperate multiple hashes by a space.");
 	}
 
 	static protected void printUsage( Options os, String usage,
