@@ -104,7 +104,8 @@ public class Elvis extends Shell {
 
     // Filehashes for unmanaged disks
     // This is only hashes done this session
-    private Map<UnmanagedDisk, Map<String, byte[]>> diskFileHashes;
+    // Its a map of unmanaged disk-> List of partition's file hashes
+    private Map<UnmanagedDisk, List<Map<String, byte[]>>> diskFileHashes;
 
     /**
      * Path to check for potential disks
@@ -151,7 +152,7 @@ public class Elvis extends Shell {
 		virtualDisks = new ArrayList<VirtualDisk>();
 		diskImages = new ArrayList<DiskImage>();
 		vmNames = new HashSet<String>();
-		diskFileHashes = new HashMap<UnmanagedDisk, Map<String, byte[]>>();
+		diskFileHashes = new HashMap<UnmanagedDisk, List<Map<String, byte[]>>>();
 		
 		// Try and load the store location via the Discovery class
 		storeLocation = Discovery.locatePropertyValue(STORE_PROPERTY);
@@ -290,6 +291,7 @@ public class Elvis extends Shell {
 					disk.setDebug(debug);
 
 					List<Partition> partitions = disk.getPartitions();
+					List<Map<String, byte[]>> allHashes = new ArrayList<Map<String, byte[]>>();
 					if(partitions != null){
 						for(Partition partition: partitions){
 							FileSystem fs = disk.getFileSystem(partition);
@@ -299,6 +301,8 @@ public class Elvis extends Shell {
 							// Hash it
 							Map<String, byte[]> hashes = disk.hashFileSystem(fs);
 							writeHashData(hashes, diskName+"-"+session.toString()+"-"+partition.start()+"-"+partition.length()+".md5");
+							// Save it
+							allHashes.add(hashes);
 						}
 					} else {
 						FileSystem fs = disk.getFileSystem();
@@ -309,11 +313,14 @@ public class Elvis extends Shell {
 						}
 						Map<String, byte[]> hashes = disk.hashFileSystem(fs);
 						writeHashData(hashes, diskName+"-"+session.toString()+".md5");
-						// Keep the hashes around
-						diskFileHashes.put(ud, hashes);
+						// Save it
+						allHashes.add(hashes);
 					}
 					// Clean up
 					disk.close();
+                    // Keep the hashes around
+                    System.out.println("Storing hashes with key: "+ud.getID());
+                    diskFileHashes.put(ud, allHashes);
 
 					Date end = new Date();
 					System.out.println("Elapsed time: "+ (end.getTime() - start.getTime()) / 1000 + "sec");
@@ -791,10 +798,17 @@ public class Elvis extends Shell {
 		}
 
 		// If the disk's files have been hashed, add them too
+		System.out.println("Using key: "+ud.getID());
 		if(diskFileHashes.containsKey(ud)){
-		    store.putFileHash(md.getDescriptor(), diskFileHashes.get(ud));
+		    System.out.println("Sending file hash for disk");
+		    // Add hashes for all partitions
+		    for(Map<String, byte[]> hashes : diskFileHashes.get(ud)){
+		        store.putFileHash(md.getDescriptor(), hashes);
+		    }
+		    System.out.println("File hashes sent");
 		} else {
 		    // TODO - Check for a hash file and read/add it
+		    System.out.println("No file hash found in memory");
 		}
 	}
 
