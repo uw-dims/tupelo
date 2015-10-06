@@ -80,7 +80,7 @@ public class TMDInfo {
 		String usage = TMDInfo.class.getName() + " [-d] /path/to/tmdfile";
 		final String header = "Print properties of given .tmd file.";
 		final String footer = "";
-		CommandLineParser clp = new PosixParser();
+		CommandLineParser clp = new DefaultParser();
 		CommandLine cl = null;
 		try {
 			cl = clp.parse( os, args );

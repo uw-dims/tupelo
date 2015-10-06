@@ -98,7 +98,7 @@ public class Digest extends Base {
 		String usage = commonUsage() + " [-i] (diskID sessionID)?";
 		final String HEADER = "";
 		final String FOOTER = "";
-		CommandLineParser clp = new PosixParser();
+		CommandLineParser clp = new DefaultParser();
 		CommandLine cl = null;
 		try {
 			cl = clp.parse( os, args );
