@@ -115,6 +115,7 @@ public class DataServlet extends HttpServlet {
 		*/
 		ServletContext sc = config.getServletContext();
 		store = (Store)sc.getAttribute( ContextListener.STORE_KEY );
+		gson = new Gson();
 	}
 	
 	@Override
@@ -161,7 +162,7 @@ public class DataServlet extends HttpServlet {
 		log.debug( "Post.PathInfo: " + pi );
 
 		if(pi.startsWith("/put/filehash/")){
-		    String details = pi.substring("/put/filehash".length());
+		    String details = pi.substring("/put/filehash/".length());
 		    addFileHash(req, res, details);
 		} else if( pi.startsWith( "/put/" ) ) {
 			String details = pi.substring( "/put/".length() );
