@@ -14,6 +14,9 @@ USER="caine"
 # Output file name
 OUTFILE=""
 
+# Extra files to include in the final filesystem
+INCLUDE_DIR=""
+
 show_help() {
 cat << EOF
 Usage: ${0##*/} [-h] [-u USER] [-w DIR] ISOFILE OUTFILE
@@ -23,6 +26,11 @@ Create the final OUTFILE ISO when done
     -h          display this help and exit
     -u USER     the live environment user (Default 'caine')
     -w DIR      the base work directory (Default /tmp)
+    -i DIR      root of file tree to include in the final filesystem.
+                This will be copied as-is into the FS, so make sure that
+                the permissions are correct, and that everything is in the
+                correct subfolder.
+                NOTE: The file owner will be changed to root.
 EOF
 }
 
@@ -69,6 +77,24 @@ while :; do
             printf 'ERROR: "--work" requires a non-empty option argument.\n' >&2
             exit 1
             ;;
+# Include dir
+        -i|--include)       # Takes an option argument, ensuring it has been specified.
+            if [ -n "$2" ]; then
+                INCLUDE_DIR=$2
+                shift 2
+                continue
+            else
+                printf 'ERROR: "--include" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            ;;
+        --include=?*)
+            INCLUDE_DIR=${1#*=} # Delete everything up to "=" and assign the remainder.
+            ;;
+        --include=)         # Handle the case of an empty --file=
+            printf 'ERROR: "--include" requires a non-empty option argument.\n' >&2
+            exit 1
+            ;;
 # Else
         --)              # End of all options.
             shift
@@ -106,10 +132,13 @@ if [ ! -f "$ISO" ]; then
 fi
 
 echo "----------"
-echo "Source ISO: $ISO"
-echo "User:       $USER"
-echo "Work Dir:   $WORK_DIR"
-echo "Out File:   $OUTFILE"
+echo "Source ISO:  $ISO"
+echo "User:        $USER"
+echo "Work Dir:    $WORK_DIR"
+echo "Out File:    $OUTFILE"
+if [ ! "$INCLUDE_DIR" == "" ]; then
+echo "Include Dir: $INCLUDE_DIR"
+fi
 echo "----------"
 
 ROOT="$WORK_DIR/tupelo"
@@ -142,7 +171,7 @@ mvn package
 
 pushd shell
 # We need sudo because permissions get wonky
-sudo bash install-shell.sh "$ROOT/filesystem/opt/tupelo"
+sudo bash install-shell.sh "$ROOT/filesystem/opt/tupelo" > /dev/null
 popd
 
 echo "Add the tupelo shell to the system's PATH"
@@ -150,6 +179,11 @@ sudo sed -i "s|PATH=\"|PATH=\"/opt/tupelo/bin:|" "$ROOT/filesystem/etc/environme
 
 echo "Making $USER part of the disks group"
 sudo sed -i "/^disk:/ s/\$/$USER/" "$ROOT/filesystem/etc/group"
+
+if [ ! "$INCLUDE_DIR" == "" ]; then
+    echo "Adding files from $INCLUDE_DIR"
+    sudo cp --preserve=mode -r "$INCLUDE_DIR"/* "$ROOT/filesystem/"
+fi
 
 # Repack
 echo "Repacking the filesystem"
