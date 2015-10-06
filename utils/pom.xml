@@ -53,11 +53,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
   <build>
   </build>
-  <dependencies>
-  	<dependency>
-  		<groupId>edu.uw.apl.commons</groupId>
-  		<artifactId>tsk4j-core</artifactId>
-  		<version>413.3.0</version>
-  	</dependency>
-  </dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>edu.uw.apl.commons</groupId>
+			<artifactId>tsk4j-core</artifactId>
+			<version>413.3.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.2.4</version>
+		</dependency>
+	</dependencies>
 </project>

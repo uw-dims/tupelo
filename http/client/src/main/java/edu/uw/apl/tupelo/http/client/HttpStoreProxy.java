@@ -56,6 +56,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
@@ -69,6 +70,7 @@ import edu.uw.apl.tupelo.model.ManagedDiskDigest;
 import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.model.ProgressMonitor;
 import edu.uw.apl.tupelo.store.Store;
+import edu.uw.apl.tupelo.utils.ByteArrayAdapter;
 
 /**
  * A client side (in the http sense that is) proxy for a Store.
@@ -79,12 +81,14 @@ import edu.uw.apl.tupelo.store.Store;
 public class HttpStoreProxy implements Store {
     private String server;
     private final Log log;
+    private Gson gson;
 
 	public HttpStoreProxy( String s ) {
 		if( !s.endsWith( "/" ) )
 			s = s + "/";
 		this.server = s;
 		log = LogFactory.getLog( getClass() );
+		gson = new GsonBuilder().registerTypeHierarchyAdapter(byte[].class, new ByteArrayAdapter()).create();
 	}
 
 	@Override
@@ -422,7 +426,6 @@ public class HttpStoreProxy implements Store {
 
         post.setHeader("content-type", "application/json");
         // Get the body ready
-        Gson gson = new Gson();
         post.setEntity(new StringEntity(gson.toJson(hashes)));
         // Make the request
         HttpClient req = new DefaultHttpClient();

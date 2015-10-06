@@ -44,6 +44,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -57,6 +58,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 
 import edu.uw.apl.tupelo.model.ManagedDisk;
@@ -64,7 +66,9 @@ import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.model.ManagedDiskDigest;
 import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.store.Store;
+import edu.uw.apl.tupelo.utils.ByteArrayAdapter;
 
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -115,7 +119,7 @@ public class DataServlet extends HttpServlet {
 		*/
 		ServletContext sc = config.getServletContext();
 		store = (Store)sc.getAttribute( ContextListener.STORE_KEY );
-		gson = new Gson();
+		gson = new GsonBuilder().registerTypeHierarchyAdapter(byte[].class, new ByteArrayAdapter()).create();
 	}
 	
 	@Override
@@ -282,7 +286,19 @@ public class DataServlet extends HttpServlet {
             JsonReader reader = new JsonReader(new InputStreamReader(req.getInputStream()));
             reader.setLenient(true);
             // Read the hashes
-            Map<String, byte[]> hashes = gson.fromJson(reader, Map.class);
+            // The incoming JSON hashes are in hex. They need to be converted back into bytes
+            Map<String, String> hexHashes = gson.fromJson(reader, Map.class);
+            Map<String, byte[]> hashes = new HashMap<String, byte[]>(hexHashes.size());
+            try{
+                for(String key : hexHashes.keySet()){
+                    String value = hexHashes.get(key);
+                    hashes.put(key, Hex.decodeHex(value.toCharArray()));
+                }
+                hexHashes = null;
+            } catch(Exception e){
+                throw new IOException(e);
+            }
+
             // Stick it in the store
             store.putFileHash(mdd, hashes);
             // Send a response
