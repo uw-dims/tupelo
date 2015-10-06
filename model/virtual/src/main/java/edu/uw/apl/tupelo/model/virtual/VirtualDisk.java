@@ -55,6 +55,9 @@ import edu.uw.apl.vmvols.model.vmware.VMwareVM;
  * e.g. during Tupelo operations.
  */
 public class VirtualDisk implements UnmanagedDisk {
+    private VirtualMachine vm;
+    private /*final*/ edu.uw.apl.vmvols.model.VirtualDisk delegate;
+    private File source;
 
 	static public boolean likelyVirtualDisk( File f ) {
 		if( f.getName().endsWith( VDIDisk.FILESUFFIX ) )
@@ -106,6 +109,25 @@ public class VirtualDisk implements UnmanagedDisk {
 	public VirtualMachine getVM() {
 		return vm;
 	}
+
+	@Override
+	public String toString(){
+	    return "(VirtualDisk "+source.getAbsolutePath()+" )";
+	}
+	
+	@Override
+    public int hashCode() {
+        return this.toString().hashCode();
+    }
+
+    @Override
+	public boolean equals(Object o){
+	    if(!(o instanceof VirtualDisk)){
+	        return false;
+	    }
+	    VirtualDisk other = (VirtualDisk) o;
+	    return source.equals(other.source);
+	}
 	
 	/*
 	  Pah, tried to avoid the delegate leaking out, but a caller
@@ -115,10 +137,4 @@ public class VirtualDisk implements UnmanagedDisk {
 	public edu.uw.apl.vmvols.model.VirtualDisk getDelegate() {
 		return delegate;
 	}
-
-	private VirtualMachine vm;
-	private /*final*/ edu.uw.apl.vmvols.model.VirtualDisk delegate;
-	private File source;
 }
-
-// eof

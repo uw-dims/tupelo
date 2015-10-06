@@ -39,9 +39,11 @@ import java.io.InputStream;
 import java.io.IOException;
 
 /**
+ * A whole disk image
  */
- 
 public class DiskImage implements UnmanagedDisk {
+    private final File data;
+    private final String id;
 
 	public DiskImage( File f ) {
 		this( f, f.getName() );
@@ -63,6 +65,25 @@ public class DiskImage implements UnmanagedDisk {
 	}
 
 	@Override
+    public boolean equals(Object o) {
+        if(!(o instanceof DiskImage)){
+            return false;
+        }
+        DiskImage other = (DiskImage) o;
+        return data.equals(other.data);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.toString().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "(DiskImage "+data.getAbsolutePath()+" )";
+    }
+
+    @Override
 	public InputStream getInputStream() throws IOException {
 		FileInputStream fis = new FileInputStream( data );
 		return fis;
@@ -72,9 +93,6 @@ public class DiskImage implements UnmanagedDisk {
 	public File getSource() {
 		return data;
 	}
-
-	private final File data;
-	private final String id;
 	
 }
 

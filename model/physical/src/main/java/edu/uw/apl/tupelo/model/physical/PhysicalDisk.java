@@ -100,7 +100,26 @@ public class PhysicalDisk implements UnmanagedDisk {
 		return disk;
 	}
 
-	// for debug purposes
+	@Override
+	public String toString(){
+	    return "(PhysicalDisk "+disk.getAbsolutePath()+" )";
+	}
+
+	@Override
+	public boolean equals(Object o){
+	    if(!(o instanceof PhysicalDisk)){
+	        return false;
+	    }
+	    PhysicalDisk other = (PhysicalDisk) o;
+	    return disk.equals(other.disk);
+	}
+
+	@Override
+    public int hashCode() {
+        return this.toString().hashCode();
+    }
+
+    // for debug purposes
 	String vendorID() {
 		return vendorID( disk.getPath() );
 	}
