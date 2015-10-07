@@ -44,7 +44,7 @@
     <servlet-name>LogLevelServlet</servlet-name>
     <description></description>
     <servlet-class>
-      edu.uw.apl.tupelo.http.server.LogLevelServlet
+      edu.uw.apl.tupelo.http.server.servlet.LogLevelServlet
     </servlet-class>
   </servlet>
 
@@ -57,7 +57,7 @@
     <servlet-name>MiscServlet</servlet-name>
     <description></description>
     <servlet-class>
-      edu.uw.apl.tupelo.http.server.MiscServlet
+      edu.uw.apl.tupelo.http.server.servlet.MiscServlet
     </servlet-class>
   </servlet>
 
@@ -82,7 +82,7 @@
     <servlet-name>AttributesServlet</servlet-name>
     <description></description>
     <servlet-class>
-      edu.uw.apl.tupelo.http.server.AttributesServlet
+      edu.uw.apl.tupelo.http.server.servlet.AttributesServlet
     </servlet-class>
   </servlet>
 
@@ -95,7 +95,7 @@
     <servlet-name>DataServlet</servlet-name>
     <description></description>
     <servlet-class>
-      edu.uw.apl.tupelo.http.server.DataServlet
+      edu.uw.apl.tupelo.http.server.servlet.DataServlet
     </servlet-class>
   </servlet>
 
@@ -108,7 +108,7 @@
     <servlet-name>ToolsServlet</servlet-name>
     <description></description>
     <servlet-class>
-      edu.uw.apl.tupelo.http.server.ToolsServlet
+      edu.uw.apl.tupelo.http.server.servlet.ToolsServlet
     </servlet-class>
   </servlet>
 

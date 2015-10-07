@@ -31,7 +31,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package edu.uw.apl.tupelo.http.server;
+package edu.uw.apl.tupelo.http.server.servlet;
 
 import java.io.IOException;
 import java.io.File;
@@ -59,6 +59,8 @@ import edu.uw.apl.tupelo.store.tools.BodyFile;
 import edu.uw.apl.tupelo.store.tools.HashFS;
 import edu.uw.apl.tupelo.store.tools.HashVS;
 import edu.uw.apl.tupelo.fuse.ManagedDiskFileSystem;
+import edu.uw.apl.tupelo.http.server.Constants;
+import edu.uw.apl.tupelo.http.server.ContextListener;
 
 
 /**

@@ -31,7 +31,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package edu.uw.apl.tupelo.http.server;
+package edu.uw.apl.tupelo.http.server.servlet;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -58,6 +58,9 @@ import org.apache.commons.logging.LogFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import edu.uw.apl.tupelo.http.server.Constants;
+import edu.uw.apl.tupelo.http.server.ContextListener;
+import edu.uw.apl.tupelo.http.server.Utils;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.store.Store;

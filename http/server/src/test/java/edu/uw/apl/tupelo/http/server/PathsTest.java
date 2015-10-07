@@ -36,6 +36,7 @@ package edu.uw.apl.tupelo.http.server;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import edu.uw.apl.tupelo.http.server.servlet.HttpStoreServlet;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.model.Session;
 

@@ -41,6 +41,7 @@ import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 
+import edu.uw.apl.tupelo.http.server.servlet.DataServlet;
 import edu.uw.apl.tupelo.model.ManagedDisk;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.model.ManagedDiskDigest;
@@ -81,7 +82,7 @@ public class HttpManagedDisk extends ManagedDisk {
 	 * @param session - will come from e.g. the pathInfo of the http request,
 	 * and thus be parsed into an object
 	 */
-	HttpManagedDisk( ManagedDiskDescriptor mdd,
+	public HttpManagedDisk( ManagedDiskDescriptor mdd,
 					 InputStream httpRequestContent ) {
 		super( null, null );
 		descriptor = mdd;
