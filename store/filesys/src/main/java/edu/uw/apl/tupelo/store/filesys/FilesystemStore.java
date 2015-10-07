@@ -92,6 +92,8 @@ public class FilesystemStore implements Store {
     private final Map<String,ManagedDisk> pathMap;
     private final Log log;
 
+    private TempDirCleaner tempDirCleaner;
+
 	public FilesystemStore( File root ) {
 		this( root, true );
 	}
@@ -110,6 +112,11 @@ public class FilesystemStore implements Store {
 		tempDir = new File( root, "temp" );
 		tempDir.mkdirs();
 		log.debug( "FSStore.tmp = " + tempDir );
+
+        // Start the temp directory cleaner
+        tempDirCleaner = new TempDirCleaner(tempDir);
+        new Thread(tempDirCleaner).start();
+
 		uuid = loadUUID();
 		descriptorMap = new HashMap<ManagedDiskDescriptor,ManagedDisk>();
 		pathMap = new HashMap<String,ManagedDisk>();
