@@ -106,7 +106,7 @@ public class PutData extends CliBase {
 		final String HEADER =
 			"Transfer an unmanaged disk image to a Tupelo store.";
 		final String FOOTER = "";
-		CommandLineParser clp = new PosixParser();
+		CommandLineParser clp = new DefaultParser();
 		CommandLine cl = null;
 		try {
 			cl = clp.parse( os, args );
