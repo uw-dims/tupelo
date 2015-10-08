@@ -67,7 +67,7 @@ import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
 		final String HEADER = "";
 		final String FOOTER = "";
 		
-		CommandLineParser clp = new PosixParser();
+		CommandLineParser clp = new DefaultParser();
 		CommandLine cl = null;
 		try {
 			cl = clp.parse( os, args );
