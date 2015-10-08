@@ -199,8 +199,8 @@ public class ManagedDiskFileSystem extends AbstractFilesystem3 {
 		//		Process p = Runtime.getRuntime().exec( cmdLine );
 		ProcessBuilder pb = new ProcessBuilder( "fusermount", "-u",
 												mountPoint.toString() );
-		pb.redirectErrorStream( true );
-		pb.redirectOutput( new File( "mdfs.pb" ) );
+		// Use the same IO as the java process
+		pb.inheritIO();
 		Process p = pb.start();
 		p.waitFor();
 		log.info( "Result: " + p.exitValue() );
