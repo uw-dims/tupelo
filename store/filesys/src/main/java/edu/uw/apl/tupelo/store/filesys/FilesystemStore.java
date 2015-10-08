@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.sql.DriverManager;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Collection;
@@ -123,6 +124,12 @@ public class FilesystemStore implements Store {
 		if( loadManagedDisks )
 			loadManagedDisks();
 		writable = true;
+        // Load the JDBC driver for the FileHashStore
+        try {
+            DriverManager.registerDriver(new org.sqlite.JDBC());
+        } catch (Exception e) {
+            // Ignore
+        }
 	}
 
 	/**

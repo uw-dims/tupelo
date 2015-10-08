@@ -46,6 +46,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sqlite.JDBC;
 
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 
@@ -102,7 +103,7 @@ public class FileHashStore implements Closeable {
 			boolean setup = !sqlFile.exists();
 
 			// Open a connection
-			connection = DriverManager.getConnection("jdbc:sqlite:"+sqlFile.getAbsolutePath());
+			connection = DriverManager.getConnection(JDBC.PREFIX + sqlFile.getAbsolutePath());
 
 			if(setup){
 				init();
