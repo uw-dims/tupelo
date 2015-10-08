@@ -47,6 +47,7 @@ import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
 import edu.uw.apl.tupelo.utils.Discovery;
 import edu.uw.apl.tupelo.amqp.server.FileHashService;
 import edu.uw.apl.tupelo.fuse.ManagedDiskFileSystem;
+import edu.uw.apl.tupelo.http.server.service.DiskFileHashService;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -90,6 +91,11 @@ public class ContextListener implements ServletContextListener {
 	 *  For the ManagedDiskFileSystem's mount point, a File object... (Internal)
 	 */
 	static public final String MDFS_MOUNT_KEY = "mdfs.mount";
+
+	/**
+	 * For storing the DiskFileHashService (Internal)
+	 */
+	static public final String DISK_FHASH_KEY = "filehash.service";
 
 
 	public ContextListener() {
@@ -177,8 +183,24 @@ public class ContextListener implements ServletContextListener {
 		log.info( "Store Root: " + dataRoot );
 		Store store = new FilesystemStore( dataRoot );
 		log.info( "Store UUID: " + store.getUUID() );
-		
+
+		// Set up the MDFS
+		log.info("Setting up store's MDFS");
+        File mountPoint = new File( dataRoot, "mdfs" );
+        mountPoint.mkdirs();
+        ManagedDiskFileSystem mdfs = new ManagedDiskFileSystem( store );
+        try{
+            mdfs.mount(mountPoint, false);
+        } catch(Exception e){
+            log.warn("Excepting mounting MDFS/waiting", e);
+        }
+        sc.setAttribute( ContextListener.MDFS_OBJ_KEY, mdfs );
+        sc.setAttribute( ContextListener.MDFS_MOUNT_KEY, mountPoint );
+
+        // Set up the file hash service
+		DiskFileHashService diskFileHashService = new DiskFileHashService(store, mdfs);
 		sc.setAttribute( STORE_KEY, store );
+		sc.setAttribute( DISK_FHASH_KEY, diskFileHashService);
 	}
 
 	/**
@@ -251,8 +273,7 @@ public class ContextListener implements ServletContextListener {
 	@Override
     public void contextDestroyed( ServletContextEvent sce ) {
 		ServletContext sc = sce.getServletContext();
-		FileHashService fhs = (FileHashService)sc.getAttribute
-			( AMQP_SERVICE_KEY );
+		FileHashService fhs = (FileHashService)sc.getAttribute( AMQP_SERVICE_KEY );
 		if( fhs != null ) {
 			log.info( "Stopping AMQP service" );
 			try {
@@ -261,8 +282,14 @@ public class ContextListener implements ServletContextListener {
 				log.warn( ioe );
 			}
 		}
-		ManagedDiskFileSystem mdfs = (ManagedDiskFileSystem)sc.getAttribute
-			( MDFS_OBJ_KEY );
+
+		// Stop the disk file hash service
+		DiskFileHashService diskFileHashService = (DiskFileHashService) sc.getAttribute(DISK_FHASH_KEY);
+		diskFileHashService.stop();
+
+		// Clean up the MDFS
+		ManagedDiskFileSystem mdfs = (ManagedDiskFileSystem)sc.getAttribute( MDFS_OBJ_KEY );
+
 		if( mdfs != null ) {
 			log.info( "Unmounting MDFS" );
 			try {
