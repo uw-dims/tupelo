@@ -63,6 +63,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <version>${project.version}</version>
     </dependency>
     <dependency>
+        <groupId>edu.uw.apl.commons</groupId>
+        <artifactId>tsk4j-core</artifactId>
+        <version>413.3.0</version>
+    </dependency>
+    <dependency>
+        <groupId>edu.uw.apl.commons</groupId>
+        <artifactId>tsk4j-digests</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
       <version>4.5.1</version>

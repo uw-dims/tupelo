@@ -64,6 +64,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.uw.apl.commons.tsk4j.digests.BodyFile.Record;
 import edu.uw.apl.tupelo.http.common.ByteArrayAdapter;
 import edu.uw.apl.tupelo.model.ManagedDisk;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
@@ -419,14 +420,14 @@ public class HttpStoreProxy implements Store {
 	}
 
     @Override
-    public void putFileHash(ManagedDiskDescriptor mdd, Map<String, byte[]> hashes) throws IOException {
+    public void putFileRecords(ManagedDiskDescriptor mdd, List<Record> records) throws IOException{
         HttpPost post = new HttpPost(server + "disks/data/put/filehash/" + mdd.getDiskID() +
                 "/" + mdd.getSession());
         log.debug(post.getRequestLine());
 
         post.setHeader("content-type", "application/json");
         // Get the body ready
-        post.setEntity(new StringEntity(gson.toJson(hashes)));
+        post.setEntity(new StringEntity(gson.toJson(records)));
         // Make the request
         HttpClient req = new DefaultHttpClient();
         HttpResponse res = req.execute(post);
@@ -466,7 +467,7 @@ public class HttpStoreProxy implements Store {
     }
 
     @Override
-    public boolean hasFileHash(ManagedDiskDescriptor mdd) throws IOException {
+    public boolean hasFileRecords(ManagedDiskDescriptor mdd) throws IOException {
         HttpGet g = new HttpGet( server + "disks/data/filehash/"+mdd.getDiskID()+"/"+mdd.getSession() );
         g.addHeader( "Accept", "application/x-java-serialized-object" );
         log.debug( g.getRequestLine() );

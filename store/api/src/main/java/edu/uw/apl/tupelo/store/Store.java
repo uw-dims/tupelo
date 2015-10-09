@@ -36,9 +36,9 @@ package edu.uw.apl.tupelo.store;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
+import edu.uw.apl.commons.tsk4j.digests.BodyFile.Record;
 import edu.uw.apl.tupelo.model.ManagedDisk;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.model.ManagedDiskDigest;
@@ -89,11 +89,12 @@ public interface Store {
 					 int progressUpdateIntervalSecs ) throws IOException;
 
 	/**
-	 * Add a map of file path to MD5 hash for a managed disk
+	 * Add a list of file records for a managed disk
 	 * @param mdd
-	 * @param hashes
+	 * @param records
+	 * @throws IOException
 	 */
-	public void putFileHash(ManagedDiskDescriptor mdd, Map<String, byte[]> hashes) throws IOException;
+	public void putFileRecords(ManagedDiskDescriptor mdd, List<Record> records) throws IOException;
 
 	/**
 	 * Check if which, if any, managed disks contain the specified MD5 file hash
@@ -103,11 +104,11 @@ public interface Store {
 	public List<ManagedDiskDescriptor> checkForHash(byte[] hash) throws IOException;
 
 	/**
-	 * Check if the store has the hash of the full filesystem available for the Managed Disk
+	 * Check if the store has the file records of the full filesystem available for the Managed Disk
 	 * @param mdd
 	 * @return
 	 */
-	public boolean hasFileHash(ManagedDiskDescriptor mdd) throws IOException;
+	public boolean hasFileRecords(ManagedDiskDescriptor mdd) throws IOException;
 
 	/**
 	 * @return size, in bytes, of the managed disk described by the

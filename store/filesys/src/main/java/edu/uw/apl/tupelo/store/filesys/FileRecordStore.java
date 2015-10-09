@@ -42,41 +42,81 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Map;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sqlite.JDBC;
 
+import edu.uw.apl.commons.tsk4j.digests.BodyFile.Record;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 
 /**
- * A store for keeping a disk's filename->MD5 hash information. <br>
+ * A store for keeping a disk's file {@link Record} information. <br>
  * The implementation uses a SQLite database
  */
-public class FileHashStore implements Closeable {
-	private static final Log log = LogFactory.getLog(FileHashStore.class);
+public class FileRecordStore implements Closeable {
+	private static final Log log = LogFactory.getLog(FileRecordStore.class);
 
 	// The name of the database file
 	private static final String DB_FILE = "fileHash.sqlite";
 
 	// SQL Table/column names
-	private static final String TABLE_NAME = "hashes";
-	private static final String FILENAME_COL = "filename";
-	private static final String HASH_COL = "hash";
+	private static final String TABLE_NAME = "records";
+	// String
+	private static final String PATH_COL = "path";
+	// byte[]
+	private static final String MD5_COL = "md5";
+	// long
+	private static final String INODE_COL = "inode";
+	// short
+	private static final String ATTR_TYPE_COL = "attr_type";
+	private static final String ATTR_ID_COL = "attr_id";
+	// byte
+	private static final String NAME_TYPE_COL = "name_type";
+	private static final String META_TYPE_COL = "meta_type";
+	// int
+	private static final String PERM_COL = "perms";
+	private static final String UID_COL = "uid";
+	private static final String GID_COL = "gid";
+	// long
+	private static final String SIZE_COL = "size";
+	// int
+	private static final String ATIME_COL = "atime";
+	private static final String MTIME_COL = "mtime";
+	private static final String CTIME_COL = "ctime";
+	private static final String CRTIME_COL = "crtime";
 
 	// Table creation SQL statement
 	private static final String CREATE_STATEMENT =
-			"CREATE TABLE "+TABLE_NAME+" ("+FILENAME_COL+" STRING, "+
-			HASH_COL+" BLOB)";
+			"CREATE TABLE "+TABLE_NAME+" ("+
+			PATH_COL+" STRING, "+
+			MD5_COL+" BLOB, "+
+			INODE_COL+" INTEGER, "+
+			ATTR_TYPE_COL+" INTEGER, "+
+			ATTR_ID_COL+" INTEGER, "+
+			NAME_TYPE_COL+" INTEGER, "+
+			META_TYPE_COL+" INTEGER, "+
+			PERM_COL+" INTEGER, "+
+			UID_COL+" INTEGER, "+
+			GID_COL+" INTEGER, "+
+			SIZE_COL+" INTEGER, "+
+			ATIME_COL+" INTEGER, "+
+			MTIME_COL+" INTEGER, "+
+			CTIME_COL+" INTEGER, "+
+			CRTIME_COL+" INTEGER"+
+			")";
 
 	// Insert SQL statment
 	private static final String INSERT_STATEMENT =
-			"INSERT INTO "+TABLE_NAME+" ("+FILENAME_COL+", "+HASH_COL+
-			") VALUES (?, ?)";
+			"INSERT INTO "+TABLE_NAME+" ("+
+			PATH_COL+", "+MD5_COL+", "+INODE_COL+", "+ ATTR_TYPE_COL+", "+
+			ATTR_ID_COL+", "+NAME_TYPE_COL+", "+META_TYPE_COL+", "+PERM_COL+", "+
+			UID_COL+", "+GID_COL+", "+SIZE_COL+", "+ATIME_COL+", "+MTIME_COL+", "
+			+CTIME_COL+", "+CRTIME_COL+") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	// Count the number of hash statement
 	private static final String COUNT_HASH_STATEMENT =
-			"SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+HASH_COL+" = ?";
+			"SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+MD5_COL+" = ?";
 	// Count all rows statement
 	private static final String COUNT_STATEMENT =
 			"SELECT COUNT(*) FROM "+TABLE_NAME;
@@ -92,7 +132,7 @@ public class FileHashStore implements Closeable {
 	 * @param mdd
 	 * @throws Exception
 	 */
-	public FileHashStore(File dataDir, ManagedDiskDescriptor mdd) throws IOException{
+	public FileRecordStore(File dataDir, ManagedDiskDescriptor mdd) throws IOException{
 		try{
 			this.mdd = mdd;
 			log.info("FileHashStore for "+mdd);
@@ -132,11 +172,11 @@ public class FileHashStore implements Closeable {
 	 * Add all the hashes in the (Filename, hash) map to the database
 	 * @param hashes
 	 */
-	public void addAllHashes(Map<String, byte[]> hashes) throws IOException {
-		log.debug("Adding file hashes for disk "+mdd);
+	public void addRecords(List<Record> records) throws IOException {
+		log.debug("Adding file records for disk "+mdd);
 		// Add everything
-		for(String key : hashes.keySet()){
-			addHash(key, hashes.get(key));
+		for(Record cur : records){
+			addRecord(cur);
 		}
 	}
 
@@ -158,16 +198,45 @@ public class FileHashStore implements Closeable {
 	}
 
 	/**
-	 * Insert a (fileName, hash) pair to the database
-	 * @param fileName
-	 * @param hash
+	 * Insert a {@link Record} to the database
+	 * @param record
 	 * @throws SQLException
 	 */
-	public void addHash(String fileName, byte[] hash) throws IOException {
+	public void addRecord(Record record) throws IOException {
+	    /*
+            PATH_COL+" STRING, "+
+            MD5_COL+" BLOB, "+
+            INODE_COL+" INTEGER, "+
+            ATTR_TYPE_COL+" INTEGER, "+
+            ATTR_ID_COL+" INTEGER, "+
+            NAME_TYPE_COL+" INTEGER, "+
+            META_TYPE_COL+" INTEGER, "+
+            PERM_COL+" INTEGER, "+
+            UID_COL+" INTEGER, "+
+            GID_COL+" INTEGER, "+
+            SIZE_COL+" INTEGER, "+
+            ATIME_COL+" INTEGER, "+
+            MTIME_COL+" INTEGER, "+
+            CTIME_COL+" INTEGER, "+
+            CRTIME_COL+" INTEGER"+
+	     */
 		try{
 			PreparedStatement insert = connection.prepareStatement(INSERT_STATEMENT);
-			insert.setString(1, fileName);
-			insert.setBytes(2, hash);
+			insert.setString(1, record.path);
+			insert.setBytes(2, record.md5);
+			insert.setLong(3, record.inode);
+			insert.setShort(4, record.attrType);
+			insert.setShort(5, record.attrId);
+			insert.setByte(6, record.nameType);
+			insert.setByte(7, record.metaType);
+			insert.setInt(8, record.perms);
+			insert.setInt(9, record.uid);
+			insert.setInt(10, record.gid);
+			insert.setLong(11, record.size);
+			insert.setInt(12, record.atime);
+			insert.setInt(13, record.mtime);
+			insert.setInt(14, record.ctime);
+			insert.setInt(15, record.crtime);
 			insert.execute();
 		} catch(SQLException e){
 			throw new IOException(e);

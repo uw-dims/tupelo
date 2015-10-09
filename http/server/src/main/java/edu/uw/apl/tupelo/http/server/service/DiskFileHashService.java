@@ -119,7 +119,7 @@ public class DiskFileHashService {
             Collection<ManagedDiskDescriptor> allDisks = store.enumerate();
             for(ManagedDiskDescriptor mdd : allDisks){
                 // Check if the store has hashes
-                if(!store.hasFileHash(mdd)){
+                if(!store.hasFileRecords(mdd)){
                     log.debug("Disk missing file hashes, adding to queue: "+mdd);
                     diskQueue.add(mdd);
                 }

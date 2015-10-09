@@ -42,11 +42,10 @@ import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.UUID;
 
@@ -61,6 +60,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 
+import edu.uw.apl.commons.tsk4j.digests.BodyFile.Record;
 import edu.uw.apl.tupelo.http.common.ByteArrayAdapter;
 import edu.uw.apl.tupelo.http.server.Constants;
 import edu.uw.apl.tupelo.http.server.ContextListener;
@@ -72,7 +72,6 @@ import edu.uw.apl.tupelo.model.ManagedDiskDigest;
 import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.store.Store;
 
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -276,11 +275,11 @@ public class DataServlet extends HttpServlet {
         String contentType = req.getContentType();
         if (contentType.equals(JAVA_CONTENT)) {
             try {
-                // Read the map from the input stream
+                // Read the records from the input stream
                 ObjectInputStream ois = new ObjectInputStream(req.getInputStream());
-                Map<String, byte[]> hashes = (Map<String, byte[]>) ois.readObject();
+                List<Record> records = (List<Record>) ois.readObject();
                 // Shove it in the store;
-                store.putFileHash(mdd, hashes);
+                store.putFileRecords(mdd, records);
                 // Send a response
                 respondJava(res, true);
             } catch (ClassNotFoundException e) {
@@ -289,22 +288,11 @@ public class DataServlet extends HttpServlet {
         } else if (contentType.equals(JSON_CONTENT)) {
             JsonReader reader = new JsonReader(new InputStreamReader(req.getInputStream()));
             reader.setLenient(true);
-            // Read the hashes
-            // The incoming JSON hashes are in hex. They need to be converted back into bytes
-            Map<String, String> hexHashes = gson.fromJson(reader, Map.class);
-            Map<String, byte[]> hashes = new HashMap<String, byte[]>(hexHashes.size());
-            try{
-                for(String key : hexHashes.keySet()){
-                    String value = hexHashes.get(key);
-                    hashes.put(key, Hex.decodeHex(value.toCharArray()));
-                }
-                hexHashes = null;
-            } catch(Exception e){
-                throw new IOException(e);
-            }
+            // Read the records
+            Record[] records = gson.fromJson(reader, Record[].class);
 
             // Stick it in the store
-            store.putFileHash(mdd, hashes);
+            store.putFileRecords(mdd, Arrays.asList(records));
             // Send a response
             respondJson(res, true);
         } else {
@@ -327,7 +315,7 @@ public class DataServlet extends HttpServlet {
 	        return;
 	    }
 
-	    boolean hasFileHash = store.hasFileHash(mdd);
+	    boolean hasFileHash = store.hasFileRecords(mdd);
 	    if(Utils.acceptsJavaObjects(req)){
 	        respondJava(res, hasFileHash);
 	    } else if(Utils.acceptsJson(req)){

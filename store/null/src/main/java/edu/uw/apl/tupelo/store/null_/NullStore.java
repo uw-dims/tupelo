@@ -40,12 +40,12 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.TimeZone;
 
 import org.apache.commons.io.output.NullOutputStream;
 
+import edu.uw.apl.commons.tsk4j.digests.BodyFile.Record;
 import edu.uw.apl.tupelo.model.Constants;
 import edu.uw.apl.tupelo.model.ManagedDisk;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
@@ -178,9 +178,8 @@ public class NullStore implements Store {
 		( Constants.NULLUUID, EPOCH, 0 );
 
     @Override
-    public void putFileHash(ManagedDiskDescriptor mdd, Map<String, byte[]> hashes) {
+    public void putFileRecords(ManagedDiskDescriptor mdd, List<Record> records) throws IOException {
         // Do nothing
-        
     }
 
     @Override
@@ -189,7 +188,7 @@ public class NullStore implements Store {
     }
 
     @Override
-    public boolean hasFileHash(ManagedDiskDescriptor mdd) {
+    public boolean hasFileRecords(ManagedDiskDescriptor mdd) {
         return true;
     }
 }

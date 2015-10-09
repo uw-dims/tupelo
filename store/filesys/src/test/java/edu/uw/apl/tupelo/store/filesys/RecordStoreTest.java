@@ -34,14 +34,16 @@
 package edu.uw.apl.tupelo.store.filesys;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
 import java.security.MessageDigest;
 
+import edu.uw.apl.commons.tsk4j.digests.BodyFile.Record;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.model.Session;
 
-public class FileHashStoreTest extends junit.framework.TestCase {
+public class RecordStoreTest extends junit.framework.TestCase {
 	private File testDir;
-	private FileHashStore store;
+	private FileRecordStore store;
 	private MessageDigest MD5;
 
 	private static final String FILE_NAME = "/some/file";
@@ -56,11 +58,11 @@ public class FileHashStoreTest extends junit.framework.TestCase {
 		MD5 = MessageDigest.getInstance("MD5");
 
 		ManagedDiskDescriptor mdd = new ManagedDiskDescriptor("hash-test", Session.testSession());
-		store = new FileHashStore(testDir, mdd);
+		store = new FileRecordStore(testDir, mdd);
 	}
 
 	/**
-	 * Check that the database fiel exists
+	 * Check that the database file exists
 	 */
 	public void testExists(){
 		System.out.println("Checking that the sqlite file exists");
@@ -71,7 +73,8 @@ public class FileHashStoreTest extends junit.framework.TestCase {
 	/**
 	 * Test adding/removing/querying for data
 	 */
-	public void testAddingData() throws Exception {
+	@SuppressWarnings("unchecked")
+    public void testAddingData() throws Exception {
 		// The store should start empty
 		System.out.println("Store should start empty");
 		assertEquals(store.hasData(), false);
@@ -82,8 +85,15 @@ public class FileHashStoreTest extends junit.framework.TestCase {
 		MD5.reset();
 
 		// Add the filename/hash
-		System.out.println("Adding a filename/hash pair");
-		store.addHash(FILE_NAME, digest);
+		System.out.println("Adding a file record");
+
+		// Use reflection to access the private constructor
+		Constructor<Record> constructor;
+		constructor = (Constructor<Record>) Record.class.getDeclaredConstructors()[0];
+		constructor.setAccessible(true);
+
+		Record record = constructor.newInstance(digest, FILE_NAME, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+		store.addRecord(record);
 
 		System.out.println("Store should have data now");
 		// The store should have data

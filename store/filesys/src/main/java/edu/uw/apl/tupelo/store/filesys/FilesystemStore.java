@@ -59,6 +59,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.FileUtils;
 
+import edu.uw.apl.commons.tsk4j.digests.BodyFile.Record;
 import edu.uw.apl.tupelo.model.ManagedDisk;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.model.ManagedDiskDigest;
@@ -499,9 +500,9 @@ public class FilesystemStore implements Store {
 	}
 
     @Override
-    public void putFileHash(ManagedDiskDescriptor mdd, Map<String, byte[]> hashes) throws IOException {
-        FileHashStore store = getHashStore(mdd);
-        store.addAllHashes(hashes);
+    public void putFileRecords(ManagedDiskDescriptor mdd, List<Record> records) throws IOException {
+        FileRecordStore store = getHashStore(mdd);
+        store.addRecords(records);
     }
 
     @Override
@@ -510,7 +511,7 @@ public class FilesystemStore implements Store {
         List<ManagedDiskDescriptor> matchingDisks = new ArrayList<ManagedDiskDescriptor>(disks.size());
         // Iterate over the disks and see if they have a matching hash
         for (ManagedDiskDescriptor mdd : disks) {
-            FileHashStore store = getHashStore(mdd);
+            FileRecordStore store = getHashStore(mdd);
             if (store.containsFileHash(hash)) {
                 matchingDisks.add(mdd);
             }
@@ -519,8 +520,8 @@ public class FilesystemStore implements Store {
     }
 
     @Override
-    public boolean hasFileHash(ManagedDiskDescriptor mdd) throws IOException {
-        FileHashStore store = getHashStore(mdd);
+    public boolean hasFileRecords(ManagedDiskDescriptor mdd) throws IOException {
+        FileRecordStore store = getHashStore(mdd);
         return store.hasData();
     }
 	
@@ -532,8 +533,8 @@ public class FilesystemStore implements Store {
      * @return
      * @throws Exception
      */
-    private FileHashStore getHashStore(ManagedDiskDescriptor mdd) throws IOException {
-        return new FileHashStore(diskDir(root, mdd), mdd);
+    private FileRecordStore getHashStore(ManagedDiskDescriptor mdd) throws IOException {
+        return new FileRecordStore(diskDir(root, mdd), mdd);
     }
 	
 	private UUID loadUUID() {

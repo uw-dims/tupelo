@@ -404,7 +404,7 @@ public class Elvis extends Shell {
                     for (ManagedDiskDescriptor mdd : disks) {
                         // Let the user know which disks are missing file hash
                         // data
-                        if (!store.hasFileHash(mdd)) {
+                        if (!store.hasFileRecords(mdd)) {
                             System.out.println("Warning: disk is missing file hash data: " + mdd);
                         }
                     }
