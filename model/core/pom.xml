@@ -43,11 +43,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <parent>
     <groupId>edu.uw.apl</groupId>
     <artifactId>tupelo-model-parent</artifactId>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
   </parent>
   
   <artifactId>tupelo-model-core</artifactId>
-  <version>1.1.1</version>
+  <version>1.1.2</version>
   <packaging>jar</packaging>
   <name>Tupelo Disk Management - Model (Core)</name>
   
@@ -55,7 +55,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <dependency>
       <groupId>org.xerial.snappy</groupId>
       <artifactId>snappy-java</artifactId>
-      <version>1.1.1</version>
+      <version>1.1.2</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
