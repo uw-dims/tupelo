@@ -93,9 +93,9 @@ public class ContextListener implements ServletContextListener {
 	static public final String MDFS_MOUNT_KEY = "mdfs.mount";
 
 	/**
-	 * For storing the DiskFileHashService (Internal)
+	 * For storing the DiskFileRecordService (Internal)
 	 */
-	static public final String DISK_FHASH_KEY = "filehash.service";
+	static public final String DISK_FHASH_KEY = "filerecord.service";
 
 
 	public ContextListener() {
@@ -190,7 +190,7 @@ public class ContextListener implements ServletContextListener {
         mountPoint.mkdirs();
         ManagedDiskFileSystem mdfs = new ManagedDiskFileSystem( store );
         try{
-            mdfs.mount(mountPoint, false);
+            mdfs.mount(mountPoint, true);
         } catch(Exception e){
             log.warn("Excepting mounting MDFS/waiting", e);
         }
