@@ -47,7 +47,7 @@ import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
 import edu.uw.apl.tupelo.utils.Discovery;
 import edu.uw.apl.tupelo.amqp.server.FileHashService;
 import edu.uw.apl.tupelo.fuse.ManagedDiskFileSystem;
-import edu.uw.apl.tupelo.http.server.service.DiskFileHashService;
+import edu.uw.apl.tupelo.http.server.service.DiskFileRecordService;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -198,7 +198,7 @@ public class ContextListener implements ServletContextListener {
         sc.setAttribute( ContextListener.MDFS_MOUNT_KEY, mountPoint );
 
         // Set up the file hash service
-		DiskFileHashService diskFileHashService = new DiskFileHashService(store, mdfs);
+		DiskFileRecordService diskFileHashService = new DiskFileRecordService(store, mdfs);
 		sc.setAttribute( STORE_KEY, store );
 		sc.setAttribute( DISK_FHASH_KEY, diskFileHashService);
 	}
@@ -284,7 +284,7 @@ public class ContextListener implements ServletContextListener {
 		}
 
 		// Stop the disk file hash service
-		DiskFileHashService diskFileHashService = (DiskFileHashService) sc.getAttribute(DISK_FHASH_KEY);
+		DiskFileRecordService diskFileHashService = (DiskFileRecordService) sc.getAttribute(DISK_FHASH_KEY);
 		diskFileHashService.stop();
 
 		// Clean up the MDFS

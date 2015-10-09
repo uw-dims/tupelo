@@ -37,25 +37,25 @@ package edu.uw.apl.tupelo.http.server.service;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.uw.apl.commons.tsk4j.filesys.FileSystem;
+import edu.uw.apl.commons.tsk4j.digests.BodyFile;
 import edu.uw.apl.tupelo.fuse.ManagedDiskFileSystem;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.store.Store;
 import edu.uw.apl.tupelo.utils.DiskHashUtils;
 
 /**
- * Monitors and generates the file hashes for managed disks that do not yet have file hashes. <br>
+ * Monitors and generates the file hashes for managed disks that do not yet have file records. <br>
  * It polls the store for disks without file hashes approximatly every 20 minutes
  */
-public class DiskFileHashService {
-    private static final Log log = LogFactory.getLog(DiskFileHashService.class);
+public class DiskFileRecordService {
+    private static final Log log = LogFactory.getLog(DiskFileRecordService.class);
 
     // How often to check the store, in milis
     private static final long UPDATE_INTERVAL = 20 * 60 * 1000;
@@ -73,7 +73,7 @@ public class DiskFileHashService {
     // Worker thread
     private WorkerThread worker;
 
-    public DiskFileHashService(Store store, ManagedDiskFileSystem mdfs){
+    public DiskFileRecordService(Store store, ManagedDiskFileSystem mdfs){
         this.store = store;
         this.mdfs = mdfs;
 
@@ -165,7 +165,7 @@ public class DiskFileHashService {
         public void run() {
             do {
                 try {
-                    log.debug("File hash worker waiting for disk");
+                    log.debug("File record worker waiting for disk");
                     // Get an available disk from the queue
                     // This will block until one is available
                     ManagedDiskDescriptor diskDescriptor = diskQueue.take();
@@ -177,21 +177,21 @@ public class DiskFileHashService {
                         File diskPath = mdfs.pathTo(diskDescriptor);
                         DiskHashUtils hashUtils = new DiskHashUtils(diskPath.getAbsolutePath());
 
-                        // Hash and store each filesystem
-                        for (FileSystem fs : hashUtils.getFilesystems()) {
-                            log.debug("Hashing filesystem");
-                            Map<String, byte[]> hashes = hashUtils.hashFileSystem(fs);
-
-                            log.debug("Storing hashes");
-                            store.putFileHash(diskDescriptor, hashes);
+                        // Create the BodyFiles
+                        List<BodyFile> bodyFiles = hashUtils.hashDisk();
+                        // Save it
+                        log.debug("Saving file records");
+                        for(BodyFile bodyFile : bodyFiles){
+                            store.putFileRecords(diskDescriptor, bodyFile.records());
                         }
-                        log.debug("Done hashing disk " + diskDescriptor);
-
+                        
+                        hashUtils.close();
+                        log.debug("Done getting records for disk " + diskDescriptor);
                     } catch (Exception e) {
-                        log.error("Exception hashing disk", e);
+                        log.error("Exception getting records disk", e);
                     }
                 } catch (InterruptedException e) {
-                    log.warn("File hash thread interrupted, stopping");
+                    log.warn("File record thread interrupted, stopping");
                     break;
                 }
             } while (!isInterrupted());

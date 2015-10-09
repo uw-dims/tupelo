@@ -34,21 +34,12 @@
 package edu.uw.apl.tupelo.utils;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import edu.uw.apl.commons.tsk4j.filesys.Attribute;
-import edu.uw.apl.commons.tsk4j.filesys.DirectoryWalk;
+import edu.uw.apl.commons.tsk4j.digests.BodyFile;
+import edu.uw.apl.commons.tsk4j.digests.BodyFileBuilder;
 import edu.uw.apl.commons.tsk4j.filesys.FileSystem;
-import edu.uw.apl.commons.tsk4j.filesys.Meta;
-import edu.uw.apl.commons.tsk4j.filesys.Walk;
-import edu.uw.apl.commons.tsk4j.filesys.WalkFile;
 import edu.uw.apl.commons.tsk4j.image.Image;
 import edu.uw.apl.commons.tsk4j.volsys.Partition;
 import edu.uw.apl.commons.tsk4j.volsys.VolumeSystem;
@@ -59,20 +50,8 @@ import edu.uw.apl.commons.tsk4j.volsys.VolumeSystem;
  *
  */
 public class DiskHashUtils {
-	
-	// Hashing variables
-	static MessageDigest MD5 = null;
-	static {
-		try {
-			MD5 = MessageDigest.getInstance( "md5" );
-		} catch( NoSuchAlgorithmException never ) {
-		}
-	}
-	static byte[] DIGESTBUFFER = new byte[ 1024*1024 ];
-	
 	private final String path;
 	private final Image image;
-	private boolean debug = true;
 	
 	/**
 	 * Create a new UnmanagedDisk
@@ -82,14 +61,6 @@ public class DiskHashUtils {
 	public DiskHashUtils(String path) throws IOException {
 		this.path = path;
 		image = new Image(path);
-	}
-	
-	/**
-	 * Turn debug printing on/off
-	 * @param debug
-	 */
-	public void setDebug(boolean debug){
-		this.debug = debug;
 	}
 	
 	/**
@@ -198,93 +169,17 @@ public class DiskHashUtils {
 	}
 	
 	/**
-	 * Walk the FileSystem and get a map of <FilePath, MD5 byte> hashes.
-	 * The FileSystem will be closed when done!
-	 * @param fs the FileSystem
-	 * @return Map of <FilePath, MD5 hash>
+	 * Walk the FileSystem and get a {@link BodyFile} for each partition.
+	 * @return List of {@link BodyFile}s
 	 */
-	public Map<String, byte[]> hashFileSystem(FileSystem fs) throws IOException {
-		final Map<String, byte[]> fileHashes = new HashMap<String, byte[]>(); 
-		
-		DirectoryWalk.Callback callBack = new DirectoryWalk.Callback() {
-			public int apply(WalkFile f, String path) {
-				try {
-					hashFile(f, path, fileHashes);
-					return Walk.WALK_CONT;
-				} catch (Exception e) {
-					System.err.println(e);
-					return Walk.WALK_ERROR;
-				}
-			}
-		};
-		int flags = DirectoryWalk.FLAG_NONE;
-		// LOOK: visit deleted files too ??
-		flags |= DirectoryWalk.FLAG_ALLOC;
-		flags |= DirectoryWalk.FLAG_RECURSE;
-		flags |= DirectoryWalk.FLAG_NOORPHAN;
-		fs.dirWalk(fs.rootINum(), flags, callBack);
-		fs.close();
-		
-		return fileHashes;
+	public List<BodyFile> hashDisk() throws IOException {
+	    List<BodyFile> bodyFiles = new ArrayList<BodyFile>();
+	    for(FileSystem fs : getFilesystems()){
+	        bodyFiles.add(BodyFileBuilder.create(fs));
+	        fs.close();
+	    }
+	    return bodyFiles;
 	}
-	
-	/**
-	 * Process and get the MD5 hash for a file
-	 * @param file the file
-	 * @param path the file's path
-	 * @param fileHashes the map to store the hash
-	 * @throws IOException
-	 */
-	private void hashFile( WalkFile file, String path,
-						  Map<String,byte[]> fileHashes )
-		throws IOException {
 
-		String name = file.getName();
-		// Skip null names or parent/current directory
-		if( name == null ){
-			return;
-		} else if(	"..".equals( name ) || ".".equals( name ) ) {
-			return;
-		}
-
-		Meta metaData = file.meta();
-		if( metaData == null )
-			return;
-		// LOOK: hash directories too ??
-		if( metaData.type() != Meta.TYPE_REG ){
-			return;
-		}
-		Attribute attribute = file.getAttribute();
-		// Seen some weirdness where an allocated file has no attribute(s) ??
-		if( attribute == null ){
-			return;
-		}
-
-		if( debug ){ 
-			System.out.println( "'" + path + "' '" + name + "'" );
-		}
-
-		String wholeName = path + name;
-		// Put the has in the map
-		byte[] digest = digest( attribute );
-		fileHashes.put( wholeName, digest );
-	}
-	
-	/**
-	 * Get the MD5 has of an attribute
-	 * @param attribute
-	 * @return
-	 * @throws IOException
-	 */
-	private byte[] digest( Attribute attribute ) throws IOException {
-		MD5.reset();
-		InputStream inputStream = attribute.getInputStream();
-		DigestInputStream digestInputStream = new DigestInputStream( inputStream, MD5 );
-		while( true ) {
-			if( digestInputStream.read( DIGESTBUFFER ) < 0 )
-				break;
-		}
-		return MD5.digest();
-	}
 
 }
