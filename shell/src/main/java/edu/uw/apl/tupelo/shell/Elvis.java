@@ -48,9 +48,7 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.cli.*;
@@ -378,19 +376,14 @@ public class Elvis extends Shell {
                         }
                     }
 
-                    // Start looking for the hashes
-                    Set<ManagedDiskDescriptor> matchingDisks = new HashSet<ManagedDiskDescriptor>();
+                    // Build the list of hashes in bytes
+                    List<byte[]> byteHashes = new ArrayList<byte[]>(hashes.length);
                     for (String hash : hashes) {
-                        hash = hash.toLowerCase();
-                        // A MD5 hash is a 32 character hex string
-                        if(!hash.matches("^[a-f0-9]{32}$")){
-                            System.err.println("Error: Invalid hash: "+hash);
-                            continue;
-                        }
-                        byte[] byteHash = Hex.decodeHex(hash.toCharArray());
-                        // Add all matching disks to the set
-                        matchingDisks.addAll(store.checkForHash(byteHash));
+                        byteHashes.add(Hex.decodeHex(hash.toCharArray()));
                     }
+
+                    // Start looking for the hashes
+                    List<ManagedDiskDescriptor> matchingDisks = store.checkForHashes(byteHashes);
 
                     // Report our results
                     if(matchingDisks.isEmpty()){

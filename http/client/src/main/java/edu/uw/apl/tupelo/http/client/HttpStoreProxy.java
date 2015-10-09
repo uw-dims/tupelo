@@ -40,7 +40,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -437,19 +437,24 @@ public class HttpStoreProxy implements Store {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public List<ManagedDiskDescriptor> checkForHash(byte[] hash) throws IOException {
+        List<byte[]> hashes = new ArrayList<byte[]>(1);
+        hashes.add(hash);
+        return checkForHashes(hashes);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<ManagedDiskDescriptor> checkForHashes(List<byte[]> hashes) throws IOException {
         HttpPost post = new HttpPost(server + "disks/data/filehash/check");
         post.addHeader( "Accept", "application/x-java-serialized-object" );
         log.debug(post.getRequestLine());
 
-        post.setHeader("content-type", "application/json");
         // Get the body ready
-        ByteArrayInputStream bais = new ByteArrayInputStream( hash );
-        InputStreamEntity ise = new InputStreamEntity
-            ( bais, hash.length, ContentType.APPLICATION_OCTET_STREAM );
-        post.setEntity( ise );
+        post.setHeader("content-type", "application/json");
+        post.setEntity( new StringEntity(gson.toJson(hashes)) );
+
         // Make the request
         HttpClient req = new DefaultHttpClient();
         HttpResponse res = req.execute(post);

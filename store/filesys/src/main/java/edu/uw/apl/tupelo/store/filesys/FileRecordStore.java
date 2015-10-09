@@ -117,6 +117,9 @@ public class FileRecordStore implements Closeable {
 	// Count the number of hash statement
 	private static final String COUNT_HASH_STATEMENT =
 			"SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+MD5_COL+" = ?";
+	// This needs a ? added for each value and then needs to have a closing )
+	private static final String COUNT_HASH_IN_STATEMENT =
+	        "SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+MD5_COL+" IN (";
 	// Count all rows statement
 	private static final String COUNT_STATEMENT =
 			"SELECT COUNT(*) FROM "+TABLE_NAME;
@@ -196,6 +199,47 @@ public class FileRecordStore implements Closeable {
 			throw new IOException(e);
 		}
 	}
+
+	/**
+	 * Check if any of the provided hashes are contained in the store
+	 * @param hashes
+	 * @return
+	 * @throws IOException
+	 */
+    public boolean containsFileHash(List<byte[]> hashes) throws IOException {
+        if (hashes == null || hashes.isEmpty()) {
+            throw new IllegalArgumentException("Array must not be empty");
+        }
+
+        // For a single hash, use the search for one hash method because it
+        // could be faster
+        if (hashes.size() == 1) {
+            return containsFileHash(hashes.get(0));
+        }
+
+        try {
+            // The query string needs to be built
+            StringBuilder queryBuilder = new StringBuilder(COUNT_HASH_IN_STATEMENT);
+            for (int i = 0; i < (hashes.size() - 1); i++) {
+                queryBuilder.append("?, ");
+            }
+            // Now, add the last ? and close the parentheses
+            queryBuilder.append("?)");
+
+            // Now, build the statement
+            PreparedStatement query = connection.prepareStatement(queryBuilder.toString());
+            // The prepared statement setXXXX() methods start with 1
+            for (int i = 1; i <= hashes.size(); i++) {
+                query.setBytes(i, hashes.get(i - 1));
+            }
+
+            // Run the query
+            ResultSet result = query.executeQuery();
+            return result.getInt(1) != 0;
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
+    }
 
 	/**
 	 * Insert a {@link Record} to the database

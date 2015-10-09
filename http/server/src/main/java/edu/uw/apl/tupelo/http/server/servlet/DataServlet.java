@@ -217,14 +217,23 @@ public class DataServlet extends HttpServlet {
 	}
 
 	private void checkForHash(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
-	    // Get the hash to look for
-	    byte[] hash = new byte[req.getContentLength()];
-	    InputStream is = req.getInputStream();
-	    is.read(hash, 0, hash.length);
-	    is.close();
+	    if(!req.getContentType().equals(JSON_CONTENT)){
+	        log.warn("Warning: Check for hash called with bad content-type: "+req.getContentType());
+	        res.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE,
+	                "Only JSON is accepted");
+	        return;
+	    }
+	    // Get the hashes to look for
+        JsonReader reader = new JsonReader(new InputStreamReader(req.getInputStream()));
+        reader.setLenient(true);
+
+        byte[][] allHashes = gson.fromJson(reader, byte[][].class);
+
+        List<byte[]> hashes = Arrays.asList(allHashes);
+        log.debug("Checking for "+hashes.size()+" hashes");
 
 	    // Get the info from the store
-	    List<ManagedDiskDescriptor> disks = store.checkForHash(hash);
+	    List<ManagedDiskDescriptor> disks = store.checkForHashes(hashes);
 
 	    // Shove it back
 	    if(Utils.acceptsJavaObjects(req)){

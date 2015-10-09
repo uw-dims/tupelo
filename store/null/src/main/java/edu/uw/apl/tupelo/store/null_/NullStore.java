@@ -188,6 +188,11 @@ public class NullStore implements Store {
     }
 
     @Override
+    public List<ManagedDiskDescriptor> checkForHashes(List<byte[]> hash) {
+        return new ArrayList<ManagedDiskDescriptor>(0);
+    }
+
+    @Override
     public boolean hasFileRecords(ManagedDiskDescriptor mdd) {
         return true;
     }

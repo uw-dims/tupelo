@@ -520,6 +520,20 @@ public class FilesystemStore implements Store {
     }
 
     @Override
+    public List<ManagedDiskDescriptor> checkForHashes(List<byte[]> hashes) throws IOException {
+        Collection<ManagedDiskDescriptor> disks = enumerate();
+        List<ManagedDiskDescriptor> matchingDisks = new ArrayList<ManagedDiskDescriptor>(disks.size());
+        // Iterate over the disks and see if they have a matching hash
+        for (ManagedDiskDescriptor mdd : disks) {
+            FileRecordStore store = getHashStore(mdd);
+            if (store.containsFileHash(hashes)) {
+                matchingDisks.add(mdd);
+            }
+        }
+        return matchingDisks;
+    }
+
+    @Override
     public boolean hasFileRecords(ManagedDiskDescriptor mdd) throws IOException {
         FileRecordStore store = getHashStore(mdd);
         return store.hasData();

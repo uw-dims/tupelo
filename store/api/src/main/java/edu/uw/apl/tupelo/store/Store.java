@@ -103,6 +103,13 @@ public interface Store {
 	 */
 	public List<ManagedDiskDescriptor> checkForHash(byte[] hash) throws IOException;
 
+    /**
+     * Check if which, if any, managed disks contain the specified MD5 file hashes
+     * @param hashes the MD5 hashes
+     * @return the list of ManagedDiskDescriptors that contain the hash
+     */
+    public List<ManagedDiskDescriptor> checkForHashes(List<byte[]> hashes) throws IOException;
+
 	/**
 	 * Check if the store has the file records of the full filesystem available for the Managed Disk
 	 * @param mdd
