@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Set;
 import java.util.UUID;
 
@@ -60,8 +61,7 @@ import edu.uw.apl.commons.tsk4j.image.Image;
 import edu.uw.apl.commons.tsk4j.volsys.Partition;
 import edu.uw.apl.commons.tsk4j.volsys.VolumeSystem;
 import edu.uw.apl.commons.tsk4j.digests.BodyFile;
-import edu.uw.apl.commons.tsk4j.digests.BodyFileBuilder;
-import edu.uw.apl.commons.tsk4j.digests.BodyFileCodec;
+import edu.uw.apl.commons.tsk4j.digests.BodyFile.Record;
 import edu.uw.apl.commons.tsk4j.digests.VolumeSystemHash;
 import edu.uw.apl.commons.tsk4j.digests.VolumeSystemHashCodec;
 import edu.uw.apl.commons.tsk4j.filesys.FileSystem;
@@ -100,12 +100,10 @@ public class Elvis extends Shell {
     private static boolean verbose, debug;
     private Session session;
     private VirtualMachineFileSystem vmfs;
-    private Set<String> vmNames;
 
-    // Filehashes for unmanaged disks
+    // Bodyfiles for unmanaged disks
     // This is only hashes done this session
-    // Its a map of unmanaged disk-> List of partition's file hashes
-    private Map<UnmanagedDisk, List<Map<String, byte[]>>> diskFileHashes;
+    private Map<UnmanagedDisk, List<BodyFile>> diskFileRecords;
 
     /**
      * Path to check for potential disks
@@ -151,8 +149,7 @@ public class Elvis extends Shell {
 		physicalDisks = new ArrayList<PhysicalDisk>();
 		virtualDisks = new ArrayList<VirtualDisk>();
 		diskImages = new ArrayList<DiskImage>();
-		vmNames = new HashSet<String>();
-		diskFileHashes = new HashMap<UnmanagedDisk, List<Map<String, byte[]>>>();
+		diskFileRecords = new HashMap<UnmanagedDisk, List<BodyFile>>();
 		
 		// Try and load the store location via the Discovery class
 		storeLocation = Discovery.locatePropertyValue(STORE_PROPERTY);
@@ -237,103 +234,75 @@ public class Elvis extends Shell {
 			} );
 		commandHelp( "vshash", "unmanagedDisk",
 					 "Hash each unallocated area of the identified unmanaged disk, storing the result as a managed disk attribute" );
-
-		/*
-		  hashfs, hash any/all filesystems of an identified
-		  unmanaged disk
-		*/
-		addCommand( "fshash", "(.+)", new Lambda() {
-				public void apply( String[] args ) throws Exception {
-					String needle = args[1];
-					needle = needle.trim();
-					UnmanagedDisk ud = null;
-					try {
-						ud = locateUnmanagedDisk( needle );
-					} catch( IndexOutOfBoundsException oob ) {
-						System.err.println
-							( "No unmanaged disk " + needle +
-							  ". Use 'us' to list unmanaged disks" );
-						return;
-					}
-					if( ud == null ) {
-						System.out.println( "No unmanaged disk: " +
-											needle );
-						return;
-					}
-					hashFileSystems( ud );
-				}
-			} );
-		commandHelp( "fshash", "unmanagedDisk",
-					 "Hash each filesystem of the identified unmanaged disk.  The resulting bodyfile is stored as a managed disk attribute" );
 		
-		addCommand( "filehash", "(.+)", new Lambda(){
-			public void apply(String args[]) throws Exception {
-				String diskName = args[1].trim();
-				UnmanagedDisk ud = null;
-				try {
-					ud = locateUnmanagedDisk( diskName );
-				} catch( IndexOutOfBoundsException oob ) {
-					System.err.println
-						( "No unmanaged disk " + diskName +
-						  ". Use 'us' to list unmanaged disks" );
-					return;
-				}
-				if( ud == null ) {
-					System.out.println( "No unmanaged disk: " + diskName );
-					return;
-				}
-				// Prep the session
-				checkSession();
+        addCommand("fshash", "(.+)", new Lambda() {
+            public void apply(String args[]) throws Exception {
+                String diskName = args[1].trim();
+                UnmanagedDisk ud = null;
+                try {
+                    ud = locateUnmanagedDisk(diskName);
+                } catch (IndexOutOfBoundsException oob) {
+                    System.err.println("No unmanaged disk " + diskName + ". Use 'us' to list unmanaged disks");
+                    return;
+                }
+                if (ud == null) {
+                    System.out.println("No unmanaged disk: " + diskName);
+                    return;
+                }
+                // Prep the session
+                checkSession();
 
-				try{
-					Date start = new Date();
-					DiskHashUtils disk = new DiskHashUtils(ud.getSource().getAbsolutePath());
-					disk.setDebug(debug);
+                try {
+                    Date start = new Date();
+                    DiskHashUtils disk = new DiskHashUtils(ud.getSource().getAbsolutePath());
 
-					List<Partition> partitions = disk.getPartitions();
-					List<Map<String, byte[]>> allHashes = new ArrayList<Map<String, byte[]>>();
-					if(partitions != null){
-						for(Partition partition: partitions){
-							FileSystem fs = disk.getFileSystem(partition);
-							if(fs == null){
-								continue;
-							}
-							// Hash it
-							Map<String, byte[]> hashes = disk.hashFileSystem(fs);
-							writeHashData(hashes, diskName+"-"+session.toString()+"-"+partition.start()+"-"+partition.length()+".md5");
-							// Save it
-							allHashes.add(hashes);
-						}
-					} else {
-						FileSystem fs = disk.getFileSystem();
-						if(fs == null){
-							System.err.println("No filesystem found");
-							disk.close();
-							return;
-						}
-						Map<String, byte[]> hashes = disk.hashFileSystem(fs);
-						writeHashData(hashes, diskName+"-"+session.toString()+".md5");
-						// Save it
-						allHashes.add(hashes);
-					}
-					// Clean up
-					disk.close();
-                    // Keep the hashes around
-                    System.out.println("Storing hashes with key: "+ud.getID());
-                    diskFileHashes.put(ud, allHashes);
+                    List<BodyFile> bodyFiles = new LinkedList<BodyFile>();
+                    // Process each parition individually
+                    List<Partition> partitions = disk.getPartitions();
+                    if (partitions != null) {
+                        for (Partition partition : partitions) {
+                            // Make sure there is a filesystem
+                            FileSystem fs = disk.getFileSystem(partition);
+                            if (fs == null) {
+                                continue;
+                            }
+                            BodyFile bodyFile = disk.hashFileSystem(fs);
+                            bodyFiles.add(bodyFile);
 
-					Date end = new Date();
-					System.out.println("Elapsed time: "+ (end.getTime() - start.getTime()) / 1000 + "sec");
-				} catch(Exception e){
-					log.warn( e );
-					if(debug){
-						e.printStackTrace();
-					}
-				}
-			}
-		});
-		commandHelp("filehash", "unmanagedDisk",
-				"Hash all the files on all filesystems of the specified disk. The result will be written to a file in the current directory.");
+                            // Write the data
+                            writeRecordData(bodyFile, diskName + "-" + session + "-" + partition.start() + "-"
+                                    + partition.length() + ".bodyfile");
+                        }
+                    } else {
+                        FileSystem fs = disk.getFileSystem();
+                        if (fs == null) {
+                            System.err.println("No filesystem found");
+                            disk.close();
+                            return;
+                        }
+                        BodyFile bodyFile = disk.hashFileSystem(fs);
+                        bodyFiles.add(bodyFile);
+
+                        // Write the bodyfile
+                        writeRecordData(bodyFile, diskName + "-" + session + ".bodyfile");
+                    }
+
+                    disk.close();
+                    // Store it for now
+                    diskFileRecords.put(ud, bodyFiles);
+
+                    Date end = new Date();
+                    System.out.println("Elapsed time: " + (end.getTime() - start.getTime()) / 1000 + "sec");
+                } catch (Exception e) {
+                    log.warn(e);
+                    if (debug) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+		commandHelp("fshash", "unmanagedDisk",
+		        "Hash each filesystem of the identified unmanaged disk.  The resulting bodyfiles are written to the current directory, and will also be sent to the store if the disk is.");
 
 		// putdisk, xfer an unmanaged disk to the store
 		addCommand( "putdisk", "(.+)", new Lambda() {
@@ -642,7 +611,7 @@ public class Elvis extends Shell {
 		System.out.println( msg );
 	}
 
-	Store buildStore() {
+	private Store buildStore() {
 		Store s = null;
 		if( storeLocation.equals( "/dev/null" ) ) {
 			s = new NullStore();
@@ -849,17 +818,20 @@ public class Elvis extends Shell {
 		}
 
 		// If the disk's files have been hashed, add them too
-		System.out.println("Using key: "+ud.getID());
-		if(diskFileHashes.containsKey(ud)){
-		    System.out.println("Sending file hash for disk");
-		    // Add hashes for all partitions
-		    for(Map<String, byte[]> hashes : diskFileHashes.get(ud)){
-		        store.putFileHash(md.getDescriptor(), hashes);
+		if(diskFileRecords.containsKey(ud)){
+		    System.out.println("Sending file records for disk");
+		    // Add records for all partitions
+		    List<Record> allRecords = new LinkedList<Record>();
+		    for(BodyFile bodyFile : diskFileRecords.get(ud)){
+		        allRecords.addAll(bodyFile.records());
 		    }
-		    System.out.println("File hashes sent");
+		    // Send it
+		    store.putFileRecords(mdd, allRecords);
+
+		    System.out.println("File records sent");
 		} else {
 		    // TODO - Check for a hash file and read/add it
-		    System.out.println("No file hash found in memory");
+		    System.out.println("No file records found in memory");
 		}
 	}
 
@@ -947,109 +919,27 @@ public class Elvis extends Shell {
 		}
 	}
 
-	private void hashFileSystems( UnmanagedDisk ud ) throws IOException {
-		checkSession();
-		if( ud instanceof VirtualDisk ) {
-			hashFileSystemsVirtual( (VirtualDisk)ud );
-		} else {
-			hashFileSystemsNonVirtual( ud );
-		}
-	}
-
-	private void hashFileSystemsVirtual( VirtualDisk ud ) throws IOException {
-		checkVMFS();
-		VirtualMachine vm = ud.getVM();
-		if( !vmNames.contains( vm.getName() ) ) {
-			vmfs.add( vm );
-			vmNames.add( vm.getName() );
-		}
-		edu.uw.apl.vmvols.model.VirtualDisk vmDisk = ud.getDelegate();
-		File f = vmfs.pathTo( vmDisk );
-		Image i = new Image( f );
-		try {
-			hashFileSystemsImpl( i, ud );
-		} finally {
-			// MUST release i else leaves vmfs non-unmountable
-			i.close();
-		}
-	}
-
-	private void hashFileSystemsNonVirtual( UnmanagedDisk ud )
-		throws IOException {
-		Image i = new Image( ud.getSource() );
-		try {
-			hashFileSystemsImpl( i, ud );
-		} finally {
-			// MUST release i else leaves vmfs non-unmountable
-			i.close();
-		}
-	}
-
-	private void hashFileSystemsImpl( Image i, UnmanagedDisk ud )
-		throws IOException {
-		VolumeSystem vs = null;
-		try {
-			vs = new VolumeSystem( i );
-		} catch( IllegalStateException noVolSys ) {
-			log.warn( noVolSys );
-			return;
-		}
-		try {
-			ManagedDiskDescriptor mdd = new ManagedDiskDescriptor( ud.getID(),
-																   session );
-			List<Partition> ps = vs.getPartitions();
-			for( Partition p : ps ) {
-				log.debug( p.start() + " " + p.length() + " " +
-						   p.description() );
-				if( !p.isAllocated() )
-					continue;
-				FileSystem fs = null;
-				try {
-					fs = new FileSystem( i, p.start() );
-				} catch( IllegalStateException lvmPerhaps ) {
-					log.warn( lvmPerhaps );
-					continue;
-				}
-				BodyFile bf = null;
-				try {
-					bf = BodyFileBuilder.create( fs );
-				} finally {
-					fs.close();
-				}
-				StringWriter sw = new StringWriter();
-				BodyFileCodec.format( bf, sw );
-				String s = sw.toString();
-				String key = "hashfs-" + p.start() + "-" + p.length();
-				byte[] value = s.getBytes();
-				store.setAttribute( mdd, key, value );
-			}
-		} finally {
-			vs.close();
-		}
-	}
-
 	/**
-	 * Write the fileHash data to a file
+	 * Write the file record data to a file
 	 * @param fileHashes the map of file path to hash
 	 * @param fileName the output file name
 	 * @throws IOException
 	 */
-	private void writeHashData(Map<String, byte[]> fileHashes, String fileName) throws IOException{
+	private void writeRecordData(BodyFile bodyFile, String fileName) throws IOException{
+	    List<Record> records = bodyFile.records();
 		// Replace / with _ so it doesnt try and write the file to some other directory
 		fileName = fileName.replace('/', '_');
-		System.out.println("Writing "+fileHashes.size()+" hashes to "+fileName);
-
-		// Sort the keys
-		List<String> sortedKeys = new ArrayList<String>(fileHashes.keySet());
-		Collections.sort(sortedKeys);
+		System.out.println("Writing "+records.size()+" hashes to "+fileName);
 
 		// Get the writers ready
 		FileWriter fileWriter = new FileWriter(fileName);
 		PrintWriter printWriter = new PrintWriter(new BufferedWriter(fileWriter));
-		for(String file : sortedKeys){
-			byte[] hash = fileHashes.get(file);
-			String stringHash = new String(Hex.encodeHex(hash));
-			printWriter.println(stringHash+" "+ file);
+
+		// Add the header
+		printWriter.println("MD5|name|inode|mode_as_string|UID|GID|size|atime|mtime|ctime|crtime");
+		// Print the records
+		for(Record record : records){
+			printWriter.println(record.toString());
 		}
 		// Flush and close the writers
 		printWriter.flush();

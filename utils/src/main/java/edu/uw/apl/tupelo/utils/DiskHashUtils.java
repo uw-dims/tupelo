@@ -169,14 +169,26 @@ public class DiskHashUtils {
 	}
 	
 	/**
+	 * Get a {@link BodyFile} for the provided filesystem. <br>
+	 * NOTE: The filesystem will be closed when done!
+	 * @param fs
+	 * @return
+	 * @throws IOException
+	 */
+	public BodyFile hashFileSystem(FileSystem fs) throws IOException {
+	    BodyFile bodyFile = BodyFileBuilder.create(fs);
+	    fs.close();
+	    return bodyFile;
+	}
+
+	/**
 	 * Walk the FileSystem and get a {@link BodyFile} for each partition.
 	 * @return List of {@link BodyFile}s
 	 */
 	public List<BodyFile> hashDisk() throws IOException {
 	    List<BodyFile> bodyFiles = new ArrayList<BodyFile>();
 	    for(FileSystem fs : getFilesystems()){
-	        bodyFiles.add(BodyFileBuilder.create(fs));
-	        fs.close();
+	        bodyFiles.add(hashFileSystem(fs));
 	    }
 	    return bodyFiles;
 	}

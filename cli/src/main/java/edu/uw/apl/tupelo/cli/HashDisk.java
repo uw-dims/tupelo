@@ -36,16 +36,14 @@ package edu.uw.apl.tupelo.cli;
 import java.io.BufferedWriter;
 import java.io.PrintWriter;
 import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.cli.*;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.LogManager;
 
+import edu.uw.apl.commons.tsk4j.digests.BodyFile;
+import edu.uw.apl.commons.tsk4j.digests.BodyFile.Record;
 import edu.uw.apl.commons.tsk4j.filesys.FileSystem;
 import edu.uw.apl.commons.tsk4j.volsys.Partition;
 import edu.uw.apl.tupelo.utils.DiskHashUtils;
@@ -111,7 +109,6 @@ public class HashDisk extends CliBase {
 		Date start = new Date();
 		System.out.println( "Trying to open " + diskPath);
 		DiskHashUtils disk = new DiskHashUtils(diskPath);
-		disk.setDebug(debug);
 
 		// Get the disk's partitions
 		List<Partition> partitions = disk.getPartitions();
@@ -124,9 +121,9 @@ public class HashDisk extends CliBase {
 					continue;
 				}
 				// Hash it
-				Map<String, byte[]> hashes = disk.hashFileSystem(fs);
+				BodyFile bodyFile = disk.hashFileSystem(fs);
 				// Record it
-				record(hashes, partition.start(), partition.length());
+				record(bodyFile, partition.start(), partition.length());
 			}
 		} else {
 			// Get the filesystem
@@ -138,8 +135,8 @@ public class HashDisk extends CliBase {
 			}
 
 			// Get and record the hashes
-			Map<String, byte[]> hashes = disk.hashFileSystem(fs);
-			record(hashes, 0, 0);
+			BodyFile bodyFile = disk.hashFileSystem(fs);
+			record(bodyFile, 0, 0);
 		}
 		
 		// Cleanup
@@ -157,26 +154,24 @@ public class HashDisk extends CliBase {
 	 * @param length
 	 * @throws Exception
 	 */
-	private void record( Map<String,byte[]> fileHashes,
-						 long start, long length )
-		throws Exception {
+	private void record( BodyFile bodyFile,
+						 long start, long length ) throws Exception {
 
-		List<String> sorted = new ArrayList<String>( fileHashes.keySet() );
-		Collections.sort( sorted );
+	    List<Record> records = bodyFile.records();
 		String outName = diskPath + "-" +
-			start + "-" + length + ".md5";
+			start + "-" + length + ".bodyfile";
 		// Use underscore instead of /, so we don't write the file under /dev or some other directory somewhere
 		outName = outName.replace('/', '_');
-		System.out.println( "Writing "+fileHashes.size()+" hashes to: " + outName );
+		System.out.println( "Writing "+records.size()+" records to: " + outName );
 		
 		// Write all the data out
 		FileWriter fileWriter = new FileWriter( outName );
 		BufferedWriter bufferedWrite = new BufferedWriter( fileWriter, 1024 * 1024 );
 		PrintWriter printWriter = new PrintWriter( bufferedWrite );
-		for( String fName : sorted ) {
-			byte[] hash = fileHashes.get( fName );
-			String s = new String( Hex.encodeHex( hash ) );
-			printWriter.println( s + " " + fName );
+        // Add the header
+        printWriter.println("MD5|name|inode|mode_as_string|UID|GID|size|atime|mtime|ctime|crtime");
+		for( Record record : records ) {
+			printWriter.println( record );
 		}
 		// Flush and close everything
 		printWriter.flush();
