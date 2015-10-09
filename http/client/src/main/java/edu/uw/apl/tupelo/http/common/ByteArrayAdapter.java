@@ -32,7 +32,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package edu.uw.apl.tupelo.utils;
+package edu.uw.apl.tupelo.http.common;
 
 import java.lang.reflect.Type;
 

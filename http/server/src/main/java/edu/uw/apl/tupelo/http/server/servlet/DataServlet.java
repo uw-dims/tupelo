@@ -61,6 +61,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 
+import edu.uw.apl.tupelo.http.common.ByteArrayAdapter;
 import edu.uw.apl.tupelo.http.server.Constants;
 import edu.uw.apl.tupelo.http.server.ContextListener;
 import edu.uw.apl.tupelo.http.server.HttpManagedDisk;
@@ -70,7 +71,6 @@ import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.model.ManagedDiskDigest;
 import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.store.Store;
-import edu.uw.apl.tupelo.utils.ByteArrayAdapter;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.logging.Log;

@@ -64,13 +64,13 @@ import org.apache.http.entity.StringEntity;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.uw.apl.tupelo.http.common.ByteArrayAdapter;
 import edu.uw.apl.tupelo.model.ManagedDisk;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.model.ManagedDiskDigest;
 import edu.uw.apl.tupelo.model.Session;
 import edu.uw.apl.tupelo.model.ProgressMonitor;
 import edu.uw.apl.tupelo.store.Store;
-import edu.uw.apl.tupelo.utils.ByteArrayAdapter;
 
 /**
  * A client side (in the http sense that is) proxy for a Store.
