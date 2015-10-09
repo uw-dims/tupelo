@@ -87,12 +87,12 @@ import org.apache.commons.logging.LogFactory;
  *
  * /disks/data/enumerate
  * /disks/data/put/DID/SID
- * /disks/data/put/filehash/DID/SID
+ * /disks/data/put/filerecord/DID/SID
  * /disks/data/size/DID/SID
  * /disks/data/uuid/DID/SID
  * /disks/data/digest/DID/SID
- * /disks/data/filehash/DID/SID
- * /disks/data/filehash/check
+ * /disks/data/filerecord/DID/SID
+ * /disks/data/filerecord/check
  *
  *
  * /disks/data/get/DID/SID (TODO, currently no support for retrieving managed data)
@@ -145,9 +145,9 @@ public class DataServlet extends HttpServlet {
 		} else if( pi.startsWith( "/uuid/" ) ) {
 			String details = pi.substring( "/uuid/".length() );
 			uuid( req, res, details );
-		} else if( pi.startsWith("/filehash/")){
-		    String details = pi.substring("/filehash/".length());
-		    hasFileHash(req, res, details);
+		} else if( pi.startsWith("/filerecord/")){
+		    String details = pi.substring("/filerecord/".length());
+		    hasFileRecord(req, res, details);
 		} else {
 			res.sendError( HttpServletResponse.SC_NOT_FOUND,
 						   "Unknown command '" + pi + "'" );
@@ -168,9 +168,9 @@ public class DataServlet extends HttpServlet {
 		String pi = req.getPathInfo();
 		log.debug( "Post.PathInfo: " + pi );
 
-		if(pi.startsWith("/put/filehash/")){
-		    String details = pi.substring("/put/filehash/".length());
-		    addFileHash(req, res, details);
+		if(pi.startsWith("/put/filerecord/")){
+		    String details = pi.substring("/put/filerecord/".length());
+		    addFileRecord(req, res, details);
 		} else if( pi.startsWith( "/put/" ) ) {
 			String details = pi.substring( "/put/".length() );
 			putData( req, res, details );
@@ -261,7 +261,7 @@ public class DataServlet extends HttpServlet {
 	}
 
 	@SuppressWarnings("unchecked")
-    private void addFileHash(HttpServletRequest req, HttpServletResponse res, String details)
+    private void addFileRecord(HttpServletRequest req, HttpServletResponse res, String details)
             throws IOException, ServletException {
         ManagedDiskDescriptor mdd = null;
         try {
@@ -301,9 +301,9 @@ public class DataServlet extends HttpServlet {
         }
     }
 
-	private void hasFileHash(HttpServletRequest req, HttpServletResponse res,
+	private void hasFileRecord(HttpServletRequest req, HttpServletResponse res,
 	        String details) throws IOException, ServletException {
-	    log.debug("Checking if disk has a filehash");
+	    log.debug("Checking if disk has file records");
 
 	    ManagedDiskDescriptor mdd = null;
 	    try {

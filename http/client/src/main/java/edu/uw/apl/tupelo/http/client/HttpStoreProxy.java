@@ -421,7 +421,7 @@ public class HttpStoreProxy implements Store {
 
     @Override
     public void putFileRecords(ManagedDiskDescriptor mdd, List<Record> records) throws IOException{
-        HttpPost post = new HttpPost(server + "disks/data/put/filehash/" + mdd.getDiskID() +
+        HttpPost post = new HttpPost(server + "disks/data/put/filerecord/" + mdd.getDiskID() +
                 "/" + mdd.getSession());
         log.debug(post.getRequestLine());
 
@@ -433,7 +433,7 @@ public class HttpStoreProxy implements Store {
         HttpResponse res = req.execute(post);
         // Check the response code
         if(res.getStatusLine().getStatusCode() != HttpStatus.SC_OK){
-            log.error("Error putting file hash");
+            log.error("Error putting file records");
         }
     }
 
@@ -461,14 +461,14 @@ public class HttpStoreProxy implements Store {
 
             return disks;
         } catch (ClassNotFoundException e){
-            log.error("Error getting list of disks with hash");
+            log.error("Error getting list of disks with file hash");
             return null;
         }
     }
 
     @Override
     public boolean hasFileRecords(ManagedDiskDescriptor mdd) throws IOException {
-        HttpGet g = new HttpGet( server + "disks/data/filehash/"+mdd.getDiskID()+"/"+mdd.getSession() );
+        HttpGet g = new HttpGet( server + "disks/data/filerecord/"+mdd.getDiskID()+"/"+mdd.getSession() );
         g.addHeader( "Accept", "application/x-java-serialized-object" );
         log.debug( g.getRequestLine() );
         HttpClient req = new DefaultHttpClient( );
