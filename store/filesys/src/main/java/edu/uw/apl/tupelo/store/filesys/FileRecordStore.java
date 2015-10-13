@@ -36,12 +36,14 @@ package edu.uw.apl.tupelo.store.filesys;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -123,6 +125,22 @@ public class FileRecordStore implements Closeable {
 	// Count all rows statement
 	private static final String COUNT_STATEMENT =
 			"SELECT COUNT(*) FROM "+TABLE_NAME;
+	// Select statement
+	private static final String SELECT_RECORD_BY_HASH =
+	        "SELECT ("+PATH_COL+", "+MD5_COL+", "+INODE_COL+", "+ ATTR_TYPE_COL+", "+
+	        ATTR_ID_COL+", "+NAME_TYPE_COL+", "+META_TYPE_COL+", "+PERM_COL+", "+
+	        UID_COL+", "+GID_COL+", "+SIZE_COL+", "+ATIME_COL+", "+MTIME_COL+", "
+	        +CTIME_COL+", "+CRTIME_COL+") FROM "+TABLE_NAME+" WHERE "+MD5_COL+" = ?";
+	// Select from multiple hashes
+	// This needs a ? added for each potential hash, and a closing )
+    private static final String SELECT_RECORD_BY_HASHES =
+            "SELECT ("+PATH_COL+", "+MD5_COL+", "+INODE_COL+", "+ ATTR_TYPE_COL+", "+
+            ATTR_ID_COL+", "+NAME_TYPE_COL+", "+META_TYPE_COL+", "+PERM_COL+", "+
+            UID_COL+", "+GID_COL+", "+SIZE_COL+", "+ATIME_COL+", "+MTIME_COL+", "
+            +CTIME_COL+", "+CRTIME_COL+") FROM "+TABLE_NAME+" WHERE "+MD5_COL+" IN (";
+
+	// The constructor for Record objects
+	private static Constructor<Record> recordConstructor;
 
 	private File sqlFile;
 	private ManagedDiskDescriptor mdd;
@@ -286,6 +304,111 @@ public class FileRecordStore implements Closeable {
 			throw new IOException(e);
 		}
 	}
+
+	/**
+	 * Get the list of {@link Record} objects with a matching MD5 hash
+	 * @param hash the MD5 hash
+	 * @return the list of records
+	 * @throws IOException
+	 */
+    public List<Record> getRecordsFromHash(byte[] hash) throws IOException {
+        try {
+            // Prep the query
+            PreparedStatement query = connection.prepareStatement(SELECT_RECORD_BY_HASH);
+            query.setBytes(1, hash);
+
+            // Run the query
+            ResultSet result = query.executeQuery();
+
+            // Get the results out
+            List<Record> records = new LinkedList<Record>();
+            while (result.next()) {
+                records.add(getRecordFromResult(result));
+            }
+            return records;
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
+    }
+
+    /**
+     * Get the list of {@link Record} objects with a matching MD5 hash
+     * @param hash the MD5 hash
+     * @return the list of records
+     * @throws IOException
+     */
+    public List<Record> getRecordsFromHashes(List<byte[]> hashes) throws IOException {
+        try {
+            // Use the single lookup method for a single hash
+            if (hashes.size() == 1) {
+                return getRecordsFromHash(hashes.get(0));
+            }
+            // Build the query string
+            StringBuilder queryBuilder = new StringBuilder(SELECT_RECORD_BY_HASHES);
+            for (int i = 0; i < (hashes.size() - 1); i++) {
+                queryBuilder.append("?, ");
+            }
+            // Close off the query
+            // The last ? gets added here
+            queryBuilder.append("?)");
+
+            // Prep the query
+            PreparedStatement query = connection.prepareStatement(queryBuilder.toString());
+            for (int i = 1; i <= hashes.size(); i++) {
+                query.setBytes(i, hashes.get(i - 1));
+            }
+
+            // Run the query
+            ResultSet result = query.executeQuery();
+
+            // Get the results out
+            List<Record> records = new LinkedList<Record>();
+            while (result.next()) {
+                records.add(getRecordFromResult(result));
+            }
+            return records;
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
+    }
+
+    /**
+     * Creates a Record object from the current row of a ResultSet
+     * @param result
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Record getRecordFromResult(ResultSet result) throws SQLException {
+        String path = result.getString(PATH_COL);
+        byte[] hash = result.getBytes(MD5_COL);
+        long inode = result.getLong(INODE_COL);
+        short attrType = result.getShort(ATTR_TYPE_COL);
+        short attrId = result.getShort(ATTR_ID_COL);
+        byte nameType = result.getByte(NAME_TYPE_COL);
+        byte metaType = result.getByte(META_TYPE_COL);
+        int perms = result.getInt(PERM_COL);
+        int uid = result.getInt(UID_COL);
+        int gid = result.getInt(GID_COL);
+        long size = result.getLong(SIZE_COL);
+        int atime = result.getInt(ATIME_COL);
+        int mtime = result.getInt(MTIME_COL);
+        int ctime = result.getInt(CTIME_COL);
+        int crtime = result.getInt(CRTIME_COL);
+
+        // Check the constructor
+        if (recordConstructor == null) {
+            recordConstructor = (Constructor<Record>) Record.class.getConstructors()[0];
+        }
+
+        try {
+            // Try and create the record object
+            return recordConstructor.newInstance(hash, path, inode, attrType, attrId, nameType, metaType, perms, uid,
+                    gid, size, atime, mtime, ctime, crtime);
+        } catch (Exception e) {
+            log.error("Exception re-creating record from result", e);
+            return null;
+        }
+    }
 
 	/**
 	 * Run initial setup

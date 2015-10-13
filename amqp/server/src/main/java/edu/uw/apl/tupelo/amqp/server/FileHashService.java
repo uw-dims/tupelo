@@ -34,19 +34,8 @@
 package edu.uw.apl.tupelo.amqp.server;
 
 import java.lang.reflect.Type;
-import java.io.IOException;
-import java.io.ByteArrayInputStream;
-import java.io.LineNumberReader;
-import java.io.InputStreamReader;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
+import java.io.IOException;
 
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
@@ -63,7 +52,7 @@ import com.rabbitmq.client.AMQP.BasicProperties;
 
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.store.Store;
-
+import edu.uw.apl.commons.tsk4j.digests.BodyFile.Record;
 import edu.uw.apl.tupelo.amqp.objects.FileHashQuery;
 import edu.uw.apl.tupelo.amqp.objects.FileHashResponse;
 import edu.uw.apl.tupelo.amqp.objects.RPCObject;
@@ -84,19 +73,23 @@ import edu.uw.apl.tupelo.amqp.objects.Utils;
  *
  * LOOK: Currently we know about a single store only.  Extend to many??
  */
-
 public class FileHashService {
+    private static final String EXCHANGE = "tupelo";
+    private static final String BINDINGKEY = "who-has";
+    private static final Log log = LogFactory.getLog(FileHashService.class);
+
+    private final Store store;
+    private final String brokerURL;
+    private Channel channel;
+    private Gson gson;
 
 	public FileHashService( Store s, String brokerURL ) {
 		store = s;
 		this.brokerURL = brokerURL;
 		gson = Utils.createGson( true );
-		log = LogFactory.getLog( getClass() );
 	}
 	
 	public void start() throws Exception {
-		Collection<ManagedDiskDescriptor> mdds = store.enumerate();
-
 		ConnectionFactory cf = new ConnectionFactory();
 		cf.setUri( brokerURL );
 		Connection connection = cf.newConnection();
@@ -146,33 +139,19 @@ public class FileHashService {
             log.info( "Searching for " + fhq.hashes.size() + " hashes..." );
 
 			FileHashResponse fhr = new FileHashResponse( fhq.algorithm );
-			
-			/*
-			  LOOK: load all the Store's md5 hash data on every query ??
-			  Better to load it once (but then what if stored updated?)
-			*/
-			for( ManagedDiskDescriptor mdd : mdds ) {
-				List<String> ss = loadFileHashes( mdd );
-				
-				log.info( "Loaded " + ss.size() + " hashes from " + mdd );
-				/*
-				  Recall: The file content of MANY paths can hash to
-				  the SAME value, typically when the file is empty.
-				*/
-				Map<BigInteger,List<String>> haystack = buildHaystack( ss );
 
-				for( byte[] hash : fhq.hashes ) {
-					// 1 means 'this value is positive'
-					BigInteger needle = new BigInteger( 1, hash );
-					List<String> paths = haystack.get( needle );
-					if( paths == null )
-						continue;
-					String hashHex = new String( Hex.encodeHex( hash ) );
-					log.info( "Matched " +  hashHex + ": " + mdd + " "
-							  + paths );
-					for( String path : paths )
-						fhr.add( hash, mdd, path );
-				}					
+			// Search for the hashes
+			List<ManagedDiskDescriptor> matchingDisks = store.checkForHashes(fhq.hashes);
+
+			// Get the matching record details
+			for( ManagedDiskDescriptor mdd : matchingDisks ) {
+			    List<Record> records = store.getRecords(mdd, fhq.hashes);
+
+				log.info(records.size() + " hashes match from " + mdd );
+
+				for(Record record : records){
+				    fhr.add(record.md5, mdd, record.path);
+				}
 			}
 
 			channel.basicAck( delivery.getEnvelope().getDeliveryTag(), false );
@@ -194,87 +173,5 @@ public class FileHashService {
 			return;
 		channel.close();
 	}
-	
-	/*
-	  Load the 'md5' attribute data from the store for the given
-	  ManagedDiskDescriptor.  Just load the whole lines, do NOT parse
-	  anything at this point.
-	*/
-	private List<String> loadFileHashes( ManagedDiskDescriptor mdd )
-		throws IOException {
-		List<String> result = new ArrayList<String>();
-		Collection<String> attrNames = store.listAttributes( mdd );
-		for( String attrName : attrNames ) {
-			if( !attrName.startsWith( "hashfs-" ) )
-				continue;
-			byte[] ba = store.getAttribute( mdd, attrName );
-			if( ba == null )
-				continue;
-			ByteArrayInputStream bais = new ByteArrayInputStream( ba );
-			InputStreamReader isr = new InputStreamReader( bais );
-			LineNumberReader lnr = new LineNumberReader( isr );
-			String line = null;
-			while( (line = lnr.readLine()) != null ) {
-				line = line.trim();
-				if( line.isEmpty() || line.startsWith( "#" ) )
-					continue;
-				result.add( line );
-			}
-		}
-		return result;
-	}
 
-
-	/**
-	 * Turn the contents of a manageddisk's md5 attribute, stored as a
-	 * text file of the form
-	 *
-	 * hashHex /path/to/file
-	 * hashHex /path/to/other/file
-	 *
-	 * into a map of hash (as BigInteger) -> List<String>
-	 *
-	 * Then, given an hash as needle, we can locate ALL files with that hash
-	 */
-	private Map<BigInteger,List<String>> buildHaystack( List<String> ss ) {
-		Map<BigInteger,List<String>> result =
-			new HashMap<BigInteger,List<String>>();
-		for( String s : ss ) {
-			String[] toks = s.split( "\\s+", 2 );
-			if( toks.length < 2 ) {
-				log.warn( s );
-				continue;
-			}
-			String md5Hex = toks[0];
-			String path = toks[1];
-			byte[] md5 = null;
-			try {
-				md5 = Hex.decodeHex( md5Hex.toCharArray() );
-			} catch( DecoderException de ) {
-				log.warn( de );
-				continue;
-			}
-			// 1 means 'this value is positive'
-			BigInteger bi = new BigInteger( 1, md5 );
-			List<String> paths = result.get( bi );
-			if( paths == null ) {
-				paths = new ArrayList<String>();
-				result.put( bi, paths );
-			}
-			paths.add( path );
-		}
-		return result;
-	}
-
-	private final Store store;
-	private final String brokerURL;
-	private Channel channel;
-	private Gson gson;
-	private Log log;
-	
-	static final String EXCHANGE = "tupelo";
-
-	static final String BINDINGKEY = "who-has";
 }
-
-// eof

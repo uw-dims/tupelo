@@ -501,8 +501,14 @@ public class FilesystemStore implements Store {
 
     @Override
     public void putFileRecords(ManagedDiskDescriptor mdd, List<Record> records) throws IOException {
-        FileRecordStore store = getHashStore(mdd);
+        FileRecordStore store = getRecordStore(mdd);
         store.addRecords(records);
+    }
+
+    @Override
+    public List<Record> getRecords(ManagedDiskDescriptor mdd, List<byte[]> hashes) throws IOException {
+        FileRecordStore store = getRecordStore(mdd);
+        return store.getRecordsFromHashes(hashes);
     }
 
     @Override
@@ -511,7 +517,7 @@ public class FilesystemStore implements Store {
         List<ManagedDiskDescriptor> matchingDisks = new ArrayList<ManagedDiskDescriptor>(disks.size());
         // Iterate over the disks and see if they have a matching hash
         for (ManagedDiskDescriptor mdd : disks) {
-            FileRecordStore store = getHashStore(mdd);
+            FileRecordStore store = getRecordStore(mdd);
             if (store.containsFileHash(hash)) {
                 matchingDisks.add(mdd);
             }
@@ -525,7 +531,7 @@ public class FilesystemStore implements Store {
         List<ManagedDiskDescriptor> matchingDisks = new ArrayList<ManagedDiskDescriptor>(disks.size());
         // Iterate over the disks and see if they have a matching hash
         for (ManagedDiskDescriptor mdd : disks) {
-            FileRecordStore store = getHashStore(mdd);
+            FileRecordStore store = getRecordStore(mdd);
             if (store.containsFileHash(hashes)) {
                 matchingDisks.add(mdd);
             }
@@ -535,19 +541,19 @@ public class FilesystemStore implements Store {
 
     @Override
     public boolean hasFileRecords(ManagedDiskDescriptor mdd) throws IOException {
-        FileRecordStore store = getHashStore(mdd);
+        FileRecordStore store = getRecordStore(mdd);
         return store.hasData();
     }
 	
 	/*********************** Private Implementation *********************/
 
     /**
-     * Get the FileHashStore associated with the managed disk
+     * Get the FileRecordStore associated with the managed disk
      * @param mdd
      * @return
      * @throws Exception
      */
-    private FileRecordStore getHashStore(ManagedDiskDescriptor mdd) throws IOException {
+    private FileRecordStore getRecordStore(ManagedDiskDescriptor mdd) throws IOException {
         return new FileRecordStore(diskDir(root, mdd), mdd);
     }
 	

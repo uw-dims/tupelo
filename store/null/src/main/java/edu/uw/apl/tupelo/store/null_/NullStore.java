@@ -196,4 +196,9 @@ public class NullStore implements Store {
     public boolean hasFileRecords(ManagedDiskDescriptor mdd) {
         return true;
     }
+
+    @Override
+    public List<Record> getRecords(ManagedDiskDescriptor mdd, List<byte[]> hashes) throws IOException {
+        return null;
+    }
 }

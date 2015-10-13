@@ -93,6 +93,7 @@ import org.apache.commons.logging.LogFactory;
  * /disks/data/digest/DID/SID
  * /disks/data/filerecord/DID/SID
  * /disks/data/filerecord/check
+ * /disks/data/filerecord/DID/SID
  *
  *
  * /disks/data/get/DID/SID (TODO, currently no support for retrieving managed data)
@@ -174,8 +175,11 @@ public class DataServlet extends HttpServlet {
 		} else if( pi.startsWith( "/put/" ) ) {
 			String details = pi.substring( "/put/".length() );
 			putData( req, res, details );
-		} else if(pi.startsWith("/filehash/check")){
+		} else if(pi.startsWith("/filerecord/check")){
 		    checkForHash(req, res);
+		} else if(pi.startsWith("/filerecord/")){
+		    String details = pi.substring("/filerecord/".length());
+		    getRecordDetails(req, res, details);
 		} else {
 			res.sendError( HttpServletResponse.SC_NOT_FOUND,
 						   "Unknown command '" + pi + "'" );
@@ -216,21 +220,20 @@ public class DataServlet extends HttpServlet {
 		}
 	}
 
+    /**
+     * Check which, if any, disks have the MD5 hashes specified in the request
+     * @param req
+     * @param res
+     * @param details
+     * @throws IOException
+     * @throws ServletException
+     */
 	private void checkForHash(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
-	    if(!req.getContentType().equals(JSON_CONTENT)){
-	        log.warn("Warning: Check for hash called with bad content-type: "+req.getContentType());
-	        res.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE,
-	                "Only JSON is accepted");
-	        return;
-	    }
-	    // Get the hashes to look for
-        JsonReader reader = new JsonReader(new InputStreamReader(req.getInputStream()));
-        reader.setLenient(true);
-
-        byte[][] allHashes = gson.fromJson(reader, byte[][].class);
-
-        List<byte[]> hashes = Arrays.asList(allHashes);
-        log.debug("Checking for "+hashes.size()+" hashes");
+        List<byte[]> hashes = getHashesFromRequest(req, res);
+        // If hashes is null, stop now
+        if(hashes == null){
+            return;
+        }
 
 	    // Get the info from the store
 	    List<ManagedDiskDescriptor> disks = store.checkForHashes(hashes);
@@ -242,6 +245,66 @@ public class DataServlet extends HttpServlet {
 	        respondJson(res, disks);
 	    }
 	}
+
+    /**
+     * Get the full record details that match the MD5 hashes in the request
+     * @param req
+     * @param res
+     * @throws IOException
+     * @throws ServletException
+     */
+    private void getRecordDetails(HttpServletRequest req, HttpServletResponse res, String details)
+            throws IOException, ServletException {
+        List<byte[]> hashes = getHashesFromRequest(req, res);
+        // If hashes is null, stop now
+        if(hashes == null){
+            return;
+        }
+
+        ManagedDiskDescriptor mdd = null;
+        try {
+            mdd = fromPathInfo( details );
+        } catch( ParseException pe ) {
+            log.debug( "File record details error" );
+            res.sendError( HttpServletResponse.SC_NOT_FOUND,
+                           "Malformed managed disk descriptor: " + details );
+            return;
+        }
+
+        // Get the records
+        List<Record> records = store.getRecords(mdd, hashes);
+        if(Utils.acceptsJson(req)){
+            respondJson(res, records);
+        } else {
+            respondText(res, records);
+        }
+    }
+
+    /**
+     * Get the list of MD5 hashes, in bytes, from a request. <br>
+     * If this returns null, a response has been sent
+     * @param req
+     * @param res
+     * @return
+     * @throws IOException
+     */
+    private List<byte[]> getHashesFromRequest(HttpServletRequest req, HttpServletResponse res) throws IOException{
+        if(!req.getContentType().equals(JSON_CONTENT)){
+            log.warn("Warning: Check for hash called with bad content-type: "+req.getContentType());
+            res.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE,
+                    "Only JSON is accepted");
+            return null;
+        }
+        // Get the hashes to look for
+        JsonReader reader = new JsonReader(new InputStreamReader(req.getInputStream()));
+        reader.setLenient(true);
+
+        byte[][] allHashes = gson.fromJson(reader, byte[][].class);
+
+        log.debug("Got "+allHashes.length+" hashes");
+
+        return Arrays.asList(allHashes);
+    }
 
 	private void putData( HttpServletRequest req, HttpServletResponse res,
 						  String details )

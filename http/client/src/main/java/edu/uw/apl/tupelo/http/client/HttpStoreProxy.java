@@ -41,6 +41,7 @@ import java.io.ObjectInputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +58,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.stream.JsonReader;
 
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
@@ -80,6 +82,10 @@ import edu.uw.apl.tupelo.store.Store;
  */
 @SuppressWarnings({"deprecation", "resource", "unused"})
 public class HttpStoreProxy implements Store {
+    private static final String JAVA_TYPE = "application/x-java-serialized-object";
+    private static final String JSON_TYPE = "application/json";
+    private static final String TEXT_TYPE = "text/plain";
+
     private String server;
     private final Log log;
     private Gson gson;
@@ -101,7 +107,7 @@ public class HttpStoreProxy implements Store {
 	@Override
 	public UUID getUUID() throws IOException {
 		HttpGet g = new HttpGet( server + "uuid" );
-		g.addHeader( "Accept", "application/x-java-serialized-object" );
+		g.addHeader( "Accept", JAVA_TYPE );
 		log.debug( g.getRequestLine() );
 		HttpClient req = new DefaultHttpClient( );
 		HttpResponse res = req.execute( g );
@@ -121,7 +127,7 @@ public class HttpStoreProxy implements Store {
 	@Override
 	public long getUsableSpace() throws IOException {
 		HttpGet g = new HttpGet( server + "usablespace" );
-		g.addHeader( "Accept", "application/x-java-serialized-object" );
+		g.addHeader( "Accept", JAVA_TYPE );
 		log.debug( g.getRequestLine() );
 		HttpClient req = new DefaultHttpClient( );
 		HttpResponse res = req.execute( g );
@@ -142,7 +148,7 @@ public class HttpStoreProxy implements Store {
 	public Session newSession() throws IOException {
 		// LOOK: is a GET good enough here?  Want non-cacheable...
 		HttpPost p = new HttpPost( server + "newsession" );
-		p.addHeader( "Accept", "application/x-java-serialized-object" );
+		p.addHeader( "Accept", JAVA_TYPE );
 	
 		log.debug( p.getRequestLine() );
 		
@@ -166,7 +172,7 @@ public class HttpStoreProxy implements Store {
 		HttpGet g = new HttpGet( server + "disks/data/size/" + mdd.getDiskID() +
 								 "/" + mdd.getSession() );
 		log.debug( g.getRequestLine() );
-		g.addHeader( "Accept", "application/x-java-serialized-object" );
+		g.addHeader( "Accept", JAVA_TYPE );
 		log.debug( g.getRequestLine() );
 		HttpClient req = new DefaultHttpClient( );
 		HttpResponse res = req.execute( g );
@@ -188,7 +194,7 @@ public class HttpStoreProxy implements Store {
 		HttpGet g = new HttpGet( server + "disks/data/uuid/" + mdd.getDiskID() +
 								   "/" + mdd.getSession() );
 		log.debug( g.getRequestLine() );
-		g.addHeader( "Accept", "application/x-java-serialized-object" );
+		g.addHeader( "Accept", JAVA_TYPE );
 		log.debug( g.getRequestLine() );
 		HttpClient req = new DefaultHttpClient( );
 		HttpResponse res = req.execute( g );
@@ -222,8 +228,8 @@ public class HttpStoreProxy implements Store {
 
 		final PipedOutputStream pos = new PipedOutputStream();
 		PipedInputStream pis = new PipedInputStream( pos );
-		InputStreamEntity ise = new InputStreamEntity
-			( pis, -1, ContentType.APPLICATION_OCTET_STREAM );
+		InputStreamEntity ise = new InputStreamEntity(pis,
+		        -1, ContentType.APPLICATION_OCTET_STREAM );
 		ise.setChunked( true );
 		p.setEntity( ise );
 		Runnable r = new Runnable() {
@@ -260,8 +266,8 @@ public class HttpStoreProxy implements Store {
 
 		final PipedOutputStream pos = new PipedOutputStream();
 		PipedInputStream pis = new PipedInputStream( pos );
-		InputStreamEntity ise = new InputStreamEntity
-			( pis, -1, ContentType.APPLICATION_OCTET_STREAM );
+		InputStreamEntity ise = new InputStreamEntity( pis,
+		        -1, ContentType.APPLICATION_OCTET_STREAM );
 		ise.setChunked( true );
 		p.setEntity( ise );
 		Runnable r = new Runnable() {
@@ -293,7 +299,7 @@ public class HttpStoreProxy implements Store {
 		HttpGet g = new HttpGet( server + "disks/data/digest/" + mdd.getDiskID() +
 								 "/" + mdd.getSession() );
 		//		g.addHeader( "Accept", "application/x-java-serialized-object" );
-		g.addHeader( "Accept", "text/plain" );
+		g.addHeader( "Accept", TEXT_TYPE );
 	
 		log.debug( g.getRequestLine() );
 		
@@ -329,7 +335,7 @@ public class HttpStoreProxy implements Store {
 		throws IOException {
 		HttpGet g = new HttpGet( server + "disks/attr/list/" + mdd.getDiskID() +
 								 "/" + mdd.getSession() );
-		g.addHeader( "Accept", "application/x-java-serialized-object" );
+		g.addHeader( "Accept", JAVA_TYPE );
 	
 		log.debug( g.getRequestLine() );
 		
@@ -353,7 +359,7 @@ public class HttpStoreProxy implements Store {
 		throws IOException {
 		HttpGet g = new HttpGet( server + "disks/attr/get/" + mdd.getDiskID() +
 								 "/" + mdd.getSession() + "/" + key  );
-		g.addHeader( "Accept", "application/x-java-serialized-object" );
+		g.addHeader( "Accept", JAVA_TYPE );
 		log.debug( g.getRequestLine() );
 		
 		HttpClient req = new DefaultHttpClient( );
@@ -399,7 +405,7 @@ public class HttpStoreProxy implements Store {
 	@Override
 	public Collection<ManagedDiskDescriptor> enumerate() throws IOException {
 		HttpGet g = new HttpGet( server + "disks/data/enumerate" );
-		g.addHeader( "Accept", "application/x-java-serialized-object" );
+		g.addHeader( "Accept", JAVA_TYPE );
 	
 		log.debug( g.getRequestLine() );
 		
@@ -425,7 +431,7 @@ public class HttpStoreProxy implements Store {
                 "/" + mdd.getSession());
         log.debug(post.getRequestLine());
 
-        post.setHeader("content-type", "application/json");
+        post.setHeader("content-type", JSON_TYPE );
         // Get the body ready
         post.setEntity(new StringEntity(gson.toJson(records)));
         // Make the request
@@ -447,12 +453,12 @@ public class HttpStoreProxy implements Store {
     @SuppressWarnings("unchecked")
     @Override
     public List<ManagedDiskDescriptor> checkForHashes(List<byte[]> hashes) throws IOException {
-        HttpPost post = new HttpPost(server + "disks/data/filehash/check");
-        post.addHeader( "Accept", "application/x-java-serialized-object" );
+        HttpPost post = new HttpPost(server + "disks/data/filerecord/check");
+        post.addHeader( "Accept", JAVA_TYPE );
         log.debug(post.getRequestLine());
 
         // Get the body ready
-        post.setHeader("content-type", "application/json");
+        post.setHeader("content-type", JSON_TYPE);
         post.setEntity( new StringEntity(gson.toJson(hashes)) );
 
         // Make the request
@@ -472,9 +478,30 @@ public class HttpStoreProxy implements Store {
     }
 
     @Override
+    public List<Record> getRecords(ManagedDiskDescriptor mdd, List<byte[]> hashes) throws IOException {
+        HttpPost post = new HttpPost(server + "disks/data/filerecord/"+mdd.getDiskID()+"/"+mdd.getSession());
+        post.addHeader("Accept", JSON_TYPE);
+        log.debug(post.getRequestLine());
+
+        // Get the body ready
+        post.setHeader("content-type", JSON_TYPE);
+        post.setEntity(new StringEntity(gson.toJson(hashes)));
+
+        // Make the request
+        HttpClient req = new DefaultHttpClient();
+        HttpResponse res = req.execute(post);
+
+        // Read the response
+        JsonReader reader = new JsonReader(new InputStreamReader(res.getEntity().getContent()));
+        Record[] records = gson.fromJson(reader, Record[].class);
+
+        return Arrays.asList(records);
+    }
+
+    @Override
     public boolean hasFileRecords(ManagedDiskDescriptor mdd) throws IOException {
         HttpGet g = new HttpGet( server + "disks/data/filerecord/"+mdd.getDiskID()+"/"+mdd.getSession() );
-        g.addHeader( "Accept", "application/x-java-serialized-object" );
+        g.addHeader( "Accept", JAVA_TYPE );
         log.debug( g.getRequestLine() );
         HttpClient req = new DefaultHttpClient( );
         HttpResponse res = req.execute( g );

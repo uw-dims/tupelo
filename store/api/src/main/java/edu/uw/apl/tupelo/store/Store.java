@@ -118,6 +118,14 @@ public interface Store {
 	public boolean hasFileRecords(ManagedDiskDescriptor mdd) throws IOException;
 
 	/**
+	 * Get the {@link Record}s for any files for the managed disk with one of the provided hashes
+	 * @param mdd the disk
+	 * @param hashes the MD5 hashes to look up
+	 * @return
+	 */
+	public List<Record> getRecords(ManagedDiskDescriptor mdd, List<byte[]> hashes) throws IOException;
+
+	/**
 	 * @return size, in bytes, of the managed disk described by the
 	 * supplied descriptor. Return -1 if the descriptor does not
 	 * identify a managed disk held in this store.
