@@ -391,7 +391,14 @@ public class Elvis extends Shell {
                     } else {
                         System.out.println("Hash found on the following disks:");
                         for(ManagedDiskDescriptor mdd : matchingDisks){
-                            System.out.println("\t"+mdd.toString());
+                            System.out.println(mdd.toString());
+                            System.out.println("Matching hashes/files:");
+                            List<Record> records = store.getRecords(mdd, byteHashes);
+                            for(Record record : records){
+                                String hash = new String(Hex.encodeHex(record.md5));
+                                System.out.println(hash+" "+record.path);
+                            }
+                            System.out.println("\n");
                         }
                     }
                 } catch (Exception e) {
