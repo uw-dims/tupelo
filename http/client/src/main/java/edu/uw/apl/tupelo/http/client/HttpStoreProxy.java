@@ -33,6 +33,7 @@
  */
 package edu.uw.apl.tupelo.http.client;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -96,6 +97,28 @@ public class HttpStoreProxy implements Store {
 		this.server = s;
 		log = LogFactory.getLog( getClass() );
 		gson = new GsonBuilder().registerTypeHierarchyAdapter(byte[].class, new ByteArrayAdapter()).create();
+	}
+
+	/**
+	 * Get the server's version
+	 * @return
+	 * @throws IOException
+	 */
+	public String getServerVersion() throws IOException {
+	    HttpGet get = new HttpGet( server + "version" );
+	    get.addHeader("Accept", TEXT_TYPE);
+	    HttpClient req = new DefaultHttpClient();
+	    HttpResponse res = req.execute(get);
+
+	    // Read the response
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(res.getEntity().getContent()));
+	    String version = "";
+	    String line = null;
+	    while((line = reader.readLine()) != null){
+	        version += line;
+	    }
+
+	    return version;
 	}
 
 	@Override

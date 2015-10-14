@@ -199,8 +199,6 @@ public class Elvis extends Shell {
 		addCommand( "s", new Lambda() {
 				public void apply( String[] args ) throws Exception {
 					System.out.println( "Store: " + storeLocation );
-					
-										 
 				}
 			} );
 		commandHelp( "s", "Print the store location" );
@@ -612,20 +610,39 @@ public class Elvis extends Shell {
 	}
 
 	private Store buildStore() {
-		Store s = null;
+		Store store = null;
 		if( storeLocation.equals( "/dev/null" ) ) {
-			s = new NullStore();
+			store = new NullStore();
 		} else if( storeLocation.startsWith( "http" ) ) {
-			s = new HttpStoreProxy( storeLocation );
+		    HttpStoreProxy proxy = new HttpStoreProxy(storeLocation);
+			// Check the store version
+			String version = getClass().getPackage().getImplementationVersion();
+			if(version != null){
+			    try {
+                    String serverVersion = proxy.getServerVersion();
+                    // Warn the user if the version is different
+                    if(!version.equals(serverVersion)){
+                        System.err.println("----");
+                        System.err.println("WARNING: Server version is different than client");
+                        System.err.println("Client version: "+version);
+                        System.err.println("Server version: "+serverVersion);
+                        System.err.println("----");
+                    }
+                } catch (IOException e) {
+                    System.err.println("Error checking the server's version: "+e);
+                    log.error("Exception checking the server's version", e);
+                }
+			}
+		    store = proxy;
 		} else {
 			File dir = new File( storeLocation );
 			if( !dir.isDirectory() ) {
 				throw new IllegalStateException
 					( "Not a directory: " + storeLocation );
 			}
-			s = new FilesystemStore( dir );
+			store = new FilesystemStore( dir );
 		}
-		return s;
+		return store;
 	}
 
 	@Override
