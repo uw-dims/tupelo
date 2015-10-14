@@ -127,17 +127,11 @@ public class FileRecordStore implements Closeable {
 			"SELECT COUNT(*) FROM "+TABLE_NAME;
 	// Select statement
 	private static final String SELECT_RECORD_BY_HASH =
-	        "SELECT ("+PATH_COL+", "+MD5_COL+", "+INODE_COL+", "+ ATTR_TYPE_COL+", "+
-	        ATTR_ID_COL+", "+NAME_TYPE_COL+", "+META_TYPE_COL+", "+PERM_COL+", "+
-	        UID_COL+", "+GID_COL+", "+SIZE_COL+", "+ATIME_COL+", "+MTIME_COL+", "
-	        +CTIME_COL+", "+CRTIME_COL+") FROM "+TABLE_NAME+" WHERE "+MD5_COL+" = ?";
+	        "SELECT * FROM "+TABLE_NAME+" WHERE "+MD5_COL+" = ?";
 	// Select from multiple hashes
 	// This needs a ? added for each potential hash, and a closing )
     private static final String SELECT_RECORD_BY_HASHES =
-            "SELECT ("+PATH_COL+", "+MD5_COL+", "+INODE_COL+", "+ ATTR_TYPE_COL+", "+
-            ATTR_ID_COL+", "+NAME_TYPE_COL+", "+META_TYPE_COL+", "+PERM_COL+", "+
-            UID_COL+", "+GID_COL+", "+SIZE_COL+", "+ATIME_COL+", "+MTIME_COL+", "
-            +CTIME_COL+", "+CRTIME_COL+") FROM "+TABLE_NAME+" WHERE "+MD5_COL+" IN (";
+            "SELECT * FROM "+TABLE_NAME+" WHERE "+MD5_COL+" IN (";
 
 	// The constructor for Record objects
 	private static Constructor<Record> recordConstructor;
@@ -382,10 +376,10 @@ public class FileRecordStore implements Closeable {
         String path = result.getString(PATH_COL);
         byte[] hash = result.getBytes(MD5_COL);
         long inode = result.getLong(INODE_COL);
-        short attrType = result.getShort(ATTR_TYPE_COL);
-        short attrId = result.getShort(ATTR_ID_COL);
-        byte nameType = result.getByte(NAME_TYPE_COL);
-        byte metaType = result.getByte(META_TYPE_COL);
+        int attrType = result.getInt(ATTR_TYPE_COL);
+        int attrId = result.getInt(ATTR_ID_COL);
+        int nameType = result.getInt(NAME_TYPE_COL);
+        int metaType = result.getInt(META_TYPE_COL);
         int perms = result.getInt(PERM_COL);
         int uid = result.getInt(UID_COL);
         int gid = result.getInt(GID_COL);
@@ -397,7 +391,8 @@ public class FileRecordStore implements Closeable {
 
         // Check the constructor
         if (recordConstructor == null) {
-            recordConstructor = (Constructor<Record>) Record.class.getConstructors()[0];
+            recordConstructor = (Constructor<Record>) Record.class.getDeclaredConstructors()[0];
+            recordConstructor.setAccessible(true);
         }
 
         try {
