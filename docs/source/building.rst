@@ -69,6 +69,20 @@ The rabbitm1-log4j-adapter is bundled into a project-local Maven repository at .
 that depend on this (logging) include this local repository in their pom.
 
 *************
+Property Files
+*************
+
+Several parts of Tupelo require a `filter.properties` file before they can be built.
+This file will contain configuration options that should not be checked into version control,
+such as usernames/passwords.
+
+There is a `template-filter.properties` file in the root of the repository which contains the options
+and a list of where to put the completed file.
+
+**NOTE:** The build will fail if you do not provide a `filter.properties` file when required. At minimum, it should be blank.
+
+
+*************
 Building & Installing
 *************
 
