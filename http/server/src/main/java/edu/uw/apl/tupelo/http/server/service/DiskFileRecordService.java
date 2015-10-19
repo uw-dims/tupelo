@@ -119,7 +119,7 @@ public class DiskFileRecordService {
             Collection<ManagedDiskDescriptor> allDisks = store.enumerate();
             for(ManagedDiskDescriptor mdd : allDisks){
                 // Check if the store has hashes
-                if(!store.hasFileRecords(mdd)){
+                if(!store.hasFileRecords(mdd) && !diskQueue.contains(mdd)){
                     log.debug("Disk missing file hashes, adding to queue: "+mdd);
                     diskQueue.add(mdd);
                 }
@@ -171,6 +171,12 @@ public class DiskFileRecordService {
                     ManagedDiskDescriptor diskDescriptor = diskQueue.take();
 
                     try {
+                        // Check that there are still no file records
+                        if(store.hasFileRecords(diskDescriptor)){
+                            log.debug("Disk has file records, skipping "+diskDescriptor);
+                            continue;
+                        }
+
                         log.debug("Starting to process disk: " + diskDescriptor);
                         currentDisk = diskDescriptor;
 
@@ -179,6 +185,14 @@ public class DiskFileRecordService {
 
                         // Create the BodyFiles
                         List<BodyFile> bodyFiles = hashUtils.hashDisk();
+
+                        // Check that there are still no file records
+                        // If there are multiple instances of the store running, another may have already stored the records
+                        if(store.hasFileRecords(diskDescriptor)){
+                            log.debug("Disk has file records, skipping "+diskDescriptor);
+                            continue;
+                        }
+
                         // Save it
                         log.debug("Saving file records");
                         for(BodyFile bodyFile : bodyFiles){
