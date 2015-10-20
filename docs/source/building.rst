@@ -104,6 +104,27 @@ which uses the local Makefile to invoke Maven. Then::
 will take the jars and copy them to /opt/dims/jars, and copy driver
 shell scripts from ./bin to /opt/dims/bin.
 
+
+Native Code
+----------
+
+Tupelo has some native code sections which use JNI.
+To build the C code, run the following::
+
+ $ mvn compile -Pnative
+
+The native code is in the `model/physical` sub-project.
+After the code is built, the resulting .so files will need to be moved
+to the appropriate folder under `src/resources`::
+
+ src/resources/edu/uw/apl/tupelo/model/physical/native/Linux/<ARCH>/
+
+Where `<ARCH>` is `x86` or `x86_64`.
+
+**NOTE:** This native code is for Linux only. It is used to get information
+about the disk drives, such as serial number. It will require writing a platform-specific
+version of the code to support OSX or Windows hosts.
+
 *************
 Unit tests
 *************
