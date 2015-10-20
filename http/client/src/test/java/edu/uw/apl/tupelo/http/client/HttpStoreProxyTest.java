@@ -98,9 +98,18 @@ public class HttpStoreProxyTest {//extends junit.framework.TestCase {
 		// LOOK: hunting around in server module filesystem!!  Any better way ??
 		File serverDir = new File( serverModuleHome );
 		File warDir = new File( serverDir, "target" );
-		File warFile = new File( warDir, "tupelo-http-server-0.0.1.war" );
-		if( !warFile.exists() )
-			warFile = new File( warDir, "tupelo.war" );
+		File[] files = warDir.listFiles();
+
+		File warFile = null;
+		// Find the war file
+		for(File file : files){
+		    if(file.getName().endsWith(".war")){
+		        warFile = file;
+		        System.out.println("Found war file: "+warFile.getAbsolutePath());
+		        break;
+		    }
+		}
+
 		wac.setWar( warFile.getPath() );
 
 		/*
