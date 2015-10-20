@@ -135,16 +135,10 @@ profile called 'tester', like this::
 
  $ mvn test -Ptester
 
-which will run all the unit tests.  The unit tests for the http/client
-sub-module will fail unless you first fire up a 'Tupelo web-based
-store', like this (in a different terminal)::
+which will run all the unit tests.
 
- $ cd /path/to/tupelo-git-repo/http/server
- $ mvn jetty:run
-
-which spawns the Jetty web container to host the Tupelo web-based
-store.  The http/client unit tests then access this store via
-url base http://localhost:8888/tupelo/
+Note that you may get exceptions because HTTP Store can't mount MDFS.
+Still working on this.
 
 *************
 Contact
