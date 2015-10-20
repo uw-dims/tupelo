@@ -53,6 +53,9 @@ import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import org.apache.commons.codec.binary.Hex;
 
 public class FileHashResponse {
+    // Intended to be accessed by amqp.client, amqp,server code only...
+    public final String algorithm;
+    public final List<Hit> hits;
 
 	public FileHashResponse( String algorithm ) {
 		this.algorithm = algorithm;
@@ -74,7 +77,10 @@ public class FileHashResponse {
 	 */
 	   
 	static public class Hit {
-		
+        public final byte[] hash;
+        public final ManagedDiskDescriptor descriptor;
+        public final String path;
+
 		Hit( byte[] hash, ManagedDiskDescriptor mdd, String path ) {
 			this.hash = hash;
 			this.descriptor = mdd;
@@ -87,17 +93,5 @@ public class FileHashResponse {
 			return "Hash: "+ hashHex + ", descriptor" + descriptor +
 				", path: " + path;
 		}
-		
-		public final byte[] hash;
-		public final ManagedDiskDescriptor descriptor;
-		public final String path;
 	}
-
-	// Intended to be accessed by amqp.client, amqp,server code only...
-	public final String algorithm;
-	public final List<Hit> hits;
 }
-
-// eof
-
-
