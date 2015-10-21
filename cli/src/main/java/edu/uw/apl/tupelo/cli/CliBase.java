@@ -40,7 +40,7 @@ import org.apache.log4j.Logger;
 /**
  * A container for state common to all command line tools in this module
  */
-
+@Deprecated
 public class CliBase {
 
 	protected CliBase() {

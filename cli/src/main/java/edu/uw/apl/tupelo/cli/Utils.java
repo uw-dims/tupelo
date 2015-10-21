@@ -47,7 +47,7 @@ import edu.uw.apl.tupelo.http.client.HttpStoreProxy;
 /**
  * Various routines shared by most/all cli sample programs
  */
-
+@Deprecated
 public class Utils {
 
 	static final String STORELOCATIONDEFAULT = "./test-store";

@@ -66,7 +66,7 @@ import edu.uw.apl.tupelo.store.Store;
  *
  * see the supported options, below
  */
-
+@Deprecated
 public class PutData extends CliBase {
 
 	static public void main( String[] args ) {

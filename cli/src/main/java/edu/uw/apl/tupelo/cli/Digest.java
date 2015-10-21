@@ -48,7 +48,7 @@ import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
  * alongside the .tmd managed data file, for later retrieval (almost
  * as an attribute).
  */
-
+@Deprecated
 public class Digest extends CliBase {
 
 	static public void main( String[] args ) {

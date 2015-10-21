@@ -85,7 +85,7 @@ import edu.uw.apl.commons.tsk4j.volsys.VolumeSystem;
  * unreliable.
  *
  */
-
+@Deprecated
 public class HashData extends CliBase {
 
 	static public void main( String[] args ) {

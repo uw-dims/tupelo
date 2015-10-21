@@ -54,6 +54,7 @@ import edu.uw.apl.tupelo.utils.DiskHashUtils;
  * attribute.
  *
  */
+@Deprecated
 public class HashDisk extends CliBase {
 	
 	private String diskPath;

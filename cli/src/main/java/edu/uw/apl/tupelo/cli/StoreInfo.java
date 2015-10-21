@@ -47,7 +47,7 @@ import edu.uw.apl.tupelo.store.Store;
  * Simple Tupelo Utility: Query and store for its contents
  * (ManagedDisks and Attributes) and print results to stdout.
  */
-
+@Deprecated
 public class StoreInfo extends CliBase {
 
 	static public void main( String[] args ) {

@@ -49,7 +49,7 @@ import edu.uw.apl.tupelo.store.Store;
  * Filesystem-based Store. The attribute contents are taken from a
  * supplied local file.
  */
-
+@Deprecated
 public class PutAttr extends CliBase {
 
 	static public void main( String[] args ) {
