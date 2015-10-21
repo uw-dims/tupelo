@@ -9,7 +9,6 @@ pom.xml.versionsBackup
 .settings
 .classpath
 
-logging
 test.log
 test-store/
 .DS_Store
