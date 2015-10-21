@@ -3,9 +3,9 @@ Building
 =================================
 
 
-*************
+**************
 Prerequisites
-*************
+**************
 
 Tupelo is Java code, organized to build using Maven.  Tupelo is a
 'multi-module' Maven codebase.  Being Java and using Maven, Tupelo has
@@ -68,9 +68,9 @@ The native-lib-loader will need to be built/installed first.
 The rabbitm1-log4j-adapter is bundled into a project-local Maven repository at ./repository.  The modules
 that depend on this (logging) include this local repository in their pom.
 
-*************
+***************
 Property Files
-*************
+***************
 
 Several parts of Tupelo require a `filter.properties` file before they can be built.
 This file will contain configuration options that should not be checked into version control,
@@ -82,9 +82,9 @@ and a list of where to put the completed file.
 **NOTE:** The build will fail if you do not provide a `filter.properties` file when required. At minimum, it should be blank.
 
 
-*************
+***********************
 Building & Installing
-*************
+***********************
 
 To build::
 
@@ -106,7 +106,7 @@ shell scripts from ./bin to /opt/dims/bin.
 
 
 Native Code
-----------
+------------
 
 Tupelo has some native code sections which use JNI.
 To build the C code, run the following::
@@ -139,11 +139,4 @@ which will run all the unit tests.
 
 Note that you may get exceptions because HTTP Store can't mount MDFS.
 Still working on this.
-
-*************
-Contact
-*************
-
-.. sectionauthor:: Stuart Maclean (@stuart) <stuart @ apl.uw.edu>
-
 
