@@ -9,6 +9,7 @@ Contents:
 
    building
    amqp
+   maven
 
 
 Indices and tables
