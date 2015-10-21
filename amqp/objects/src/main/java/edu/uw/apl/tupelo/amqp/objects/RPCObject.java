@@ -94,7 +94,7 @@ public class RPCObject<T>  {
 		}
 	}
 
-	static private String VERSION = "UNKOWN";
+	static private String VERSION = "UNKNOWN";
 	static {
 		Package p = RPCObject.class.getPackage();
 		try {
@@ -106,7 +106,7 @@ public class RPCObject<T>  {
 		}
 	}
 
-	static private String PLATFORM = "UNKOWN";
+	static private String PLATFORM = "UNKNOWN";
 	static {
 		try {
 			Process p = Runtime.getRuntime().exec( "uname -a" );
