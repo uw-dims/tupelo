@@ -61,7 +61,7 @@ public class FileRecordStore implements Closeable {
 	private static final Log log = LogFactory.getLog(FileRecordStore.class);
 
 	// The name of the database file
-	private static final String DB_FILE = "fileHash.sqlite";
+	private static final String DB_FILE = "fileRecord.sqlite";
 
 	// SQL Table/column names
 	private static final String TABLE_NAME = "records";
