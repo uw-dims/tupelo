@@ -16,12 +16,10 @@ A 1.7+ version of the Java Development Kit (JDK).  For installation on Ubuntu::
   $ sudo apt-get install openjdk-7-jdk
 
 will install the OpenJDK toolset.  You may prefer the Sun/Oracle
-toolset, but that takes more work to install. See
-e.g. http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html.
+toolset, but that takes more work to install. See Oracle's `website <http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html>`_.
 
-Apache Maven 3.0.5 or greater (earlier 2.* versions may work fine, but
-3.0.5 is our current reference). See install instructions at
-http://maven.apache.org/download.cgi.  For quick install on Ubuntu::
+Apache Maven 3.0.5 or greater. See install instructions on their `website <http://maven.apache.org/download.cgi>`_.
+For quick install on Ubuntu::
 
   $ sudo apt-get install maven
 
@@ -31,12 +29,12 @@ very close to this::
 
  $ mvn -v
 
- Apache Maven 3.0.4
+ Apache Maven 3.0.5
  Maven home: /usr/share/maven
- Java version: 1.7.0_65, vendor: Oracle Corporation
+ Java version: 1.7.0_79, vendor: Oracle Corporation
  Java home: /usr/lib/jvm/java-7-openjdk-amd64/jre
  Default locale: en_US, platform encoding: UTF-8
- OS name: "linux", version: "3.11.0-15-generic", arch: "amd64", family: "unix"
+ OS name: "linux", version: "3.19.0-30-generic", arch: "amd64", family: "unix"
 
 *************
 Dependencies
