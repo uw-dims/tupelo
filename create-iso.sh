@@ -175,7 +175,7 @@ sudo bash install-shell.sh "$ROOT/filesystem/opt/tupelo" > /dev/null
 popd
 
 echo "Add the tupelo shell to the system's PATH"
-sudo sed -i "s|PATH=\"|PATH=\"/opt/tupelo/bin:|" "$ROOT/filesystem/etc/environment"
+sudo sed -i "s|PATH=\"|PATH=\"/opt/dims/bin:|" "$ROOT/filesystem/etc/environment"
 
 echo "Making $USER part of the disks group"
 sudo sed -i "/^disk:/ s/\$/$USER/" "$ROOT/filesystem/etc/group"

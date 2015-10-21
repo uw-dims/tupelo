@@ -9,7 +9,7 @@ SHELL=/bin/bash
 
 DIMSHOME=/opt/dims
 
-JARDIR=$(DIMSHOME)/jars
+JARDIR=$(DIMSHOME)/jars/tupelo
 
 BINDIR=$(DIMSHOME)/bin
 
@@ -28,11 +28,13 @@ install: install-jars install-bin
 
 .PHONY: install-jars
 install-jars: package installdirs
-	@$(INSTALL) cli/target/*.jar $(JARDIR)
+	@$(INSTALL) shell/target/*.jar $(JARDIR)
+	@$(INSTALL) shell/target/*.properties $(JARDIR)
+	@$(INSTALL) shell/*.properties $(JARDIR)
 
 .PHONY: install-bin
 install-bin: installdirs
-	@$(INSTALL) bin/* $(BINDIR)
+	@$(INSTALL) shell/elvis $(BINDIR)
 
 .PHONY: package
 package:
