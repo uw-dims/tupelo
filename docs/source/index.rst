@@ -10,6 +10,7 @@ Contents:
    building
    amqp
    structure
+   running
    maven
 
 

@@ -63,7 +63,7 @@ Maven repositories (i.e. Maven Central). These dependencies will need to be inst
 before you can build Tupelo. The easiest way is to clone them and run `mvn package install` to install them.
 The native-lib-loader will need to be built/installed first.
 
-The rabbitm1-log4j-adapter is bundled into a project-local Maven repository at ./repository.  The modules
+The rabbitmq-log4j-adapter is bundled into a project-local Maven repository at ./repository.  The modules
 that depend on this (logging) include this local repository in their pom.
 
 ***************
