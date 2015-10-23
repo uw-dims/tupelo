@@ -171,7 +171,7 @@ mvn package
 
 pushd shell
 # We need sudo because permissions get wonky
-sudo bash install-shell.sh "$ROOT/filesystem/opt/tupelo" > /dev/null
+sudo bash install-shell.sh "$ROOT/filesystem/opt/dims" > /dev/null
 popd
 
 echo "Add the tupelo shell to the system's PATH"
