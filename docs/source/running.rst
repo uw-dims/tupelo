@@ -31,7 +31,7 @@ The shell is started via the ``elvis`` command.
 The ``elvis`` script will only run if installed under `/opt/dims` or if all the required jars are under a `target/` folder in the current directory.
 If you need to run it from another directory, you will need to modify the script - it's just a bash script that sets the classpath and starts Java.
 
-By default, the shell uses a local store in `./test-store` - if this directory does not exist it will give you an error.
+By default, the shell uses a local store in `./test-store` - if this directory does not exist it will give you an error. The default store location is configurable, see :ref:`shell-config`.
 Use the `-s <PATH/URL>` option to specify a different store location. To see all possible flags, use the `-h` flag.
 
 Once the shell is running, it will display the following::
@@ -62,6 +62,22 @@ To manually add a drive or image, use the `-u` flag.
 **NOTE:** In order to access the drives directly under `/dev`, the user running the shell must be in the `disks` group, or the shell must
 be run with elevated privileges.
 
+.. _shell-config:
+
+----------------------------
+Shell Configuration Options
+----------------------------
+
+The configuration options available for the shell are:
+
+===============  ==========================  =============
+ Option          Description                 Default Value
+===============  ==========================  =============
+store-location   The default store location  ./test-store
+===============  ==========================  =============
+
+*See* :ref:`setting-config` *for where to change these options.*
+
 *****************
 Tupelo Web Store
 *****************
@@ -89,3 +105,36 @@ For longer running uses (and in the Tupelo server Docker conatiner), a server su
 To deploy on Tomcat, you just need to build the project and copy the WAR file from under `http/server/target/`
 into the Tomcat server's `webapps` directory and start Tomcat.
 The store will be available at http://localhost:8080/tupelo by default under Tomcat.
+
+------------------------
+Web Store Configuration
+------------------------
+
+The configuration options for the we store are:
+
+==========  ======================================================  ==============
+Option      Description                                             Default Value
+==========  ======================================================  ==============
+dataroot    The path to the underlying filesystem store             $HOME/.tupelo
+amqp.url    The AMQP url to connect to (Including authentication)   ${amqp.url}
+==========  ======================================================  ==============
+
+*See* :ref:`setting-config` *for where to change these options.*
+
+.. _setting-config:
+
+******************************
+Setting Configuration Options
+******************************
+
+The different ways to define these options are:
+
+1: Specified as JVM arguments, prefixed with tupelo.* (Example: -Dtupelo.store=./test-store)
+
+2: In a real file name $(HOME)/.tupelo
+
+3: In a real file name /etc/tupelo.prp
+
+4: In a resource (classpath-based) named /tupelo.prp
+
+The first match wins.
