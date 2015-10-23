@@ -34,148 +34,122 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" 
-	 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
 			     http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+	<modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>edu.uw.apl</groupId>
-    <artifactId>tupelo-http-parent</artifactId>
-    <version>1.2.1-SNAPSHOT</version>
-  </parent>
+	<parent>
+		<groupId>edu.uw.apl</groupId>
+		<artifactId>tupelo-http-parent</artifactId>
+		<version>1.2.1-SNAPSHOT</version>
+	</parent>
 
-  <groupId>edu.uw.apl</groupId>
-  <artifactId>tupelo-http-server</artifactId>
-  <version>1.2.1-SNAPSHOT</version>
-  <packaging>war</packaging>
-  <name>Tupelo Disk Management - Http Store Servlet</name>
+	<groupId>edu.uw.apl</groupId>
+	<artifactId>tupelo-http-server</artifactId>
+	<version>1.2.1-SNAPSHOT</version>
+	<packaging>war</packaging>
+	<name>Tupelo Disk Management - Http Store Servlet</name>
 
-  <dependencies>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>tupelo-http-client</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>tupelo-store-filesys</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>tupelo-store-tools</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+	<dependencies>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>tupelo-http-client</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>tupelo-store-filesys</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>tupelo-store-tools</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>tupelo-amqp-server</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>tupelo-amqp-server</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>tupelo-logging</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>tupelo-utils</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>jstl</artifactId>
+			<version>1.2</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.4</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
 
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>tupelo-logging</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+		<filters>
+			<filter>filter.properties</filter>
+		</filters>
 
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>tupelo-utils</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>2.5</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>
+								true
+							</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>
+								true
+							</addDefaultSpecificationEntries>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
 
-	<dependency>
-	    <groupId>javax.servlet</groupId>
-	    <artifactId>jstl</artifactId>
-	    <version>1.2</version>
-	</dependency>
-
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
-      <version>2.4</version>
-      <scope>provided</scope>
-    </dependency>
-
-<!--
-    <dependency>
-      <groupId>edu.uw.apl</groupId>
-      <artifactId>commons-servlet-filters</artifactId>
-      <version>1.0</version>
-    </dependency>
--->
-
-  </dependencies>
-
-  <build>
-    <!-- 
-	 Wah, we are having to DISCARD the version number info from
-	 the final artifact name. Otherwise, as the version number
-	 increases over time, scripted tools like Jenkins, ansible
-	 will not be able to locate the artifact by name.
-    -->
-    <finalName>tupelo</finalName>
-
-    <resources>
-      <resource>
-	<directory>src/main/resources</directory>
-	<filtering>true</filtering>
-      </resource>
-    </resources>
-    <filters>
-      <filter>filter.properties</filter>
-    </filters>
-
-    <plugins>
-      <plugin>
-	<groupId>org.apache.maven.plugins</groupId>
-	<artifactId>maven-war-plugin</artifactId>
-	<version>2.5</version>
-	<configuration>
-	  <archive>
-	    <manifest>
-	      <addDefaultImplementationEntries>
-		true
-	      </addDefaultImplementationEntries>
-	      <addDefaultSpecificationEntries>
-		true
-	      </addDefaultSpecificationEntries>
-	    </manifest>
-	  </archive>
-	</configuration>
-      </plugin>
-
-      <plugin>
-	<groupId>org.mortbay.jetty</groupId>
-	<artifactId>maven-jetty-plugin</artifactId>
-	<version>6.1.26</version>
-	<configuration>
-	  <connectors>
-	    <connector implementation=
-		       "org.mortbay.jetty.nio.SelectChannelConnector">
-	      <port>8888</port>
-	      <maxIdleTime>360000</maxIdleTime>
-	    </connector>
-	    <connector implementation=
-		       "org.mortbay.jetty.nio.SelectChannelConnector">
-	      <port>8889</port>
-	      <maxIdleTime>360000</maxIdleTime>
-	    </connector>
-	  </connectors>
-	  <!-- 
-	       The override.xml lets us set a context init param for dataroot 
-	  -->
-	  <overrideWebXml>
-	    src/main/resources/jetty-override-web.xml
-	  </overrideWebXml>
-	  <contextPath>tupelo</contextPath>
-	  <reload>manual</reload>
-	</configuration>
-      </plugin>
-    </plugins>
-  </build>
+			<plugin>
+				<groupId>org.mortbay.jetty</groupId>
+				<artifactId>jetty-maven-plugin</artifactId>
+				<version>8.1.16.v20140903</version>
+				<configuration>
+					<connectors>
+						<connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+							<port>8888</port>
+							<maxIdleTime>360000</maxIdleTime>
+						</connector>
+						<connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+							<port>8889</port>
+							<maxIdleTime>360000</maxIdleTime>
+						</connector>
+					</connectors>
+					<!-- The override.xml lets us set a context init param for dataroot -->
+					<overrideWebXml>
+						src/main/resources/jetty-override-web.xml
+					</overrideWebXml>
+					<contextPath>tupelo</contextPath>
+					<reload>manual</reload>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>
