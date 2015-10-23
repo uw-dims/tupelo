@@ -66,7 +66,7 @@ public class RecordStoreTest extends junit.framework.TestCase {
 	 */
 	public void testExists(){
 		System.out.println("Checking that the sqlite file exists");
-		File db = new File(testDir, "fileHash.sqlite");
+		File db = new File(testDir, "fileRecord.sqlite");
 		assert(db.exists());
 	}
 
