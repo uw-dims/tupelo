@@ -171,7 +171,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 								<id>run-server</id>
 								<phase>package</phase>
 								<goals>
-									<goal>run</goal>
+									<goal>run-war</goal>
 								</goals>
 							</execution>
 						</executions>
