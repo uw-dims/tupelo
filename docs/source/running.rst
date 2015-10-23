@@ -66,5 +66,26 @@ be run with elevated privileges.
 Tupelo Web Store
 *****************
 
+The Tupelo web store is packaged into a WAR (Web ARchive) file.
+A WAR file can be run in various Java Servlet Containers, such as `Jetty <http://www.eclipse.org/jetty/>`_ and `Tomcat <http://tomcat.apache.org/>`_.
+The Tupelo Web Store has been tested in both a Jetty and Tomcat 7 server.
 
+-------------------
+Running the Server
+-------------------
 
+^^^^^^^
+Jetty
+^^^^^^^
+
+The fastest way to get the web store up and running is to run ``mvn package -Prun-server`` in the root of the project.
+This will compile the whole project and start the server on ports 8888 and 8889. Access it via http://localhost:8888/
+
+^^^^^^^
+Tomcat
+^^^^^^^
+
+For longer running uses (and in the Tupelo server Docker conatiner), a server such as Tomcat is recommended.
+To deploy on Tomcat, you just need to build the project and copy the WAR file from under `http/server/target/`
+into the Tomcat server's `webapps` directory and start Tomcat.
+The store will be available at http://localhost:8080/tupelo by default under Tomcat.
