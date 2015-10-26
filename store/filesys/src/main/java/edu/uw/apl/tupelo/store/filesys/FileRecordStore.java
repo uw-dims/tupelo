@@ -150,7 +150,7 @@ public class FileRecordStore implements Closeable {
 	public FileRecordStore(File dataDir, ManagedDiskDescriptor mdd) throws IOException{
 		try{
 			this.mdd = mdd;
-			log.info("FileHashStore for "+mdd);
+			// log.info("FileRecordStore for "+mdd);
 
 			// Get the file name
 			sqlFile = new File(dataDir, DB_FILE);
