@@ -260,7 +260,7 @@ public class ContextListener implements ServletContextListener {
 					try {
 						fhs.start();
 					} catch( Exception e ) {
-						log.warn( e );
+						log.warn("Exception in FileHashService, stopping it", e);
 					}
 				}
 			};

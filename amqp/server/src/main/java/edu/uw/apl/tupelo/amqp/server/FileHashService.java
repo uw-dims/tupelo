@@ -35,6 +35,7 @@ package edu.uw.apl.tupelo.amqp.server;
 
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.io.IOException;
 
 import com.google.gson.*;
@@ -112,7 +113,7 @@ public class FileHashService {
 			try {
 				delivery = consumer.nextDelivery();
 			} catch( ShutdownSignalException sse ) {
-				log.warn( sse );
+			    log.warn("SignalShutdownException in FileHashService", sse);
 				break;
 			}
 
@@ -171,7 +172,11 @@ public class FileHashService {
 	public void stop() throws IOException {
 		if( channel == null )
 			return;
-		channel.close();
+		try {
+            channel.close();
+        } catch (TimeoutException e) {
+            log.warn("TimeoutException closing channel", e);
+        }
 	}
 
 }
