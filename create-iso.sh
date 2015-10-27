@@ -19,7 +19,7 @@ INCLUDE_DIR=""
 
 show_help() {
 cat << EOF
-Usage: ${0##*/} [-h] [-u USER] [-w DIR] ISOFILE OUTFILE
+Usage: ${0##*/} [-h] [-u USER] [-w DIR] [-i DIR] ISOFILE OUTFILE
 Repack the source ISOFILE with the tupelo shell (elvis)
 Create the final OUTFILE ISO when done
 

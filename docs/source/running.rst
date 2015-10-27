@@ -138,3 +138,48 @@ The different ways to define these options are:
 4: In a resource (classpath-based) named /tupelo.prp
 
 The first match wins.
+
+******************************
+Packing into Live Environment
+******************************
+
+There is a script, `create-iso.sh` in the root of the project that automates the process of installing the Tupelo shell into a live ISO.
+
+This requires an existing live ISO with Java pre-installed, such as `Caine <http://www.caine-live.net/>`_ (Tested with 6.0) or `Linux Mint <http://blog.linuxmint.com/?p=2864>`_
+(Tested with 17.2 MATE Edition).
+
+This command **will build the Tupelo project**, so the host machine needs Java/Maven and the dependencies. See :ref:`building`
+
+Running the script::
+
+ create-iso.sh [-h] [-u USER] [-w DIR] [-i DIR] ISOFILE OUTFILE
+
+
+===============  ====================================  =========
+Option           Description                           Default
+===============  ====================================  =========
+-h               Show Help                             N/A
+-u <USER>        The live environment's username       caine
+-w <DIRECTORY>   Working directory for un/repacking    /tmp
+-i <DIRECTORY>   Include file tree under directory     None
+===============  ====================================  =========
+
+
+More detail:
+
+* The user from `-u` will be added to the `disks` group, so they have direct access to the physical disks
+* The ISO will be mounted, extracted, and unpacked in a subfolder of the directory specified by `-w`
+
+  * If you have a lot of ram available, try to use `/dev/shm/` (In memory FS)
+
+    * This has only been tested on a machine with 32GB or ram -- it may use as much as 12GB just for unpacking.
+
+  * The full filesystem.squashfs will be unpacked here - the extracted version is about 4x larger than the original
+
+* If you specify a directory with `-i`, everything under that directory will be copied into the filesystem before repacking
+
+  * Permissions will be preserved, but ownership will be changed to root
+  * You can use this option to include extra configuration, such as a `/etc/tupelo.prp` file
+
+**NOTE:** If the script is stopped and/or errors out, you will need to remove the `WORKDIR/tupelo` before re-running -- the script will refuse to run if `WORKDIR/tupelo` exists.
+(WORKDIR is defined by the `-w` option)
