@@ -2,12 +2,13 @@
 set -e
 
 INSTALL_BASE="/opt/dims"
-JAR_PATH="$INSTALL_BASE/jars/tupelo"
 
 # If there was a path specified, use that instead of the default
 if [ ! "$1" == "" ]; then
    INSTALL_BASE="$1"
 fi
+
+JAR_PATH="$INSTALL_BASE/jars/tupelo"
 
 echo "Installing to $INSTALL_BASE"
 
