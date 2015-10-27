@@ -52,7 +52,7 @@ import edu.uw.apl.tupelo.utils.DiskHashUtils;
 
 /**
  * Monitors and generates the file hashes for managed disks that do not yet have file records. <br>
- * It polls the store for disks without file hashes approximatly every 20 minutes
+ * It polls the store for disks without file hashes approximately every 20 minutes
  */
 public class DiskFileRecordService {
     private static final Log log = LogFactory.getLog(DiskFileRecordService.class);
