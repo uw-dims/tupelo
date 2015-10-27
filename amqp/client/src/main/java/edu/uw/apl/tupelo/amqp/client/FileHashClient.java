@@ -108,7 +108,6 @@ public class FileHashClient {
 		gson = Utils.createGson( withPrettyPrinting );
 		hashes = new ArrayList<String>();
 		brokerUrl = Discovery.locatePropertyValue( "amqp.url" );
-		log.info( "BrokerUrl: " + brokerUrl );
 	}
 
 	
@@ -144,6 +143,8 @@ public class FileHashClient {
 		if( cl.hasOption( "u" ) ) {
 			brokerUrl = cl.getOptionValue( "u" );
 		}
+		log.info( "BrokerUrl: " + brokerUrl );
+
 		args = cl.getArgs();
 		if( args.length > 0 ) {
 			// hashes are in cmd line args
