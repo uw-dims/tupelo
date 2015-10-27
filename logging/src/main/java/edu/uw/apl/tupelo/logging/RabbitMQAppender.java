@@ -48,13 +48,13 @@ import java.util.concurrent.TimeoutException;
  * A Log4j appender that publishes messages to a RabbitMQ exchange/queue.
  */
 public class RabbitMQAppender extends AppenderSkeleton {
-    
+    private static String url = Discovery.locatePropertyValue("amqp.url");
+
     private ConnectionFactory factory = new ConnectionFactory();
     private Connection connection = null;
     private Channel channel = null;
     private String identifier = null;
     private String host = "localhost";
-    private String url = Discovery.locatePropertyValue("amqp.url");
     private boolean useUrl;
     private int port = 5762;
     private String username = "guest";

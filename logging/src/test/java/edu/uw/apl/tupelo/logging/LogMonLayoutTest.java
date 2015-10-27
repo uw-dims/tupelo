@@ -52,20 +52,22 @@ import org.apache.log4j.LogManager;
  * The message being logged
  */
 public class LogMonLayoutTest extends junit.framework.TestCase {
+    private Logger log;
 
 	protected void setUp() {
+	    System.out.println("Setting up log test");
 		log = Logger.getLogger( getClass() );
 	}
 	
 	protected void tearDown() {
+	    System.out.println("Tearing down log test");
 		LogManager.shutdown();
 	}
 	
 	public void test1() {
+	    System.out.println("Testing sending log message");
 		log.debug( "Test Message" );
 	}
-
-	Logger log;
 }
 
 // eof
