@@ -148,7 +148,22 @@ There is a script, `create-iso.sh` in the root of the project that automates the
 This requires an existing live ISO with Java pre-installed, such as `Caine <http://www.caine-live.net/>`_ (Tested with 6.0) or `Linux Mint <http://blog.linuxmint.com/?p=2864>`_
 (Tested with 17.2 MATE Edition).
 
-This command **will build the Tupelo project**, so the host machine needs Java/Maven and the dependencies. See :ref:`building`
+-------------
+Requirements
+-------------
+
+This script **will build the Tupelo project**, so the host machine needs Java/Maven and the dependencies. See :ref:`building`
+
+Additionally, you will need the `squashfs-tools` package installed::
+
+ sudo apt-get install squashfs-tools
+
+The suqashfs un/re-packing process is extremely CPU intensive and slow, so start the script and grab some coffee or something.
+If using a laptop, make sure it has good ventilation.
+
+--------
+Running
+--------
 
 Running the script::
 
@@ -183,3 +198,15 @@ More detail:
 
 **NOTE:** If the script is stopped and/or errors out, you will need to remove the `WORKDIR/tupelo` before re-running -- the script will refuse to run if `WORKDIR/tupelo` exists.
 (WORKDIR is defined by the `-w` option)
+
+^^^^^^^^^^
+Examples
+^^^^^^^^^^
+
+Repacking Linux Mint with `/dev/shm/` as the working directory::
+
+ ./create-iso.sh -w /dev/shm/ -u mint ~/linuxmint-17.2-mate-64bit.iso ~/linuxmint-tupelo.iso
+
+Repacking Caine with `/dev/shm/` as the working directory:
+
+ ./create-iso.sh -w /dev/shm/ ~/caine6.0.iso ~/caine-tupelo.iso
