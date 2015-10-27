@@ -11,6 +11,7 @@ Contents:
    amqp
    structure
    running
+   webstore
    maven
 
 
