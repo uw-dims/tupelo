@@ -503,12 +503,15 @@ public class FilesystemStore implements Store {
     public void putFileRecords(ManagedDiskDescriptor mdd, List<Record> records) throws IOException {
         FileRecordStore store = getRecordStore(mdd);
         store.addRecords(records);
+        store.close();
     }
 
     @Override
     public List<Record> getRecords(ManagedDiskDescriptor mdd, List<byte[]> hashes) throws IOException {
         FileRecordStore store = getRecordStore(mdd);
-        return store.getRecordsFromHashes(hashes);
+        List<Record> records = store.getRecordsFromHashes(hashes);
+        store.close();
+        return records;
     }
 
     @Override
@@ -521,6 +524,7 @@ public class FilesystemStore implements Store {
             if (store.containsFileHash(hash)) {
                 matchingDisks.add(mdd);
             }
+            store.close();
         }
         return matchingDisks;
     }
@@ -535,6 +539,7 @@ public class FilesystemStore implements Store {
             if (store.containsFileHash(hashes)) {
                 matchingDisks.add(mdd);
             }
+            store.close();
         }
         return matchingDisks;
     }
@@ -542,7 +547,9 @@ public class FilesystemStore implements Store {
     @Override
     public boolean hasFileRecords(ManagedDiskDescriptor mdd) throws IOException {
         FileRecordStore store = getRecordStore(mdd);
-        return store.hasData();
+        boolean hasData = store.hasData();
+        store.close();
+        return hasData;
     }
 	
 	/*********************** Private Implementation *********************/
