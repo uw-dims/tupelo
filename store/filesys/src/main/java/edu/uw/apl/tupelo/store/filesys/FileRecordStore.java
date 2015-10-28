@@ -89,6 +89,9 @@ public class FileRecordStore implements Closeable {
 	private static final String CTIME_COL = "ctime";
 	private static final String CRTIME_COL = "crtime";
 
+	// Insert batch size
+	private static final int INSERT_BATCH_SIZE = 1000;
+
 	// Table creation SQL statement
 	private static final String CREATE_STATEMENT =
 			"CREATE TABLE "+TABLE_NAME+" ("+
@@ -187,13 +190,48 @@ public class FileRecordStore implements Closeable {
 	 * Add all the hashes in the (Filename, hash) map to the database
 	 * @param hashes
 	 */
-	public void addRecords(List<Record> records) throws IOException {
-		log.debug("Adding file records for disk "+mdd);
-		// Add everything
-		for(Record cur : records){
-			addRecord(cur);
-		}
-	}
+    public void addRecords(List<Record> records) throws IOException {
+        log.debug("Adding file records for disk " + mdd);
+
+        try {
+            PreparedStatement insert = connection.prepareStatement(INSERT_STATEMENT);
+
+            int count = 0;
+
+            // Add everything
+            for (Record record : records) {
+                insert.setString(1, record.path);
+                insert.setBytes(2, record.md5);
+                insert.setLong(3, record.inode);
+                insert.setShort(4, record.attrType);
+                insert.setShort(5, record.attrId);
+                insert.setByte(6, record.nameType);
+                insert.setByte(7, record.metaType);
+                insert.setInt(8, record.perms);
+                insert.setInt(9, record.uid);
+                insert.setInt(10, record.gid);
+                insert.setLong(11, record.size);
+                insert.setInt(12, record.atime);
+                insert.setInt(13, record.mtime);
+                insert.setInt(14, record.ctime);
+                insert.setInt(15, record.crtime);
+
+                insert.addBatch();
+
+                count++;
+                // When we hit the batch size, execute it
+                if (count % INSERT_BATCH_SIZE == 0) {
+                    insert.executeBatch();
+                }
+            }
+
+            // Run any left over inserts
+            insert.executeBatch();
+            insert.close();
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
+    }
 
 	/**
 	 * Checks if the provided hash is contained in the store
@@ -294,6 +332,7 @@ public class FileRecordStore implements Closeable {
 			insert.setInt(14, record.ctime);
 			insert.setInt(15, record.crtime);
 			insert.execute();
+			insert.close();
 		} catch(SQLException e){
 			throw new IOException(e);
 		}
