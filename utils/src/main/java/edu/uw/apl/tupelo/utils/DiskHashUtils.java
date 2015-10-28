@@ -39,6 +39,7 @@ import java.util.List;
 
 import edu.uw.apl.commons.tsk4j.digests.BodyFile;
 import edu.uw.apl.commons.tsk4j.digests.BodyFileBuilder;
+import edu.uw.apl.commons.tsk4j.digests.BodyFileBuilder.BuilderCallback;
 import edu.uw.apl.commons.tsk4j.filesys.FileSystem;
 import edu.uw.apl.commons.tsk4j.image.Image;
 import edu.uw.apl.commons.tsk4j.volsys.Partition;
@@ -182,6 +183,16 @@ public class DiskHashUtils {
 	}
 
 	/**
+	 * Hash a filesystem and send the file records back via the callback
+	 * @param fs
+	 * @param callback
+	 * @throws IOException
+	 */
+	public void hashFileSystem(FileSystem fs, BuilderCallback callback) throws IOException {
+	    BodyFileBuilder.create(fs, callback);
+	}
+
+	/**
 	 * Walk the FileSystem and get a {@link BodyFile} for each partition.
 	 * @return List of {@link BodyFile}s
 	 */
@@ -193,5 +204,16 @@ public class DiskHashUtils {
 	    return bodyFiles;
 	}
 
+    /**
+     * Hash a disk and send the file records back via the callback
+     * @param fs
+     * @param callback
+     * @throws IOException
+     */
+	public void hashDisk(BuilderCallback callback) throws IOException {
+	    for(FileSystem fs : getFilesystems()){
+	        hashFileSystem(fs, callback);
+	    }
+	}
 
 }
