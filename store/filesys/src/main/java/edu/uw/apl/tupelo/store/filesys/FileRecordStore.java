@@ -221,13 +221,16 @@ public class FileRecordStore implements Closeable {
                 count++;
                 // When we hit the batch size, execute it
                 if (count % INSERT_BATCH_SIZE == 0) {
+                    log.debug("Inserting batch or records");
                     insert.executeBatch();
                 }
             }
 
             // Run any left over inserts
+            log.debug("Inserting any left over records");
             insert.executeBatch();
             insert.close();
+            log.debug("Done adding records");
         } catch (SQLException e) {
             throw new IOException(e);
         }
@@ -242,9 +245,12 @@ public class FileRecordStore implements Closeable {
 		try{
 			PreparedStatement query = connection.prepareStatement(COUNT_HASH_STATEMENT);
 			query.setBytes(1, hash);
+			query.closeOnCompletion();
 			ResultSet result = query.executeQuery();
 			// If the count is != 0, the hash is in there
-			return result.getInt(1) != 0;
+			boolean hasData = result.getInt(1) != 0;
+			result.close();
+			return hasData;
 		} catch(SQLException e){
 			throw new IOException(e);
 		}
@@ -282,10 +288,13 @@ public class FileRecordStore implements Closeable {
             for (int i = 1; i <= hashes.size(); i++) {
                 query.setBytes(i, hashes.get(i - 1));
             }
+            query.closeOnCompletion();
 
             // Run the query
             ResultSet result = query.executeQuery();
-            return result.getInt(1) != 0;
+            boolean hasHash = result.getInt(1) != 0;
+            result.close();
+            return hasHash;
         } catch (SQLException e) {
             throw new IOException(e);
         }
@@ -349,6 +358,7 @@ public class FileRecordStore implements Closeable {
             // Prep the query
             PreparedStatement query = connection.prepareStatement(SELECT_RECORD_BY_HASH);
             query.setBytes(1, hash);
+            query.closeOnCompletion();
 
             // Run the query
             ResultSet result = query.executeQuery();
@@ -358,6 +368,7 @@ public class FileRecordStore implements Closeable {
             while (result.next()) {
                 records.add(getRecordFromResult(result));
             }
+            result.close();
             return records;
         } catch (SQLException e) {
             throw new IOException(e);
@@ -390,6 +401,7 @@ public class FileRecordStore implements Closeable {
             for (int i = 1; i <= hashes.size(); i++) {
                 query.setBytes(i, hashes.get(i - 1));
             }
+            query.closeOnCompletion();
 
             // Run the query
             ResultSet result = query.executeQuery();
@@ -399,6 +411,7 @@ public class FileRecordStore implements Closeable {
             while (result.next()) {
                 records.add(getRecordFromResult(result));
             }
+            result.close();
             return records;
         } catch (SQLException e) {
             throw new IOException(e);
