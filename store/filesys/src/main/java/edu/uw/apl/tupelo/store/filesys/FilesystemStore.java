@@ -551,8 +551,6 @@ public class FilesystemStore implements Store {
         store.close();
         return hasData;
     }
-	
-	/*********************** Private Implementation *********************/
 
     /**
      * Get the FileRecordStore associated with the managed disk
@@ -560,10 +558,12 @@ public class FilesystemStore implements Store {
      * @return
      * @throws Exception
      */
-    private FileRecordStore getRecordStore(ManagedDiskDescriptor mdd) throws IOException {
+    public FileRecordStore getRecordStore(ManagedDiskDescriptor mdd) throws IOException {
         return new FileRecordStore(diskDir(root, mdd), mdd);
     }
-	
+
+    /*********************** Private Implementation *********************/
+
 	private UUID loadUUID() {
 		UUID result = null;
 		File f = new File( root, "uuid.txt" );

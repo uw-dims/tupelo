@@ -89,7 +89,7 @@ public class FileRecordStore implements Closeable {
 	private static final String CRTIME_COL = "crtime";
 
 	// Insert batch size
-	private static final int INSERT_BATCH_SIZE = 1000;
+	public static final int INSERT_BATCH_SIZE = 1000;
 
 	// Table creation SQL statement
 	private static final String CREATE_STATEMENT =
