@@ -162,6 +162,7 @@ public class FileRecordStore implements Closeable {
 
 			// Open a connection
 			connection = DriverManager.getConnection(JDBC.PREFIX + sqlFile.getAbsolutePath());
+			connection.setAutoCommit(false);
 
 			if(setup){
 				init();
@@ -230,6 +231,7 @@ public class FileRecordStore implements Closeable {
             log.debug("Inserting any left over records");
             insert.executeBatch();
             insert.close();
+            connection.commit();
             log.debug("Done adding records");
         } catch (SQLException e) {
             throw new IOException(e);
@@ -465,6 +467,7 @@ public class FileRecordStore implements Closeable {
 		log.debug("Initializing database for managed disk "+mdd);
 		Statement statement = connection.createStatement();
 		statement.executeUpdate(CREATE_STATEMENT);
+		connection.commit();
 	}
 
 	@Override
