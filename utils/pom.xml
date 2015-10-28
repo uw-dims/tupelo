@@ -57,7 +57,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		<dependency>
 			<groupId>edu.uw.apl.commons</groupId>
 			<artifactId>tsk4j-core</artifactId>
-			<version>413.3.0</version>
 		</dependency>
         <dependency>
             <groupId>edu.uw.apl.commons</groupId>

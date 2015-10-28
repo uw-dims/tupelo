@@ -36,7 +36,6 @@ package edu.uw.apl.tupelo.store.filesys;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -136,9 +135,6 @@ public class FileRecordStore implements Closeable {
     private static final String SELECT_RECORD_BY_HASHES =
             "SELECT * FROM "+TABLE_NAME+" WHERE "+MD5_COL+" IN (";
 
-	// The constructor for Record objects
-	private static Constructor<Record> recordConstructor;
-
 	private File sqlFile;
 	private ManagedDiskDescriptor mdd;
 	private Connection connection;
@@ -224,6 +220,7 @@ public class FileRecordStore implements Closeable {
                 if (count % INSERT_BATCH_SIZE == 0) {
                     log.debug("Inserting batch or records");
                     insert.executeBatch();
+                    connection.commit();
                 }
             }
 
@@ -425,7 +422,6 @@ public class FileRecordStore implements Closeable {
      * @param result
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Record getRecordFromResult(ResultSet result) throws SQLException {
         String path = result.getString(PATH_COL);
         byte[] hash = result.getBytes(MD5_COL);
@@ -443,20 +439,10 @@ public class FileRecordStore implements Closeable {
         int ctime = result.getInt(CTIME_COL);
         int crtime = result.getInt(CRTIME_COL);
 
-        // Check the constructor
-        if (recordConstructor == null) {
-            recordConstructor = (Constructor<Record>) Record.class.getDeclaredConstructors()[0];
-            recordConstructor.setAccessible(true);
-        }
+        // Create the record object
+        return new Record(hash, path, inode, attrType, attrId, nameType, metaType, perms, uid,
+                gid, size, atime, mtime, ctime, crtime);
 
-        try {
-            // Try and create the record object
-            return recordConstructor.newInstance(hash, path, inode, attrType, attrId, nameType, metaType, perms, uid,
-                    gid, size, atime, mtime, ctime, crtime);
-        } catch (Exception e) {
-            log.error("Exception re-creating record from result", e);
-            return null;
-        }
     }
 
 	/**
