@@ -130,7 +130,7 @@ public class ManagedDiskFileSystem extends AbstractFilesystem3 {
 						  "/" + mdd.getSession() );
 			}
 		} catch( IOException ioe ) {
-			log.warn( ioe );
+			log.warn( "Exception creating MDFS", ioe );
 		}
 	}
 	
@@ -212,7 +212,7 @@ public class ManagedDiskFileSystem extends AbstractFilesystem3 {
 		try {
 			return store.enumerate();
 		} catch( IOException ioe ) {
-			log.warn( ioe );
+			log.warn( "Exception getting descriptors", ioe );
 			return Collections.emptyList();
 		}
 	}
@@ -459,7 +459,7 @@ public class ManagedDiskFileSystem extends AbstractFilesystem3 {
 			*/
 			return 0;
 		} catch( Exception e ) {
-			log.warn( e, e );
+			log.warn( "Exception reading", e );
 			log.warn( path + " " + offset + " " + buf.remaining() );
 			throw new FuseException( e );
 		}
