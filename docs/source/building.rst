@@ -38,6 +38,9 @@ very close to this::
  Default locale: en_US, platform encoding: UTF-8
  OS name: "linux", version: "3.19.0-30-generic", arch: "amd64", family: "unix"
 
+Also, Tupelo is **platform dependent**. Even though the code is mostly Java, there are portions of native C code.
+ See the :ref:`native-code` section for more details.
+
 *************
 Dependencies
 *************
@@ -104,6 +107,7 @@ which uses the local Makefile to invoke Maven. Then::
 will take the jars and copy them to /opt/dims/jars, and copy driver
 shell scripts from ./bin to /opt/dims/bin.
 
+.. _native-code:
 
 Native Code
 ------------
@@ -114,7 +118,7 @@ To build the C code, run the following::
  $ mvn compile -Pnative
 
 The native code is in the `model/physical` sub-project.
-After the code is built, the resulting .so files will need to be moved
+After the code is built, the resulting .so files will automatically be copied
 to the appropriate folder under `src/resources`::
 
  src/resources/edu/uw/apl/tupelo/model/physical/native/Linux/<ARCH>/
