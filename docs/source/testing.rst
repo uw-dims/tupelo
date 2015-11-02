@@ -4,6 +4,8 @@ Testing
 
 This section has information on how to run through the tests to satisfy the Dims Test Plan.
 
+See :ref:`dimstp:diutconditions` to check the test details.
+
 ***********************
 Bootable Media Testing
 ***********************
