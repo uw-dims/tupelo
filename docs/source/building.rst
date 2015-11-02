@@ -59,17 +59,10 @@ Tupelo dependencies (i.e. 3rd party code it builds against) include
 
   * Available in DIMS Git repositories and Github
 
-* rabbitmq-log4j-appender (Allow log4j statements to go to RabbitMQ broker). Used by logging module.
-
-  * Bundled locally
-
 These artifacts (jars,poms) are not yet available on public facing
 Maven repositories (i.e. Maven Central). These dependencies will need to be installed into the local maven cache
 before you can build Tupelo. The easiest way is to clone them and run `mvn package install` to install them.
 The native-lib-loader will need to be built/installed first.
-
-The rabbitmq-log4j-adapter is bundled into a project-local Maven repository at ./repository.  The modules
-that depend on this (logging) include this local repository in their pom.
 
 ***************
 Property Files
