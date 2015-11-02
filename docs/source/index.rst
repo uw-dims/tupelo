@@ -12,6 +12,7 @@ Contents:
    structure
    running
    webstore
+   testing
    maven
 
 

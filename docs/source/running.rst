@@ -139,6 +139,8 @@ The different ways to define these options are:
 
 The first match wins.
 
+.. _create-live:
+
 ******************************
 Packing into Live Environment
 ******************************
