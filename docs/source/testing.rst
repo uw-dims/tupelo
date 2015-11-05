@@ -2,19 +2,48 @@
 Testing
 ========
 
-This section has information on how to run through the tests to satisfy the Dims Test Plan.
+This section has information on how to do the tests to satisfy the :ref:`dimstp:dimstestplan`.
 
-See :ref:`dimstp:diutconditions` to check the test details.
+*************************
+Disk Acquisition Testing
+*************************
+
+-------------------------
+Initial Acquisition Test
+-------------------------
+
+*This is in reference to 4.3.3.3.1 under* :ref:`dimstp:diutconditions`
+
+**Prerequisites:**
+
+Host machine with the Tupelo shell installed and multiple disks, and the Tupelo web store running on another system on the same network.
+
+If no machine with multiple drives is available, taking images of external or flash drives will also work.
+
+**Procedure:**
+
+To test the initial acquisition of a disk follow the procedure from :ref:`boot-test1`, starting at step #3.
+
+**NOTE:** Make sure to not take an image of the running system's root disk (Whatever is mounted at ``/``) - the files
+on the root drive may change while creating the image, causing issues. Take an image of a disk that is not in use.
+
+-------------------------
+Repeat Acquisition Test
+-------------------------
+
+
 
 ***********************
 Bootable Media Testing
 ***********************
 
+.. _boot-test1:
+
 ----------------------
 Bootable Media Test 1
 ----------------------
 
-*This is in reference to 4.3.3.3.7 in the Dims Test Plan*
+*This is in reference to 4.3.3.3.7 under* :ref:`dimstp:diutconditions`
 
 **Prerequisites:**
 
@@ -68,7 +97,7 @@ and the Tupelo web store running on another system on the same network.
 Bootable Media Test 2
 ----------------------
 
-*This is in reference to 4.3.3.3.8 in the Dims Test Plan*
+*This is in reference to 4.3.3.3.8 under* :ref:`dimstp:diutconditions`
 
 **Prerequisites:**
 
