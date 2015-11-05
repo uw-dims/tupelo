@@ -134,11 +134,10 @@ public class Elvis extends Shell {
 			main.readArgs( args );
 			main.start();
 			main.finish();
+			System.exit(0);
 		} catch( Exception e ) {
-			if( debug )
-				e.printStackTrace();
-			else
-				System.err.println( e );
+			e.printStackTrace();
+			System.exit(-1);
 		}
 	}
 
