@@ -46,6 +46,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.uw.apl.commons.tsk4j.digests.BodyFile.Record;
 import edu.uw.apl.commons.tsk4j.digests.BodyFileBuilder.BuilderCallback;
+import edu.uw.apl.commons.tsk4j.filesys.FileSystem;
 import edu.uw.apl.tupelo.fuse.ManagedDiskFileSystem;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.store.Store;
@@ -173,6 +174,7 @@ public class DiskFileRecordService {
                     // This will block until one is available
                     ManagedDiskDescriptor diskDescriptor = diskQueue.take();
 
+                    DiskHashUtils hashUtils = null;
                     try {
                         // Check that there are still no file records
                         final FileRecordStore recordStore = store.getRecordStore(diskDescriptor);
@@ -186,7 +188,7 @@ public class DiskFileRecordService {
                         currentDisk = diskDescriptor;
 
                         File diskPath = mdfs.pathTo(diskDescriptor);
-                        DiskHashUtils hashUtils = new DiskHashUtils(diskPath.getAbsolutePath());
+                        hashUtils = new DiskHashUtils(diskPath.getAbsolutePath());
 
                         final BuilderCallback callback = new BuilderCallback(){
                             @Override
@@ -206,8 +208,17 @@ public class DiskFileRecordService {
                             }
                         };
 
-                        // Create the BodyFiles
-                        hashUtils.hashDisk(callback);
+                        // Process the filesystems
+                        List<FileSystem> fileSystems = hashUtils.getFilesystems();
+                        for(FileSystem fs : fileSystems){
+                            try{
+                                // Process each filesystem individually
+                                // If there is an error processing a partition, it wont stop everything else from being processed
+                                hashUtils.hashFileSystem(fs, callback);
+                            } catch(Exception e){
+                                log.error("Exception processing filesystem "+fs+" on disk "+diskDescriptor, e);
+                            }
+                        }
 
                         // Clean up
                         hashUtils.close();
@@ -215,6 +226,13 @@ public class DiskFileRecordService {
                         log.debug("Done getting records for disk " + diskDescriptor);
                     } catch (Exception e) {
                         log.error("Exception getting records disk", e);
+                    } finally {
+                        // Always try and close the disk files
+                        try{
+                            hashUtils.close();
+                        } catch(Exception e){
+                            // Ignore
+                        }
                     }
                 } catch (InterruptedException e) {
                     log.warn("File record thread interrupted, stopping");
