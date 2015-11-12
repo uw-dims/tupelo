@@ -37,6 +37,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jfree.util.Log;
+
 import edu.uw.apl.commons.tsk4j.digests.BodyFile;
 import edu.uw.apl.commons.tsk4j.digests.BodyFileBuilder;
 import edu.uw.apl.commons.tsk4j.digests.BodyFileBuilder.BuilderCallback;
@@ -116,7 +118,12 @@ public class DiskHashUtils {
 		// If we have partitions, create a filesystem for all allocated partitions
 		if(partitions != null){
 			for(Partition partition : partitions){
-				FileSystem fs = getFileSystem(partition);
+				FileSystem fs = null;
+				try{
+				    fs = getFileSystem(partition);
+				} catch(Exception e){
+				    Log.warn("Error getting filesystem for partition "+partition, e);
+				}
 
 				if(fs != null){
 					filesystems.add(fs);
