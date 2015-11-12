@@ -188,8 +188,8 @@ public class DiskHashUtils {
 	 * @param callback
 	 * @throws IOException
 	 */
-	public void hashFileSystem(FileSystem fs, BuilderCallback callback) throws IOException {
-	    BodyFileBuilder.create(fs, callback);
+	public BodyFile hashFileSystem(FileSystem fs, BuilderCallback callback) throws IOException {
+	    return BodyFileBuilder.create(fs, callback);
 	}
 
 	/**
@@ -210,10 +210,12 @@ public class DiskHashUtils {
      * @param callback
      * @throws IOException
      */
-	public void hashDisk(BuilderCallback callback) throws IOException {
+	public List<BodyFile> hashDisk(BuilderCallback callback) throws IOException {
+	    List<BodyFile> bodyFiles = new ArrayList<BodyFile>();
 	    for(FileSystem fs : getFilesystems()){
-	        hashFileSystem(fs, callback);
+	        bodyFiles.add(hashFileSystem(fs, callback));
 	    }
+	    return bodyFiles;
 	}
 
 }

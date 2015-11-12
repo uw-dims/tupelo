@@ -60,6 +60,7 @@ import edu.uw.apl.commons.tsk4j.volsys.Partition;
 import edu.uw.apl.commons.tsk4j.volsys.VolumeSystem;
 import edu.uw.apl.commons.tsk4j.digests.BodyFile;
 import edu.uw.apl.commons.tsk4j.digests.BodyFile.Record;
+import edu.uw.apl.commons.tsk4j.digests.BodyFileBuilder.BuilderCallback;
 import edu.uw.apl.commons.tsk4j.digests.VolumeSystemHash;
 import edu.uw.apl.commons.tsk4j.digests.VolumeSystemHashCodec;
 import edu.uw.apl.commons.tsk4j.filesys.FileSystem;
@@ -85,8 +86,8 @@ import edu.uw.apl.tupelo.utils.DiskHashUtils;
 import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
 
 /**
-   A cmd line shell for the Tupelo system. Works along the lines of
-   bash...
+ * A cmd line shell for the Tupelo system. Works along the lines of
+ * bash...
 */
 public class Elvis extends Shell {
 
@@ -247,9 +248,23 @@ public class Elvis extends Shell {
                 // Prep the session
                 checkSession();
 
+                DiskHashUtils disk = null;
                 try {
                     Date start = new Date();
-                    DiskHashUtils disk = new DiskHashUtils(ud.getSource().getAbsolutePath());
+                    if(ud instanceof VirtualDisk){
+                        VirtualDisk vDisk = (VirtualDisk) ud;
+                        // Virtual disk, this takes extra steps to set up
+                        // Set up the virtual machine FS mount point
+                        checkVMFS();
+                        // Get and mount the VM
+                        VirtualMachine vm = vDisk.getVM();
+                        vmfs.add(vm);
+                        File diskPath = vmfs.pathTo(vDisk.getDelegate());
+                        // Create the disk
+                        disk = new DiskHashUtils(diskPath.getAbsolutePath());
+                    } else {
+                        disk = new DiskHashUtils(ud.getSource().getAbsolutePath());
+                    }
 
                     List<BodyFile> bodyFiles = new LinkedList<BodyFile>();
                     // Process each parition individually
@@ -261,7 +276,23 @@ public class Elvis extends Shell {
                             if (fs == null) {
                                 continue;
                             }
-                            BodyFile bodyFile = disk.hashFileSystem(fs);
+
+                            // Callback, for printing status
+                            final BuilderCallback callback = new BuilderCallback() {
+                                private int totalFiles = 0;
+                                @Override
+                                public int getUpdateInterval() {
+                                    return 1000;
+                                }
+
+                                @Override
+                                public void gotRecords(List<Record> records) {
+                                    totalFiles += records.size();
+                                    System.out.println("Processed "+totalFiles+" files");
+                                }
+                            };
+
+                            BodyFile bodyFile = disk.hashFileSystem(fs, callback);
                             bodyFiles.add(bodyFile);
 
                             // Write the data
@@ -292,6 +323,13 @@ public class Elvis extends Shell {
                     log.warn(e);
                     if (debug) {
                         e.printStackTrace();
+                    }
+                } finally {
+                    // Always try and close the disk
+                    try{
+                        disk.close();
+                    } catch(Exception e){
+                        // Ignore
                     }
                 }
             }
@@ -598,8 +636,16 @@ public class Elvis extends Shell {
 	}
 	
 	private void finish() throws Exception {
-		if( isInteractive() )
+		if( isInteractive() ){
 			System.out.println( "Bye!" );
+		}
+		if(vmfs != null){
+		    try{
+		        vmfs.umount();
+		    } catch(Exception e){
+		        // Ignore it
+		    }
+		}
 	}
 
 	private void report( String msg ) {
