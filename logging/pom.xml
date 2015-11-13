@@ -41,12 +41,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	<parent>
 		<groupId>edu.uw.apl</groupId>
 		<artifactId>tupelo-parent</artifactId>
-		<version>1.2.1</version>
+		<version>1.2.2</version>
 	</parent>
 
 	<groupId>edu.uw.apl</groupId>
 	<artifactId>tupelo-logging</artifactId>
-	<version>1.2.1</version>
+	<version>1.2.2</version>
 	<name>Tupelo Disk Management - Logging Infrastructure</name>
 
 	<dependencies>

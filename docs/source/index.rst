@@ -12,7 +12,9 @@ Contents:
    structure
    running
    webstore
+   testing
    maven
+   referenceddocs
 
 
 Indices and tables
@@ -26,4 +28,4 @@ Indices and tables
 Contact
 *************
 
-.. sectionauthor:: Stuart Maclean (@stuart) <stuart @ apl.uw.edu>
+.. sectionauthor:: Stuart Maclean (@stuart) <stuart @ apl.uw.edu>, Scott Warner <scott.warner @ nextcentury.com>

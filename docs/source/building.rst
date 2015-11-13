@@ -38,6 +38,9 @@ very close to this::
  Default locale: en_US, platform encoding: UTF-8
  OS name: "linux", version: "3.19.0-30-generic", arch: "amd64", family: "unix"
 
+Also, Tupelo is **platform dependent**. Even though the code is mostly Java, there are portions of native C code.
+ See the :ref:`native-code` section for more details.
+
 *************
 Dependencies
 *************
@@ -56,17 +59,10 @@ Tupelo dependencies (i.e. 3rd party code it builds against) include
 
   * Available in DIMS Git repositories and Github
 
-* rabbitmq-log4j-appender (Allow log4j statements to go to RabbitMQ broker). Used by logging module.
-
-  * Bundled locally
-
 These artifacts (jars,poms) are not yet available on public facing
 Maven repositories (i.e. Maven Central). These dependencies will need to be installed into the local maven cache
 before you can build Tupelo. The easiest way is to clone them and run `mvn package install` to install them.
 The native-lib-loader will need to be built/installed first.
-
-The rabbitmq-log4j-adapter is bundled into a project-local Maven repository at ./repository.  The modules
-that depend on this (logging) include this local repository in their pom.
 
 ***************
 Property Files
@@ -104,6 +100,7 @@ which uses the local Makefile to invoke Maven. Then::
 will take the jars and copy them to /opt/dims/jars, and copy driver
 shell scripts from ./bin to /opt/dims/bin.
 
+.. _native-code:
 
 Native Code
 ------------
@@ -114,7 +111,7 @@ To build the C code, run the following::
  $ mvn compile -Pnative
 
 The native code is in the `model/physical` sub-project.
-After the code is built, the resulting .so files will need to be moved
+After the code is built, the resulting .so files will automatically be copied
 to the appropriate folder under `src/resources`::
 
  src/resources/edu/uw/apl/tupelo/model/physical/native/Linux/<ARCH>/

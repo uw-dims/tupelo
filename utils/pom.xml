@@ -42,11 +42,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <parent>
     <groupId>edu.uw.apl</groupId>
     <artifactId>tupelo-parent</artifactId>
-    <version>1.2.1</version>
+    <version>1.2.2</version>
   </parent>
 
   <artifactId>tupelo-utils</artifactId>
-  <version>1.2.1</version>
+  <version>1.2.2</version>
   <packaging>jar</packaging>
 
   <name>Tupelo Disk Management - Utilities</name>
@@ -57,7 +57,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		<dependency>
 			<groupId>edu.uw.apl.commons</groupId>
 			<artifactId>tsk4j-core</artifactId>
-			<version>413.3.0</version>
 		</dependency>
         <dependency>
             <groupId>edu.uw.apl.commons</groupId>

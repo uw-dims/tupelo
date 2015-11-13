@@ -52,14 +52,14 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Tupelo'
-copyright = u'2015, Stuart Maclean'
+copyright = u'2015, University of Washington'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = '1.2.1'
+version = '1.2.2'
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -276,7 +276,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'Tupelo', u'Tupelo Documentation',
-   u'Stuart Maclean', 'Tupelo', 'One line description of project.',
+   u'Stuart Maclean', 'Tupelo', 'Tupelo Disk Store',
    'Miscellaneous'),
 ]
 
@@ -306,6 +306,7 @@ intersphinx_mapping = {
         'dimsdevguide': ("{}/dims-devguide".format(os.environ['DOCSURL']), None),
         'dimspacker': ("{}/dims-packer".format(os.environ['DOCSURL']), None),
         'dittrich': ('https://staff.washington.edu/dittrich/home/', None),
-        'ansibleplaybooks': ("{}/ansible-playbooks".format(os.environ['DOCSURL']),None)
+        'ansibleplaybooks': ("{}/ansible-playbooks".format(os.environ['DOCSURL']),None),
+        'dimstp': ("{}/dims-tp".format(os.environ['DOCSURL']), None)
 }
 

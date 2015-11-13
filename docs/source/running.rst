@@ -11,6 +11,8 @@ The shell has can be used to analyze the files on a physical disk or image,
 send a disk or image to either a local or remote store,
 check a store for files with a specific MD5 hash and more.
 
+.. _install-shell:
+
 ---------------------
 Installing the Shell
 ---------------------
@@ -78,6 +80,8 @@ store-location   The default store location  ./test-store
 
 *See* :ref:`setting-config` *for where to change these options.*
 
+.. _tupelo-web-store:
+
 *****************
 Tupelo Web Store
 *****************
@@ -85,6 +89,8 @@ Tupelo Web Store
 The Tupelo web store is packaged into a WAR (Web ARchive) file.
 A WAR file can be run in various Java Servlet Containers, such as `Jetty <http://www.eclipse.org/jetty/>`_ and `Tomcat <http://tomcat.apache.org/>`_.
 The Tupelo Web Store has been tested in both a Jetty and Tomcat 7 server.
+
+The host machine should be a Ubuntu 14.04 based system, needs at least as much free space as the size of drives that will be sent to it.
 
 -------------------
 Running the Server
@@ -139,13 +145,15 @@ The different ways to define these options are:
 
 The first match wins.
 
+.. _create-live:
+
 ******************************
 Packing into Live Environment
 ******************************
 
 There is a script, `create-iso.sh` in the root of the project that automates the process of installing the Tupelo shell into a live ISO.
 
-This requires an existing live ISO with Java pre-installed, such as `Caine <http://www.caine-live.net/>`_ (Tested with 6.0) or `Linux Mint <http://blog.linuxmint.com/?p=2864>`_
+This requires an existing live ISO with Java pre-installed, such as `Caine <http://www.caine-live.net/>`_ (Tested with 6.0 and 7.0) or `Linux Mint <http://blog.linuxmint.com/?p=2864>`_
 (Tested with 17.2 MATE Edition).
 
 -------------

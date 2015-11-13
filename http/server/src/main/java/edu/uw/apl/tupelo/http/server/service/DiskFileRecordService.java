@@ -44,10 +44,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.uw.apl.commons.tsk4j.digests.BodyFile;
+import edu.uw.apl.commons.tsk4j.digests.BodyFile.Record;
+import edu.uw.apl.commons.tsk4j.digests.BodyFileBuilder.BuilderCallback;
+import edu.uw.apl.commons.tsk4j.filesys.FileSystem;
 import edu.uw.apl.tupelo.fuse.ManagedDiskFileSystem;
 import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 import edu.uw.apl.tupelo.store.Store;
+import edu.uw.apl.tupelo.store.filesys.FileRecordStore;
+import edu.uw.apl.tupelo.store.filesys.FilesystemStore;
 import edu.uw.apl.tupelo.utils.DiskHashUtils;
 
 /**
@@ -61,7 +65,7 @@ public class DiskFileRecordService {
     private static final long UPDATE_INTERVAL = 20 * 60 * 1000;
 
     // The store
-    private final Store store;
+    private final FilesystemStore store;
     // The store's MDFS
     private final ManagedDiskFileSystem mdfs;
     // Which disks are next
@@ -74,7 +78,7 @@ public class DiskFileRecordService {
     private WorkerThread worker;
 
     public DiskFileRecordService(Store store, ManagedDiskFileSystem mdfs){
-        this.store = store;
+        this.store = (FilesystemStore) store;
         this.mdfs = mdfs;
 
         diskQueue = new LinkedBlockingQueue<ManagedDiskDescriptor>();
@@ -170,10 +174,13 @@ public class DiskFileRecordService {
                     // This will block until one is available
                     ManagedDiskDescriptor diskDescriptor = diskQueue.take();
 
+                    DiskHashUtils hashUtils = null;
                     try {
                         // Check that there are still no file records
-                        if(store.hasFileRecords(diskDescriptor)){
+                        final FileRecordStore recordStore = store.getRecordStore(diskDescriptor);
+                        if(recordStore.hasData()){
                             log.debug("Disk has file records, skipping "+diskDescriptor);
+                            recordStore.close();
                             continue;
                         }
 
@@ -181,28 +188,51 @@ public class DiskFileRecordService {
                         currentDisk = diskDescriptor;
 
                         File diskPath = mdfs.pathTo(diskDescriptor);
-                        DiskHashUtils hashUtils = new DiskHashUtils(diskPath.getAbsolutePath());
+                        hashUtils = new DiskHashUtils(diskPath.getAbsolutePath());
 
-                        // Create the BodyFiles
-                        List<BodyFile> bodyFiles = hashUtils.hashDisk();
+                        final BuilderCallback callback = new BuilderCallback(){
+                            @Override
+                            public int getUpdateInterval() {
+                                // Get the records back in chunks we save to the database right away
+                                return FileRecordStore.INSERT_BATCH_SIZE;
+                            }
 
-                        // Check that there are still no file records
-                        // If there are multiple instances of the store running, another may have already stored the records
-                        if(store.hasFileRecords(diskDescriptor)){
-                            log.debug("Disk has file records, skipping "+diskDescriptor);
-                            continue;
+                            @Override
+                            public void gotRecords(List<Record> records) {
+                                // Save the records as we get them
+                                try {
+                                    recordStore.addRecords(records);
+                                } catch (IOException e) {
+                                    log.error("Exception saving file records", e);
+                                }
+                            }
+                        };
+
+                        // Process the filesystems
+                        List<FileSystem> fileSystems = hashUtils.getFilesystems();
+                        for(FileSystem fs : fileSystems){
+                            try{
+                                // Process each filesystem individually
+                                // If there is an error processing a partition, it wont stop everything else from being processed
+                                hashUtils.hashFileSystem(fs, callback);
+                            } catch(Exception e){
+                                log.error("Exception processing filesystem "+fs+" on disk "+diskDescriptor, e);
+                            }
                         }
 
-                        // Save it
-                        log.debug("Saving file records");
-                        for(BodyFile bodyFile : bodyFiles){
-                            store.putFileRecords(diskDescriptor, bodyFile.records());
-                        }
-                        
+                        // Clean up
                         hashUtils.close();
+                        recordStore.close();
                         log.debug("Done getting records for disk " + diskDescriptor);
                     } catch (Exception e) {
                         log.error("Exception getting records disk", e);
+                    } finally {
+                        // Always try and close the disk files
+                        try{
+                            hashUtils.close();
+                        } catch(Exception e){
+                            // Ignore
+                        }
                     }
                 } catch (InterruptedException e) {
                     log.warn("File record thread interrupted, stopping");

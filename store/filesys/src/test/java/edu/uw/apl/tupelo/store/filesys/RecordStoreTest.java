@@ -34,7 +34,6 @@
 package edu.uw.apl.tupelo.store.filesys;
 
 import java.io.File;
-import java.lang.reflect.Constructor;
 import java.security.MessageDigest;
 
 import edu.uw.apl.commons.tsk4j.digests.BodyFile.Record;
@@ -73,7 +72,6 @@ public class RecordStoreTest extends junit.framework.TestCase {
 	/**
 	 * Test adding/removing/querying for data
 	 */
-	@SuppressWarnings("unchecked")
     public void testAddingData() throws Exception {
 		// The store should start empty
 		System.out.println("Store should start empty");
@@ -87,12 +85,7 @@ public class RecordStoreTest extends junit.framework.TestCase {
 		// Add the filename/hash
 		System.out.println("Adding a file record");
 
-		// Use reflection to access the private constructor
-		Constructor<Record> constructor;
-		constructor = (Constructor<Record>) Record.class.getDeclaredConstructors()[0];
-		constructor.setAccessible(true);
-
-		Record record = constructor.newInstance(digest, FILE_NAME, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+		Record record = new Record(digest, FILE_NAME, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 		store.addRecord(record);
 
 		System.out.println("Store should have data now");

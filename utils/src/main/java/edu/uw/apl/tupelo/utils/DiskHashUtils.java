@@ -37,8 +37,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jfree.util.Log;
+
 import edu.uw.apl.commons.tsk4j.digests.BodyFile;
 import edu.uw.apl.commons.tsk4j.digests.BodyFileBuilder;
+import edu.uw.apl.commons.tsk4j.digests.BodyFileBuilder.BuilderCallback;
 import edu.uw.apl.commons.tsk4j.filesys.FileSystem;
 import edu.uw.apl.commons.tsk4j.image.Image;
 import edu.uw.apl.commons.tsk4j.volsys.Partition;
@@ -115,7 +118,12 @@ public class DiskHashUtils {
 		// If we have partitions, create a filesystem for all allocated partitions
 		if(partitions != null){
 			for(Partition partition : partitions){
-				FileSystem fs = getFileSystem(partition);
+				FileSystem fs = null;
+				try{
+				    fs = getFileSystem(partition);
+				} catch(Exception e){
+				    Log.warn("Error getting filesystem for partition "+partition, e);
+				}
 
 				if(fs != null){
 					filesystems.add(fs);
@@ -182,6 +190,16 @@ public class DiskHashUtils {
 	}
 
 	/**
+	 * Hash a filesystem and send the file records back via the callback
+	 * @param fs
+	 * @param callback
+	 * @throws IOException
+	 */
+	public BodyFile hashFileSystem(FileSystem fs, BuilderCallback callback) throws IOException {
+	    return BodyFileBuilder.create(fs, callback);
+	}
+
+	/**
 	 * Walk the FileSystem and get a {@link BodyFile} for each partition.
 	 * @return List of {@link BodyFile}s
 	 */
@@ -193,5 +211,18 @@ public class DiskHashUtils {
 	    return bodyFiles;
 	}
 
+    /**
+     * Hash a disk and send the file records back via the callback
+     * @param fs
+     * @param callback
+     * @throws IOException
+     */
+	public List<BodyFile> hashDisk(BuilderCallback callback) throws IOException {
+	    List<BodyFile> bodyFiles = new ArrayList<BodyFile>();
+	    for(FileSystem fs : getFilesystems()){
+	        bodyFiles.add(hashFileSystem(fs, callback));
+	    }
+	    return bodyFiles;
+	}
 
 }
