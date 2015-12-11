@@ -59,7 +59,7 @@ copyright = u'2015, University of Washington'
 # built documents.
 #
 # The short X.Y version.
-version = '1.2.3'
+version = '1.2.4'
 # The full version, including alpha/beta/rc tags.
 release = version
 
