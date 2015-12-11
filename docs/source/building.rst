@@ -36,6 +36,7 @@ two very obvious tool prerequisites:
        $ sudo apt-get install maven
 
    ..
+
 After installation of both tools, run ``mvn -v`` which shows Maven's
 version and which JDK it has located.  You are hoping to see something
 very close to this:
