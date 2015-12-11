@@ -82,11 +82,11 @@ Shell Configuration Options
 
 The configuration options available for the shell are:
 
-=================  ==========================  ===============
-Option             Description                 Default Value
-=================  ==========================  ===============
-``store-location`` The default store location  ``./test-store``
-=================  ==========================  ===============
+==================  ==========================  ================
+Option              Description                 Default Value
+==================  ==========================  ================
+``store-location``  The default store location  ``./test-store``
+==================  ==========================  ================
 
 See :ref:`setting-config` for how to change these options.
 
