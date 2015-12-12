@@ -199,6 +199,18 @@ Additionally, you will need the ``squashfs-tools`` package installed:
 
 ..
 
+.. TODO(dittrich): Add this to Ansible
+
+.. todo::
+
+    This needs to be added to Ansible playbooks for automated deployment.
+    See Jira Ticket `DIMS-618`_.
+
+..
+
+.. _DIMS-618: http://jira.prisem.washington.edu/browse/DIMS-618
+
+
 .. attention::
 
     The ``squashfs`` un/re-packing process is extremely CPU intensive and slow,
@@ -206,6 +218,7 @@ Additionally, you will need the ``squashfs-tools`` package installed:
     make sure it has good ventilation.
 
 ..
+
 
 --------
 Running
