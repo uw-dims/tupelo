@@ -43,11 +43,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <parent>
     <groupId>edu.uw.apl</groupId>
     <artifactId>tupelo-parent</artifactId>
-    <version>1.2.5</version>
+    <version>1.2.6</version>
   </parent>
 
   <artifactId>tupelo-http-parent</artifactId>
-  <version>1.2.5</version>
+  <version>1.2.6</version>
   <packaging>pom</packaging>
 
   <name>Tupelo Disk Management - Http (Parent)</name>
