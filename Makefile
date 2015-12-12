@@ -45,10 +45,28 @@ install-jars: package installdirs
 install-bin: installdirs
 	@$(INSTALL) shell/elvis $(BINDIR)
 
+#HELP package - build maven package
 .PHONY: package
-package:
+package: properties
 	mvn package
 
+#HELP properties - make sure filter.properties files exist where needed
+.PHONY: properties
+properties: $(GIT)/tupelo/amqp/server/filter.properties \
+	    $(GIT)/tupelo/amqp/client/filter.properties \
+	    $(GIT)/tupelo/http/server/filter.properties
+
+$(GIT)/tupelo/amqp/client/filter.properties:
+	touch $(GIT)/tupelo/amqp/client/filter.properties
+
+$(GIT)/tupelo/amqp/server/filter.properties:
+	touch $(GIT)/tupelo/amqp/server/filter.properties
+
+$(GIT)/tupelo/http/server/filter.properties:
+	touch $(GIT)/tupelo/http/server/filter.properties
+
+#HLEP installdirs - create directories for installation
+.PHONY: installdirs
 installdirs:
 	[ -d $(JARDIR) ] || \
 	(mkdir -p $(JARDIR); \
