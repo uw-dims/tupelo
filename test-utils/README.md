@@ -11,6 +11,8 @@ run the script with the target directory on your current directory.
 It takes two parameters: The input STIX file and the output file name. If the output
 file exists, it will overwrite it without warning.
 
+You can use the -v option to make it print the AQMP request/response
+
 The AMQP URL can be specified with the -u option, or read from the 'tupelo.prp' file, if it exists.
 Define the AMQP URL in the 'tupelo.prp' file with 'amqp.url : amqp://dims:dims@localhost/dims' - using
 your URL instead of localhost
