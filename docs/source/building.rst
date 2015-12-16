@@ -84,6 +84,13 @@ Maven repositories (i.e. Maven Central). These dependencies will need to be inst
 before you can build Tupelo. The easiest way is to clone them and run ``mvn package install`` to install them.
 The ``native-lib-loader`` will need to be built/installed first.
 
+.. note::
+
+  With the full DIMS source tree, run ``mvn package install`` in ``$GIT/java-native-loader/main``,
+  ``$GIT/tsk4j``, and ``$GIT/fuse4j`` (In that order) to set up the dependencies.
+
+..
+
 ***************
 Property Files
 ***************
