@@ -43,11 +43,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <parent>
     <groupId>edu.uw.apl</groupId>
     <artifactId>tupelo-store-parent</artifactId>
-    <version>1.2.6</version>
+    <version>1.2.7</version>
   </parent>
 
   <artifactId>tupelo-store-null</artifactId>
-  <version>1.2.6</version>
+  <version>1.2.7</version>
   <packaging>jar</packaging>
   <name>Tupelo Disk Management - Null/Test Store</name>
 
