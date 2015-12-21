@@ -38,8 +38,10 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.io.IOException;
 import java.io.File;
+import java.util.Date;
 import java.util.Properties;
 
 import edu.uw.apl.tupelo.store.Store;
@@ -254,18 +256,45 @@ public class ContextListener implements ServletContextListener {
 		Store s = (Store)sc.getAttribute( STORE_KEY );
 		final FileHashService fhs = new FileHashService( s, brokerURL );
 		sc.setAttribute( AMQP_SERVICE_KEY, fhs );
-		Runnable r = new Runnable() {
-				@Override
-				public void run() {
-					try {
-						fhs.start();
-					} catch( Exception e ) {
-						log.warn("Exception in FileHashService, stopping it", e);
-					}
-				}
-			};
-		new Thread( r ).start();
-	}
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Date lastConnectTry;
+                    int reconnectCount = 0;
+                    while (reconnectCount < 10) {
+                        lastConnectTry = new Date();
+                        try {
+                            fhs.start();
+                        } catch (Exception e) {
+                            if (e instanceof URISyntaxException) {
+                                throw e;
+                            }
+                            log.warn("Exception in AMQP FileHashService, restarting", e);
+                        }
+
+                        try {
+                            Date now = new Date();
+                            if (now.getTime() - lastConnectTry.getTime() <= 60 * 1000) {
+                                reconnectCount++;
+                                log.debug("Reconnect try count = " + reconnectCount);
+                            } else {
+                                reconnectCount = 1;
+                            }
+                            log.info("Waiting 10 sec to reconnect to AMQP");
+                            Thread.sleep(10 * 1000);
+                        } catch (Exception e) {
+                            // Ignore
+                        }
+                    }
+                    log.warn("More than 10 failed AMQP connection attempts, stopping FileHashService");
+                } catch (Exception e) {
+                    log.warn("Fatal exception in AMQP FileHashService, disabling", e);
+                }
+            }
+        };
+        new Thread(r).start();
+    }
 
 	/**
 	 * Clean up when the server stops

@@ -56,12 +56,57 @@ import java.util.UUID;
  */
 
 public class LogMonLayout extends Layout {
+    private final UUID uuid;
 
+    static private final String ISO8601 = "yyyy-MM-dd'T'HH:mm:ss.SSS000XXX";
+
+    static private String HOSTNAME = "UNKNOWN";
+    static {
+        try {
+            InetAddress ia = InetAddress.getLocalHost();
+            HOSTNAME = ia.getCanonicalHostName();
+        } catch( UnknownHostException uhe ) {
+        }
+    }
+
+    static private SimpleDateFormat dateFormatter;
+    static private String pidString = null;
 
 	public LogMonLayout() {
 		uuid = UUID.randomUUID();
+		dateFormatter = new SimpleDateFormat( ISO8601 );
+		if(pidString == null){
+		    getProcessId();
+		}
 	}
-	
+
+	@SuppressWarnings("restriction")
+	/**
+	 * Attempts to get the process ID.
+	 * This can fail for a number of reasons.
+	 * Source: http://stackoverflow.com/a/12066696
+	 */
+    private void getProcessId(){
+	    int pid = 0;
+	    try{
+            java.lang.management.RuntimeMXBean runtime = java.lang.management.ManagementFactory.getRuntimeMXBean();
+            java.lang.reflect.Field jvm = runtime.getClass().getDeclaredField("jvm");
+            jvm.setAccessible(true);
+            sun.management.VMManagement mgmt = (sun.management.VMManagement) jvm.get(runtime);
+            java.lang.reflect.Method pid_method = mgmt.getClass().getDeclaredMethod("getProcessId");
+            pid_method.setAccessible(true);
+
+            pid = (Integer) pid_method.invoke(mgmt);
+	    } catch(Exception e){
+	        // Ignore
+	    }
+	    if(pid > 0){
+	        pidString = ""+pid;
+	    } else {
+	        pidString = "-";
+	    }
+	}
+
     /**
      * format a given LoggingEvent to a string
      * @param loggingEvent
@@ -77,15 +122,14 @@ public class LogMonLayout extends Layout {
     }
 
 	private void writeBasic( LoggingEvent le, PrintWriter pw ) {
-		SimpleDateFormat sdf = new SimpleDateFormat( ISO8601 );
-        pw.print( sdf.format( new Date() ) );
+        pw.print( dateFormatter.format( new Date() ) );
         pw.print( " " );
         pw.print( HOSTNAME );
         pw.print( " " );
 		pw.print( uuid );
-        pw.print( " " );
+        pw.print( " tupelo-http-store [" );
 		pw.print( le.getLoggerName() );
-        pw.print( " " );
+        pw.print( "] [" + pidString+"] " );
 		pw.print( le.getLevel() );
         pw.print( " " );
         pw.println( "'" + le.getMessage() + "'" );
@@ -113,20 +157,4 @@ public class LogMonLayout extends Layout {
     @Override
     public void activateOptions() {
     }
-
-
-	private final UUID uuid;
-	
-	static private final String ISO8601 = "yyyy-MM-dd'T'HH:mm:ss.SSS000XXX";
-
-	static private String HOSTNAME = "UNKNOWN";
-	static {
-		try {
-			InetAddress ia = InetAddress.getLocalHost();
-			HOSTNAME = ia.getCanonicalHostName();
-		} catch( UnknownHostException uhe ) {
-		}
-	}
 }
-
-// eof

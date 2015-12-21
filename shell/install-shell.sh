@@ -12,9 +12,9 @@ JAR_PATH="$INSTALL_BASE/jars/tupelo"
 
 echo "Installing to $INSTALL_BASE"
 
-if [ -d "JAR_PATH" ]; then
-    echo "Existing jar path found, removing"
-    rm -rf "$JAR_PATH"
+if [ -d "$JAR_PATH" ]; then
+    echo "Existing jar path found, cleaning"
+    rm -f "$JAR_PATH/*"
 fi
 
 # Copy all the jars and properties into the lib folder
@@ -31,13 +31,14 @@ mkdir -p "$INSTALL_BASE/bin"
 cp elvis "$INSTALL_BASE/bin"
 
 # Set permissions
-chmod -R a+r "$INSTALL_BASE"
-chmod -R a-w "$INSTALL_BASE"
-
-# Make sure the directories have +x
-chmod -R a+x "$INSTALL_BASE/bin"
-chmod a+x "$JAR_PATH/../"
-chmod a+x "$JAR_PATH"
+# Don't use recursive changes, be explicit
+# Make sure the directories have +rx
+chmod a+rx "$INSTALL_BASE"
+chmod a+rx "$INSTALL_BASE/bin"
+chmod a+rx "$JAR_PATH/../"
+chmod a+rx "$JAR_PATH"
+# Make sure the elvis script has +x
+chmod a+x "$INSTALL_BASE/bin/elvis"
 
 echo "Installed to $INSTALL_BASE"
 echo "Add '$INSTALL_BASE/bin' to your path"
