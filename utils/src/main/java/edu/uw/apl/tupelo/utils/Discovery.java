@@ -116,8 +116,14 @@ public class Discovery {
 
 		// Search 4: a classpath resource
 		if( result == null ) {
-			InputStream is = Discovery.class.getResourceAsStream
-				( "/tupelo.prp" );
+			InputStream is = Discovery.class.getResourceAsStream( "/tupelo.prp" );
+			if(is == null) {
+			    try {
+			        is = new FileInputStream("tupelo.prp");
+			    } catch(Exception e){
+			        // Ignore
+			    }
+			}
 			if( is != null ) {
 				try {
 					log.info( "Searching in resource for property " +
