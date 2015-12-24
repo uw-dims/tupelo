@@ -35,7 +35,6 @@ package edu.uw.apl.tupelo.utils;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.IOException;
 import java.util.Properties;
@@ -61,9 +60,9 @@ public class Discovery {
 
 	  2: In a real file name $(HOME)/.tupelo <br>
 
-	  3: In a resource (classpath-based) named /tupelo.prp <br>
-	  
-      4: In a real file name /etc/tupelo.prp <br>
+	  3: In a real file name /etc/tupelo.prp <br>
+
+	  4: In a resource (classpath-based) named /tupelo.prp <br>
 
 	  The first match wins. <br>
 
@@ -98,32 +97,7 @@ public class Discovery {
 			}
 		}
 
-        // Search 3: a classpath resource
-        if( result == null ) {
-            InputStream is = Discovery.class.getResourceAsStream( "/tupelo.prp" );
-            if(is == null){
-                try {
-                    is = new FileInputStream("tupelo.prp");
-                } catch (FileNotFoundException e) {
-                    // Ignore
-                }
-            }
-            if( is != null ) {
-                try {
-                    log.info( "Searching in resource for property " +
-                              prpName );
-                    Properties p = new Properties();
-                    p.load( is );
-                    result = p.getProperty( prpName );
-                    log.info( "Located " + result );
-                    is.close();
-                } catch( IOException ioe ) {
-                    log.info( ioe );
-                }
-            }
-        }
-
-		// Search 4: file = /etc/tupelo.prp
+		// Search 3: file = /etc/tupelo.prp
 		if(result == null){
 		    File f = new File("/etc/tupelo.prp");
 		    if(f.isFile() && f.canRead()){
@@ -140,6 +114,30 @@ public class Discovery {
 		    }
 		}
 
+		// Search 4: a classpath resource
+		if( result == null ) {
+			InputStream is = Discovery.class.getResourceAsStream( "/tupelo.prp" );
+			if(is == null) {
+			    try {
+			        is = new FileInputStream("tupelo.prp");
+			    } catch(Exception e){
+			        // Ignore
+			    }
+			}
+			if( is != null ) {
+				try {
+					log.info( "Searching in resource for property " +
+							  prpName );
+					Properties p = new Properties();
+					p.load( is );
+					result = p.getProperty( prpName );
+					log.info( "Located " + result );
+					is.close();
+				} catch( IOException ioe ) {
+					log.info( ioe );
+				}
+			}
+		}
 		return result;
 	}
 }

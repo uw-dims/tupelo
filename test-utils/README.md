@@ -16,3 +16,8 @@ You can use the -v option to make it print the AQMP request/response
 The AMQP URL can be specified with the -u option, or read from the 'tupelo.prp' file, if it exists.
 Define the AMQP URL in the 'tupelo.prp' file with 'amqp.url : amqp://dims:dims@localhost/dims' - using
 your URL instead of localhost
+
+
+Building:
+This needs the Tupelo artifacts need to be installed to the local Maven cache. Run 'mvn package install' in $GIT/tupelo
+Once the Tupelo artifacts are installed, you can build it via 'mvn package'

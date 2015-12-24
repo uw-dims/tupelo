@@ -1,0 +1,6 @@
+ dataroot : /opt/tupelo-store
+# dataroot : /mnt/ext/store
+# dataroot : /mnt/ext/flat-store
+# amqp.url : amqp://dims:dims@localhost/dims
+amqp.url : amqp://rpc_user:rpcm3pwd@rabbitmq.prisem.washington.edu/%2f
+
