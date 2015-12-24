@@ -45,163 +45,167 @@ public class StixAmqpTest {
     private FileHashResponse hashResponse;
     private List<String> hashes = new LinkedList<String>();
     private boolean verbose = false;
-    
+    private boolean debug = false;
+
     private String brokerUrl;
-    
-    public static void main( String[] args ) throws Exception{
+
+    public static void main(String[] args) throws Exception {
         StixAmqpTest app = new StixAmqpTest();
         app.readArgs(args);
         app.getHashes();
         app.sendAmqpRequest();
         app.writeStixOutput();
     }
-    
-    public void readArgs( String[] args ) throws Exception {
-        Options os = new Options();
-        os.addOption( "u", true,
-                "Broker url. Can also be located on path and in resource" );
-        os.addOption("v", false, "Enable verbose printing");
+
+    public void readArgs(String[] args) throws Exception {
+        Options options = new Options();
+        options.addOption("u", true, "Broker url. Can also be located on path and in resource");
+        options.addOption("v", false, "Enable verbose printing");
+        options.addOption("d", false, "Enable debug mode");
 
         final String USAGE = "inFile outFile";
         final String HEADER = "";
         final String FOOTER = "";
-        
+
         CommandLineParser clp = new DefaultParser();
-        CommandLine cl = null;
+        CommandLine commandLine = null;
         try {
-            cl = clp.parse( os, args );
-        } catch( ParseException pe ) {
-            printUsage( os, USAGE, HEADER, FOOTER );
+            commandLine = clp.parse(options, args);
+        } catch (ParseException pe) {
+            printUsage(options, USAGE, HEADER, FOOTER);
             System.exit(1);
         }
-        if(cl.hasOption("v")){
+        if (commandLine.hasOption("v")) {
             verbose = true;
         }
-        if(cl.hasOption("u")){
-            brokerUrl = cl.getOptionValue("u");
+        if (commandLine.hasOption("d")) {
+            debug = true;
+        }
+        if (commandLine.hasOption("u")) {
+            brokerUrl = commandLine.getOptionValue("u");
         } else {
             brokerUrl = Discovery.locatePropertyValue("amqp.url");
         }
-        System.out.println("Using broker URL "+brokerUrl);
+        if (debug) {
+            System.out.println("Using broker URL " + brokerUrl);
+        }
 
-        args = cl.getArgs();
-        if( args.length >= 2 ) {
-            inFile = new File( args[0] );
+        args = commandLine.getArgs();
+        if (args.length >= 2) {
+            inFile = new File(args[0]);
             outFile = new File(args[1]);
-            if( !inFile.isFile() ) {
+            if (!inFile.isFile()) {
                 // like bash would do, write to stderr...
-                System.err.println( inFile + ": No such file or directory" );
+                System.err.println(inFile + ": No such file or directory");
                 System.exit(-1);
             }
         } else {
-            printUsage( os, USAGE, HEADER, FOOTER );
+            printUsage(options, USAGE, HEADER, FOOTER);
             System.exit(1);
         }
     }
-    
+
     public void sendAmqpRequest() throws Exception {
-        Gson gson = Utils.createGson( true );
+        Gson gson = Utils.createGson(true);
 
         ConnectionFactory cf = new ConnectionFactory();
-        cf.setUri( brokerUrl );
+        cf.setUri(brokerUrl);
         Connection connection = cf.newConnection();
         Channel channel = connection.createChannel();
 
-        channel.exchangeDeclare( EXCHANGE, "direct" );
-        
+        channel.exchangeDeclare(EXCHANGE, "direct");
+
         String replyQueueName = channel.queueDeclare().getQueue();
 
-        BasicProperties bp = new BasicProperties.Builder()
-            .replyTo( replyQueueName )
-            .contentType( "application/json" )
-            .correlationId( "" + System.currentTimeMillis()  )
-            .build();
+        BasicProperties bp = new BasicProperties.Builder().replyTo(replyQueueName).contentType("application/json")
+                .correlationId("" + System.currentTimeMillis()).build();
 
         // LOOK: populate the fhq via add( byte[] )
-        FileHashQuery fhq = new FileHashQuery( "md5" );
-        for( String hash : hashes ) {
+        FileHashQuery fhq = new FileHashQuery("md5");
+        for (String hash : hashes) {
             char[] cs = hash.toCharArray();
-            byte[] bs = Hex.decodeHex( cs );
-            fhq.add( bs );
+            byte[] bs = Hex.decodeHex(cs);
+            fhq.add(bs);
         }
-        RPCObject<FileHashQuery> rpc1 = RPCObject.asRPCObject( fhq, "filehash" );
-        String json = gson.toJson( rpc1 );
-        
-        if(verbose){
-            System.out.println( "Sending request '" + json + "'" );
+        RPCObject<FileHashQuery> rpc1 = RPCObject.asRPCObject(fhq, "filehash");
+        String json = gson.toJson(rpc1);
+
+        if (verbose) {
+            System.out.println("Sending request '" + json + "'");
         } else {
             System.out.println("Sending AMQP request");
         }
-        
-        channel.basicPublish( EXCHANGE, "who-has", bp, json.getBytes() );
+
+        channel.basicPublish(EXCHANGE, "who-has", bp, json.getBytes());
 
         QueueingConsumer consumer = new QueueingConsumer(channel);
         boolean autoAck = true;
-        channel.basicConsume( replyQueueName, autoAck, consumer);
+        channel.basicConsume(replyQueueName, autoAck, consumer);
 
         QueueingConsumer.Delivery delivery = consumer.nextDelivery();
         String message = new String(delivery.getBody());
-        
+
         // look: check contentType
         json = message;
-        if(verbose){
-            System.out.println( "Received reply '" + json + "'" );
+        if (verbose) {
+            System.out.println("Received reply '" + json + "'");
         }
 
-        Type fhrType = new TypeToken<RPCObject<FileHashResponse>>(){}.getType();
-        RPCObject<FileHashResponse> rpc2 = gson.fromJson( json, fhrType );
+        Type fhrType = new TypeToken<RPCObject<FileHashResponse>>() {
+        }.getType();
+        RPCObject<FileHashResponse> rpc2 = gson.fromJson(json, fhrType);
         hashResponse = rpc2.appdata;
         // Check if there were any hits
-        if(hashResponse.hits.size() == 0){
+        if (hashResponse.hits.size() == 0) {
             System.out.println("No matches found in the Tupelo store");
             System.exit(0);
         }
-        
+
         System.out.println("Tupelo Hits:");
-        for( FileHashResponse.Hit h : hashResponse.hits ) {
-            String hashHex = new String( Hex.encodeHex( h.hash ) );
-            System.out.println( hashHex + " " + h.descriptor + " " + h.path );
+        for (FileHashResponse.Hit h : hashResponse.hits) {
+            String hashHex = new String(Hex.encodeHex(h.hash));
+            System.out.println(hashHex + " " + h.descriptor + " " + h.path);
         }
-        
-        System.out.println(hashResponse.hits.size()+" total hits");
+
+        System.out.println(hashResponse.hits.size() + " total hits");
 
         channel.close();
         connection.close();
     }
-    
+
     public void writeStixOutput() throws Exception {
         System.out.println("Writing STIX output");
 
         List<String> hashes = new ArrayList<String>(hashResponse.hits.size());
         List<String> fileNames = new ArrayList<String>(hashResponse.hits.size());
-        for(FileHashResponse.Hit hit : hashResponse.hits){
+        for (FileHashResponse.Hit hit : hashResponse.hits) {
             String hashHex = new String(Hex.encodeHex(hit.hash));
             String fileName = hit.path;
             hashes.add(hashHex);
             fileNames.add(fileName);
         }
-        
+
         STIXPackage s = HashComposers.composeMD5HashObservables(fileNames, hashes);
         String xmlString = s.toXMLString(true);
-        
+
         BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
         writer.write(xmlString);
         writer.flush();
         writer.close();
-        
-        System.out.println("STIX document written to "+outFile.getName());
+
+        System.out.println("STIX document written to " + outFile.getName());
     }
-    
+
     public void getHashes() throws Exception {
-        System.out.println("Reading hashes from STIX "+inFile.getName());
+        System.out.println("Reading hashes from STIX " + inFile.getName());
         List<STIXPackage> stixPackages = Extractor.getStixPackages(inFile);
-        for(STIXPackage stixPackage : stixPackages){
-            hashes.addAll(HashExtractors.extractMD5HexBinary( stixPackage ));
+        for (STIXPackage stixPackage : stixPackages) {
+            hashes.addAll(HashExtractors.extractMD5HexBinary(stixPackage));
         }
-        
-        System.out.println("Read "+hashes.size()+" hashes");
+
+        System.out.println("Read " + hashes.size() + " hashes");
     }
-    
+
     /**
      * Print the usage of the class to the console
      * @param os
