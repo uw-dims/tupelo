@@ -440,7 +440,7 @@ public class FileRecordStore implements Closeable {
         int crtime = result.getInt(CRTIME_COL);
 
         // Create the record object
-        return new Record(hash, path, inode, attrType, attrId, nameType, metaType, perms, uid,
+        return new Record(hash, null, null, path, inode, attrType, attrId, nameType, metaType, perms, uid,
                 gid, size, atime, mtime, ctime, crtime);
 
     }

@@ -85,7 +85,7 @@ public class RecordStoreTest extends junit.framework.TestCase {
 		// Add the filename/hash
 		System.out.println("Adding a file record");
 
-		Record record = new Record(digest, FILE_NAME, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+		Record record = new Record(digest, null, null, FILE_NAME, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 		store.addRecord(record);
 
 		System.out.println("Store should have data now");
