@@ -68,6 +68,10 @@ public class FileRecordStore implements Closeable {
 	private static final String PATH_COL = "path";
 	// byte[]
 	private static final String MD5_COL = "md5";
+	// byte[]
+	private static final String SHA1_COL = "sha1";
+	// byte[]
+	private static final String SHA256_COL = "sha256";
 	// long
 	private static final String INODE_COL = "inode";
 	// short
@@ -96,6 +100,8 @@ public class FileRecordStore implements Closeable {
 			"CREATE TABLE "+TABLE_NAME+" ("+
 			PATH_COL+" STRING, "+
 			MD5_COL+" BLOB, "+
+			SHA1_COL+" BLOB, "+
+			SHA256_COL+" BLOB, "+
 			INODE_COL+" INTEGER, "+
 			ATTR_TYPE_COL+" INTEGER, "+
 			ATTR_ID_COL+" INTEGER, "+
@@ -114,10 +120,10 @@ public class FileRecordStore implements Closeable {
 	// Insert SQL statment
 	private static final String INSERT_STATEMENT =
 			"INSERT INTO "+TABLE_NAME+" ("+
-			PATH_COL+", "+MD5_COL+", "+INODE_COL+", "+ ATTR_TYPE_COL+", "+
+			PATH_COL+", "+MD5_COL+", "+SHA1_COL+", "+SHA256_COL+", "+INODE_COL+", "+ ATTR_TYPE_COL+", "+
 			ATTR_ID_COL+", "+NAME_TYPE_COL+", "+META_TYPE_COL+", "+PERM_COL+", "+
 			UID_COL+", "+GID_COL+", "+SIZE_COL+", "+ATIME_COL+", "+MTIME_COL+", "
-			+CTIME_COL+", "+CRTIME_COL+") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+CTIME_COL+", "+CRTIME_COL+") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	// Count the number of hash statement
 	private static final String COUNT_HASH_STATEMENT =
 			"SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+MD5_COL+" = ?";
@@ -128,11 +134,11 @@ public class FileRecordStore implements Closeable {
 	private static final String COUNT_STATEMENT =
 			"SELECT COUNT(*) FROM "+TABLE_NAME;
 	// Select statement
-	private static final String SELECT_RECORD_BY_HASH =
+	private static final String SELECT_RECORD_BY_MD5 =
 	        "SELECT * FROM "+TABLE_NAME+" WHERE "+MD5_COL+" = ?";
 	// Select from multiple hashes
 	// This needs a ? added for each potential hash, and a closing )
-    private static final String SELECT_RECORD_BY_HASHES =
+    private static final String SELECT_RECORD_BY_MD5_HASHES =
             "SELECT * FROM "+TABLE_NAME+" WHERE "+MD5_COL+" IN (";
 
 	private File sqlFile;
@@ -199,19 +205,21 @@ public class FileRecordStore implements Closeable {
             for (Record record : records) {
                 insert.setString(1, record.path);
                 insert.setBytes(2, record.md5);
-                insert.setLong(3, record.inode);
-                insert.setShort(4, record.attrType);
-                insert.setShort(5, record.attrId);
-                insert.setByte(6, record.nameType);
-                insert.setByte(7, record.metaType);
-                insert.setInt(8, record.perms);
-                insert.setInt(9, record.uid);
-                insert.setInt(10, record.gid);
-                insert.setLong(11, record.size);
-                insert.setInt(12, record.atime);
-                insert.setInt(13, record.mtime);
-                insert.setInt(14, record.ctime);
-                insert.setInt(15, record.crtime);
+                insert.setBytes(3, record.sha1);
+                insert.setBytes(4, record.sha256);
+                insert.setLong(5, record.inode);
+                insert.setShort(6, record.attrType);
+                insert.setShort(7, record.attrId);
+                insert.setByte(8, record.nameType);
+                insert.setByte(9, record.metaType);
+                insert.setInt(10, record.perms);
+                insert.setInt(11, record.uid);
+                insert.setInt(12, record.gid);
+                insert.setLong(13, record.size);
+                insert.setInt(14, record.atime);
+                insert.setInt(15, record.mtime);
+                insert.setInt(16, record.ctime);
+                insert.setInt(17, record.crtime);
 
                 insert.addBatch();
 
@@ -308,6 +316,8 @@ public class FileRecordStore implements Closeable {
 	    /*
             PATH_COL+" STRING, "+
             MD5_COL+" BLOB, "+
+            SHA1_COL+" BLOB, "+
+            SHA256_COL+" BLOB, "+
             INODE_COL+" INTEGER, "+
             ATTR_TYPE_COL+" INTEGER, "+
             ATTR_ID_COL+" INTEGER, "+
@@ -326,19 +336,21 @@ public class FileRecordStore implements Closeable {
 			PreparedStatement insert = connection.prepareStatement(INSERT_STATEMENT);
 			insert.setString(1, record.path);
 			insert.setBytes(2, record.md5);
-			insert.setLong(3, record.inode);
-			insert.setShort(4, record.attrType);
-			insert.setShort(5, record.attrId);
-			insert.setByte(6, record.nameType);
-			insert.setByte(7, record.metaType);
-			insert.setInt(8, record.perms);
-			insert.setInt(9, record.uid);
-			insert.setInt(10, record.gid);
-			insert.setLong(11, record.size);
-			insert.setInt(12, record.atime);
-			insert.setInt(13, record.mtime);
-			insert.setInt(14, record.ctime);
-			insert.setInt(15, record.crtime);
+			insert.setBytes(3, record.sha1);
+			insert.setBytes(4, record.sha256);
+			insert.setLong(5, record.inode);
+			insert.setShort(6, record.attrType);
+			insert.setShort(7, record.attrId);
+			insert.setByte(8, record.nameType);
+			insert.setByte(9, record.metaType);
+			insert.setInt(10, record.perms);
+			insert.setInt(11, record.uid);
+			insert.setInt(12, record.gid);
+			insert.setLong(13, record.size);
+			insert.setInt(14, record.atime);
+			insert.setInt(15, record.mtime);
+			insert.setInt(16, record.ctime);
+			insert.setInt(17, record.crtime);
 			insert.execute();
 			insert.close();
 		} catch(SQLException e){
@@ -355,7 +367,7 @@ public class FileRecordStore implements Closeable {
     public List<Record> getRecordsFromHash(byte[] hash) throws IOException {
         try {
             // Prep the query
-            PreparedStatement query = connection.prepareStatement(SELECT_RECORD_BY_HASH);
+            PreparedStatement query = connection.prepareStatement(SELECT_RECORD_BY_MD5);
             query.setBytes(1, hash);
             query.closeOnCompletion();
 
@@ -387,7 +399,7 @@ public class FileRecordStore implements Closeable {
                 return getRecordsFromHash(hashes.get(0));
             }
             // Build the query string
-            StringBuilder queryBuilder = new StringBuilder(SELECT_RECORD_BY_HASHES);
+            StringBuilder queryBuilder = new StringBuilder(SELECT_RECORD_BY_MD5_HASHES);
             for (int i = 0; i < (hashes.size() - 1); i++) {
                 queryBuilder.append("?, ");
             }
@@ -424,7 +436,9 @@ public class FileRecordStore implements Closeable {
      */
     private Record getRecordFromResult(ResultSet result) throws SQLException {
         String path = result.getString(PATH_COL);
-        byte[] hash = result.getBytes(MD5_COL);
+        byte[] md5 = result.getBytes(MD5_COL);
+        byte[] sha1 = result.getBytes(SHA1_COL);
+        byte[] sha256 = result.getBytes(SHA256_COL);
         long inode = result.getLong(INODE_COL);
         int attrType = result.getInt(ATTR_TYPE_COL);
         int attrId = result.getInt(ATTR_ID_COL);
@@ -440,7 +454,7 @@ public class FileRecordStore implements Closeable {
         int crtime = result.getInt(CRTIME_COL);
 
         // Create the record object
-        return new Record(hash, null, null, path, inode, attrType, attrId, nameType, metaType, perms, uid,
+        return new Record(md5, sha1, sha256, path, inode, attrType, attrId, nameType, metaType, perms, uid,
                 gid, size, atime, mtime, ctime, crtime);
 
     }
