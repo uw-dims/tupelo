@@ -33,8 +33,12 @@
  */
 package edu.uw.apl.tupelo.store.filesys;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -61,6 +65,10 @@ public class FileRecordStore implements Closeable {
 
 	// The name of the database file
 	private static final String DB_FILE = "fileRecord.sqlite";
+	// Name of the version file
+	private static final String DB_VERSION_FILE = "fileRecord.version";
+	// The DB version
+	private static final int VERSION = 2;
 
 	// SQL Table/column names
 	private static final String TABLE_NAME = "records";
@@ -142,6 +150,7 @@ public class FileRecordStore implements Closeable {
             "SELECT * FROM "+TABLE_NAME+" WHERE "+MD5_COL+" IN (";
 
 	private File sqlFile;
+	private File versionFile;
 	private ManagedDiskDescriptor mdd;
 	private Connection connection;
 
@@ -159,6 +168,7 @@ public class FileRecordStore implements Closeable {
 
 			// Get the file name
 			sqlFile = new File(dataDir, DB_FILE);
+			versionFile = new File(dataDir, DB_VERSION_FILE);
 			// If the file doesn't already exist, set up the tables
 			boolean setup = !sqlFile.exists();
 
@@ -172,6 +182,43 @@ public class FileRecordStore implements Closeable {
 		} catch(SQLException e){
 			throw new IOException(e);
 		}
+	}
+
+	/**
+	 * Check that the DB version matches the system version.
+	 * If it does not, drop and re-create the table.
+	 * @throws IOException
+	 */
+	public void checkVersion() throws IOException {
+	    boolean reInit = false;
+	    if(!versionFile.exists()){
+	        // Check version failed. Delete and re-init
+	        reInit = true;
+	    } else {
+	        BufferedReader reader = new BufferedReader(new FileReader(versionFile));
+	        int version = Integer.parseInt(reader.readLine());
+	        reader.close();
+	        if(version < VERSION){
+	            log.info("FileRecordStore version "+version+" less than system version "+VERSION);
+	            reInit = true;
+	        }
+	    }
+
+        if (reInit) {
+            try {
+                log.info("Re-creating FileRecordStore");
+                // Close the connection and delete the file.
+                connection.close();
+                sqlFile.delete();
+                // Re-open the connection
+                connection = DriverManager.getConnection(JDBC.PREFIX + sqlFile.getAbsolutePath());
+                connection.setAutoCommit(false);
+                // Re-run init
+                init();
+            } catch (SQLException e) {
+                log.warn("SQLiteException re-opening the connection", e);
+            }
+        }
 	}
 
 	/**
@@ -468,6 +515,16 @@ public class FileRecordStore implements Closeable {
 		Statement statement = connection.createStatement();
 		statement.executeUpdate(CREATE_STATEMENT);
 		connection.commit();
+
+		// Write the version info
+		try{
+		    BufferedWriter writer = new BufferedWriter(new FileWriter(versionFile));
+		    writer.write(""+VERSION);
+		    writer.flush();
+		    writer.close();
+		} catch(IOException e){
+		    log.error("IOException writing FileREcordStore version information", e);
+		}
 	}
 
 	@Override
