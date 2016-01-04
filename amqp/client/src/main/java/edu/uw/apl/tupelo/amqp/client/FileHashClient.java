@@ -88,6 +88,15 @@ import edu.uw.apl.tupelo.utils.Discovery;
  * @see RPCObject
  */
 public class FileHashClient {
+    private String brokerUrl;
+    private Gson gson;
+    private Logger log;
+    private String hashtype = "MD5";
+    static boolean debug, verbose;
+    private List<String> hashes;
+
+    static final String EXCHANGE = "tupelo";
+    private static final String[] VALID_HASHTYPES = {"MD5", "SHA-1", "SHA-256"};
 
 	static public void main( String[] args ) throws Exception {
 		FileHashClient main = new FileHashClient();
@@ -113,6 +122,7 @@ public class FileHashClient {
 	
 	public void readArgs( String[] args ) throws IOException {
 		Options os = new Options();
+		os.addOption("t", true, "Hash type (MD5, SHA-1, or SHA-256). Default is MD5.");
 		os.addOption( "d", false, "Debug" );
 		os.addOption( "v", false, "Verbose" );
 		os.addOption( "u", true,
@@ -138,12 +148,32 @@ public class FileHashClient {
 			System.out.println( p.getName() + "/" + version );
 			System.exit(0);
 		}
+		if(cl.hasOption("t")){
+		    hashtype = cl.getOptionValue("t");
+
+		    // Validate the hash type
+		    boolean valid = false;
+		    for(String type : VALID_HASHTYPES){
+		        if(type.equalsIgnoreCase(hashtype)) {
+		            valid = true;
+		            break;
+		        }
+		    }
+		    // If the type is invalid, say so and exit
+		    if(!valid){
+		        System.err.println("Error: Invalid hash type: "+hashtype);
+		        System.err.println("Valid types are 'MD5', 'SHA-1', or 'SHA-256' (Case insensitive).");
+		        System.exit(-1);
+		    }
+		}
 		debug = cl.hasOption( "d" );
 		verbose = cl.hasOption( "v" );
 		if( cl.hasOption( "u" ) ) {
 			brokerUrl = cl.getOptionValue( "u" );
 		}
-		log.info( "BrokerUrl: " + brokerUrl );
+		if(debug){
+		    log.info( "BrokerUrl: " + brokerUrl );
+		}
 
 		args = cl.getArgs();
 		if( args.length > 0 ) {
@@ -186,7 +216,7 @@ public class FileHashClient {
 			.build();
 
 		// LOOK: populate the fhq via add( byte[] )
-		FileHashQuery fhq = new FileHashQuery( "md5" );
+		FileHashQuery fhq = new FileHashQuery( hashtype );
 		for( String hash : hashes ) {
 			char[] cs = hash.toCharArray();
 			byte[] bs = Hex.decodeHex( cs );
@@ -213,10 +243,12 @@ public class FileHashClient {
 		Type fhrType = new TypeToken<RPCObject<FileHashResponse>>(){}.getType();
 		RPCObject<FileHashResponse> rpc2 = gson.fromJson( json, fhrType );
 		FileHashResponse fhr = rpc2.appdata;
+		System.out.println("Hits: (Disk Descriptor) MD5|SHA-1|SHA-256|Size|Path");
 		for( FileHashResponse.Hit h : fhr.hits ) {
-			String hashHex = new String( Hex.encodeHex( h.md5 ) );
-			System.out.println( "Hit: " + hashHex + " " + h.descriptor + " " +
-								h.path );
+			String md5 = new String( Hex.encodeHex( h.md5 ) );
+			String sha1 = new String( Hex.encodeHex( h.sha1 ) );
+			String sha256 = new String( Hex.encodeHex( h.sha256 ) );
+			System.out.println(h.descriptor+" "+md5+"|"+sha1+"|"+sha256+"|"+h.size+"|"+h.path);
 		}
 
 		channel.close();
@@ -230,15 +262,4 @@ public class FileHashClient {
 		hf.printHelp( usage, header, os, footer );
 	}
 
-	private String brokerUrl;
-	private Gson gson;
-	private Logger log;
-	
-	static boolean debug, verbose;
-	
-	private List<String> hashes;
-	
-	static final String EXCHANGE = "tupelo";
 }
-
-// eof
