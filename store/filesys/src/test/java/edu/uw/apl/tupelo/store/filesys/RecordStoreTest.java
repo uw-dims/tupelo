@@ -94,7 +94,7 @@ public class RecordStoreTest extends junit.framework.TestCase {
 
 		// It should find the hash we just added
 		System.out.println("Store should find the hash we just added");
-		assertEquals(store.containsFileHash(digest), true);
+		assertEquals(store.containsFileHash("MD5", digest), true);
 
 		// Test a hash that isnt in the table
 		MD5.update(this.getClass().getName().getBytes());
@@ -102,7 +102,7 @@ public class RecordStoreTest extends junit.framework.TestCase {
 		MD5.reset();
 
 		System.out.println("Store should not find hash that isn't in it");
-		assertEquals(store.containsFileHash(badHash), false);
+		assertEquals(store.containsFileHash("MD5", badHash), false);
 	}
 
 	@Override

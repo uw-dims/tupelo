@@ -183,12 +183,12 @@ public class NullStore implements Store {
     }
 
     @Override
-    public List<ManagedDiskDescriptor> checkForHash(byte[] hash) {
+    public List<ManagedDiskDescriptor> checkForHash(String algorithm, byte[] hash) {
         return new ArrayList<ManagedDiskDescriptor>(0);
     }
 
     @Override
-    public List<ManagedDiskDescriptor> checkForHashes(List<byte[]> hash) {
+    public List<ManagedDiskDescriptor> checkForHashes(String algorithm, List<byte[]> hash) {
         return new ArrayList<ManagedDiskDescriptor>(0);
     }
 
@@ -198,7 +198,7 @@ public class NullStore implements Store {
     }
 
     @Override
-    public List<Record> getRecords(ManagedDiskDescriptor mdd, List<byte[]> hashes) throws IOException {
+    public List<Record> getRecords(ManagedDiskDescriptor mdd, String algorithm, List<byte[]> hashes) throws IOException {
         return null;
     }
 }

@@ -97,18 +97,20 @@ public interface Store {
 	public void putFileRecords(ManagedDiskDescriptor mdd, List<Record> records) throws IOException;
 
 	/**
-	 * Check if which, if any, managed disks contain the specified MD5 file hash
-	 * @param hash the MD5 hash
+	 * Check if which, if any, managed disks contain the specified file hash
+	 * @param algorithm the hash algorithm (MD5, SHA-1, SHA-256 only)
+	 * @param hash the hash
 	 * @return the list of ManagedDiskDescriptors that contain the hash
 	 */
-	public List<ManagedDiskDescriptor> checkForHash(byte[] hash) throws IOException;
+	public List<ManagedDiskDescriptor> checkForHash(String algorithm, byte[] hash) throws IOException;
 
     /**
-     * Check if which, if any, managed disks contain the specified MD5 file hashes
-     * @param hashes the MD5 hashes
+     * Check if which, if any, managed disks contain the specified file hashes
+     * @param algorithm the hash algorithm (MD5, SHA-1, SHA-256 only)
+     * @param hashes the hashes
      * @return the list of ManagedDiskDescriptors that contain the hash
      */
-    public List<ManagedDiskDescriptor> checkForHashes(List<byte[]> hashes) throws IOException;
+    public List<ManagedDiskDescriptor> checkForHashes(String algorithm, List<byte[]> hashes) throws IOException;
 
 	/**
 	 * Check if the store has the file records of the full filesystem available for the Managed Disk
@@ -120,10 +122,11 @@ public interface Store {
 	/**
 	 * Get the {@link Record}s for any files for the managed disk with one of the provided hashes
 	 * @param mdd the disk
+	 * @param algorithm the hash algorithm (MD5, SHA-1, SHA-256 only)
 	 * @param hashes the MD5 hashes to look up
 	 * @return
 	 */
-	public List<Record> getRecords(ManagedDiskDescriptor mdd, List<byte[]> hashes) throws IOException;
+	public List<Record> getRecords(ManagedDiskDescriptor mdd, String algorithm, List<byte[]> hashes) throws IOException;
 
 	/**
 	 * @return size, in bytes, of the managed disk described by the

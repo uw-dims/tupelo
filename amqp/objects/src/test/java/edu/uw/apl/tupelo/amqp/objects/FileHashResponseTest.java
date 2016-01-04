@@ -64,7 +64,7 @@ public class FileHashResponseTest extends junit.framework.TestCase {
 		Session session = Session.testSession();
 		String hashHex = "1234567890123456789012345678901234567890";
 		byte[] hash = Hex.decodeHex( hashHex.toCharArray() );
-		r1.add( hash, new ManagedDiskDescriptor( diskID, session ),
+		r1.add( hash, null, null, 10, new ManagedDiskDescriptor( diskID, session ),
 			   "/" );
 
 		String r1json = gson.toJson( r1 );

@@ -63,6 +63,10 @@ import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 public class FileRecordStore implements Closeable {
 	private static final Log log = LogFactory.getLog(FileRecordStore.class);
 
+	private static final String MD5 = "md5";
+	private static final String SHA1= "sha-1";
+	private static final String SHA256 = "sha-256";
+
 	// The name of the database file
 	private static final String DB_FILE = "fileRecord.sqlite";
 	// Name of the version file
@@ -132,22 +136,43 @@ public class FileRecordStore implements Closeable {
 			ATTR_ID_COL+", "+NAME_TYPE_COL+", "+META_TYPE_COL+", "+PERM_COL+", "+
 			UID_COL+", "+GID_COL+", "+SIZE_COL+", "+ATIME_COL+", "+MTIME_COL+", "
 			+CTIME_COL+", "+CRTIME_COL+") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-	// Count the number of hash statement
-	private static final String COUNT_HASH_STATEMENT =
+
+	// Count the number of hashes statement
+	private static final String COUNT_MD5_STATEMENT =
 			"SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+MD5_COL+" = ?";
+    private static final String COUNT_SHA1_STATEMENT =
+            "SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+SHA1_COL+" = ?";
+    private static final String COUNT_SHA256_STATEMENT =
+            "SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+SHA256_COL+" = ?";
+
 	// This needs a ? added for each value and then needs to have a closing )
-	private static final String COUNT_HASH_IN_STATEMENT =
+	private static final String COUNT_MD5_IN_STATEMENT =
 	        "SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+MD5_COL+" IN (";
+    private static final String COUNT_SHA1_IN_STATEMENT =
+            "SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+SHA1_COL+" IN (";
+    private static final String COUNT_SHA256_IN_STATEMENT =
+            "SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+SHA256_COL+" IN (";
+
+    // Select statement
+    private static final String SELECT_RECORD_BY_MD5 =
+            "SELECT * FROM "+TABLE_NAME+" WHERE "+MD5_COL+" = ?";
+    private static final String SELECT_RECORD_BY_SHA1 =
+            "SELECT * FROM "+TABLE_NAME+" WHERE "+SHA1_COL+" = ?";
+    private static final String SELECT_RECORD_BY_SHA256 =
+            "SELECT * FROM "+TABLE_NAME+" WHERE "+SHA256_COL+" = ?";
+
+    // Select from multiple hashes
+    // This needs a ? added for each potential hash, and a closing )
+    private static final String SELECT_RECORD_BY_MD5_HASHES =
+            "SELECT * FROM "+TABLE_NAME+" WHERE "+MD5_COL+" IN (";
+    private static final String SELECT_RECORD_BY_SHA1_HASHES =
+            "SELECT * FROM "+TABLE_NAME+" WHERE "+SHA1_COL+" IN (";
+    private static final String SELECT_RECORD_BY_SHA256_HASHES =
+            "SELECT * FROM "+TABLE_NAME+" WHERE "+SHA256_COL+" IN (";
+
 	// Count all rows statement
 	private static final String COUNT_STATEMENT =
 			"SELECT COUNT(*) FROM "+TABLE_NAME;
-	// Select statement
-	private static final String SELECT_RECORD_BY_MD5 =
-	        "SELECT * FROM "+TABLE_NAME+" WHERE "+MD5_COL+" = ?";
-	// Select from multiple hashes
-	// This needs a ? added for each potential hash, and a closing )
-    private static final String SELECT_RECORD_BY_MD5_HASHES =
-            "SELECT * FROM "+TABLE_NAME+" WHERE "+MD5_COL+" IN (";
 
 	private File sqlFile;
 	private File versionFile;
@@ -295,9 +320,25 @@ public class FileRecordStore implements Closeable {
 	 * @param hash
 	 * @return
 	 */
-	public boolean containsFileHash(byte[] hash) throws IOException {
+	public boolean containsFileHash(String algorithm, byte[] hash) throws IOException {
 		try{
-			PreparedStatement query = connection.prepareStatement(COUNT_HASH_STATEMENT);
+		    // Get the correct query string
+		    String baseQuery = null;
+            switch(algorithm.toLowerCase()){
+            case MD5:
+                baseQuery = COUNT_MD5_STATEMENT;
+                break;
+            case SHA1:
+                baseQuery = COUNT_SHA1_STATEMENT;
+                break;
+            case SHA256:
+                baseQuery = COUNT_SHA256_STATEMENT;
+                break;
+           default:
+                throw new IllegalArgumentException("Invalid hash algorithm: "+algorithm);
+            }
+
+			PreparedStatement query = connection.prepareStatement(baseQuery);
 			query.setBytes(1, hash);
 			query.closeOnCompletion();
 			ResultSet result = query.executeQuery();
@@ -316,7 +357,7 @@ public class FileRecordStore implements Closeable {
 	 * @return
 	 * @throws IOException
 	 */
-    public boolean containsFileHash(List<byte[]> hashes) throws IOException {
+    public boolean containsFileHash(String algorithm, List<byte[]> hashes) throws IOException {
         if (hashes == null || hashes.isEmpty()) {
             throw new IllegalArgumentException("Array must not be empty");
         }
@@ -324,12 +365,27 @@ public class FileRecordStore implements Closeable {
         // For a single hash, use the search for one hash method because it
         // could be faster
         if (hashes.size() == 1) {
-            return containsFileHash(hashes.get(0));
+            return containsFileHash(algorithm, hashes.get(0));
         }
 
         try {
+            String baseQuery = null;
+            switch(algorithm.toLowerCase()){
+            case MD5:
+                baseQuery = COUNT_MD5_IN_STATEMENT;
+                break;
+            case SHA1:
+                baseQuery = COUNT_SHA1_IN_STATEMENT;
+                break;
+            case SHA256:
+                baseQuery = COUNT_SHA256_IN_STATEMENT;
+                break;
+           default:
+                throw new IllegalArgumentException("Invalid hash algorithm: "+algorithm);
+            }
+
             // The query string needs to be built
-            StringBuilder queryBuilder = new StringBuilder(COUNT_HASH_IN_STATEMENT);
+            StringBuilder queryBuilder = new StringBuilder(baseQuery);
             for (int i = 0; i < (hashes.size() - 1); i++) {
                 queryBuilder.append("?, ");
             }
@@ -406,15 +462,31 @@ public class FileRecordStore implements Closeable {
 	}
 
 	/**
-	 * Get the list of {@link Record} objects with a matching MD5 hash
-	 * @param hash the MD5 hash
+	 * Get the list of {@link Record} objects with a matching hash
+	 * @param algorithm the hash algorithm
+	 * @param hash the hash
 	 * @return the list of records
 	 * @throws IOException
 	 */
-    public List<Record> getRecordsFromHash(byte[] hash) throws IOException {
+    public List<Record> getRecordsFromHash(String algorithm, byte[] hash) throws IOException {
         try {
+            String baseQuery = null;
+            switch(algorithm.toLowerCase()){
+            case MD5:
+                baseQuery = SELECT_RECORD_BY_MD5;
+                break;
+            case SHA1:
+                baseQuery = SELECT_RECORD_BY_SHA1;
+                break;
+            case SHA256:
+                baseQuery = SELECT_RECORD_BY_SHA256;
+                break;
+           default:
+                throw new IllegalArgumentException("Invalid hash algorithm: "+algorithm);
+            }
+
             // Prep the query
-            PreparedStatement query = connection.prepareStatement(SELECT_RECORD_BY_MD5);
+            PreparedStatement query = connection.prepareStatement(baseQuery);
             query.setBytes(1, hash);
             query.closeOnCompletion();
 
@@ -434,19 +506,36 @@ public class FileRecordStore implements Closeable {
     }
 
     /**
-     * Get the list of {@link Record} objects with a matching MD5 hash
-     * @param hash the MD5 hash
+     * Get the list of {@link Record} objects with a matching hashes
+     * @param algorithm the algorithm type
+     * @param hash the hashes
      * @return the list of records
      * @throws IOException
      */
-    public List<Record> getRecordsFromHashes(List<byte[]> hashes) throws IOException {
+    public List<Record> getRecordsFromHashes(String algorithm, List<byte[]> hashes) throws IOException {
         try {
             // Use the single lookup method for a single hash
             if (hashes.size() == 1) {
-                return getRecordsFromHash(hashes.get(0));
+                return getRecordsFromHash(algorithm, hashes.get(0));
             }
+
+            String baseQuery = null;
+            switch(algorithm.toLowerCase()){
+            case MD5:
+                baseQuery = SELECT_RECORD_BY_MD5_HASHES;
+                break;
+            case SHA1:
+                baseQuery = SELECT_RECORD_BY_SHA1_HASHES;
+                break;
+            case SHA256:
+                baseQuery = SELECT_RECORD_BY_SHA256_HASHES;
+                break;
+           default:
+                throw new IllegalArgumentException("Invalid hash algorithm: "+algorithm);
+            }
+
             // Build the query string
-            StringBuilder queryBuilder = new StringBuilder(SELECT_RECORD_BY_MD5_HASHES);
+            StringBuilder queryBuilder = new StringBuilder(baseQuery);
             for (int i = 0; i < (hashes.size() - 1); i++) {
                 queryBuilder.append("?, ");
             }

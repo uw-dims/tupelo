@@ -142,16 +142,16 @@ public class FileHashService {
 			FileHashResponse fhr = new FileHashResponse( fhq.algorithm );
 
 			// Search for the hashes
-			List<ManagedDiskDescriptor> matchingDisks = store.checkForHashes(fhq.hashes);
+			List<ManagedDiskDescriptor> matchingDisks = store.checkForHashes(fhq.algorithm, fhq.hashes);
 
 			// Get the matching record details
 			for( ManagedDiskDescriptor mdd : matchingDisks ) {
-			    List<Record> records = store.getRecords(mdd, fhq.hashes);
+			    List<Record> records = store.getRecords(mdd, fhq.algorithm, fhq.hashes);
 
 				log.info(records.size() + " hashes match from " + mdd );
 
 				for(Record record : records){
-				    fhr.add(record.md5, mdd, record.path);
+				    fhr.add(record.md5, record.sha1, record.sha256, record.size, mdd, record.path);
 				}
 			}
 

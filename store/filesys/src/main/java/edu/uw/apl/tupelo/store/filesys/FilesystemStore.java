@@ -507,21 +507,21 @@ public class FilesystemStore implements Store {
     }
 
     @Override
-    public List<Record> getRecords(ManagedDiskDescriptor mdd, List<byte[]> hashes) throws IOException {
+    public List<Record> getRecords(ManagedDiskDescriptor mdd, String algorithm, List<byte[]> hashes) throws IOException {
         FileRecordStore store = getRecordStore(mdd);
-        List<Record> records = store.getRecordsFromHashes(hashes);
+        List<Record> records = store.getRecordsFromHashes(algorithm, hashes);
         store.close();
         return records;
     }
 
     @Override
-    public List<ManagedDiskDescriptor> checkForHash(byte[] hash) throws IOException {
+    public List<ManagedDiskDescriptor> checkForHash(String algorithm, byte[] hash) throws IOException {
         Collection<ManagedDiskDescriptor> disks = enumerate();
         List<ManagedDiskDescriptor> matchingDisks = new ArrayList<ManagedDiskDescriptor>(disks.size());
         // Iterate over the disks and see if they have a matching hash
         for (ManagedDiskDescriptor mdd : disks) {
             FileRecordStore store = getRecordStore(mdd);
-            if (store.containsFileHash(hash)) {
+            if (store.containsFileHash(algorithm, hash)) {
                 matchingDisks.add(mdd);
             }
             store.close();
@@ -530,13 +530,13 @@ public class FilesystemStore implements Store {
     }
 
     @Override
-    public List<ManagedDiskDescriptor> checkForHashes(List<byte[]> hashes) throws IOException {
+    public List<ManagedDiskDescriptor> checkForHashes(String algorithm, List<byte[]> hashes) throws IOException {
         Collection<ManagedDiskDescriptor> disks = enumerate();
         List<ManagedDiskDescriptor> matchingDisks = new ArrayList<ManagedDiskDescriptor>(disks.size());
         // Iterate over the disks and see if they have a matching hash
         for (ManagedDiskDescriptor mdd : disks) {
             FileRecordStore store = getRecordStore(mdd);
-            if (store.containsFileHash(hashes)) {
+            if (store.containsFileHash(algorithm, hashes)) {
                 matchingDisks.add(mdd);
             }
             store.close();

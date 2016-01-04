@@ -393,58 +393,90 @@ public class Elvis extends Shell {
 		commandHelp( "as", "managedDiskIndex",
 					 "List attributes of an identified managed disk" );
 
-		addCommand("findhash", "(.+)", new Lambda() {
+		addCommand("findmd5", "(.+)", new Lambda() {
             @Override
             public void apply(String[] args) throws Exception {
-                try {
-                    // Get and verify the hashes
-                    String input = args[0];
-                    String[] hashes = input.split("\\s+");
-
-                    // Check which managed disks have file hash data
-                    Collection<ManagedDiskDescriptor> disks = store.enumerate();
-                    for (ManagedDiskDescriptor mdd : disks) {
-                        // Let the user know which disks are missing file hash
-                        // data
-                        if (!store.hasFileRecords(mdd)) {
-                            System.out.println("Warning: disk is missing file hash data: " + mdd);
-                        }
-                    }
-
-                    // Build the list of hashes in bytes
-                    List<byte[]> byteHashes = new ArrayList<byte[]>(hashes.length);
-                    for (String hash : hashes) {
-                        byteHashes.add(Hex.decodeHex(hash.toCharArray()));
-                    }
-
-                    // Start looking for the hashes
-                    List<ManagedDiskDescriptor> matchingDisks = store.checkForHashes(byteHashes);
-
-                    // Report our results
-                    if(matchingDisks.isEmpty()){
-                        System.out.println("Hash not found.");
-                    } else {
-                        System.out.println("Hash found on the following disks:");
-                        for(ManagedDiskDescriptor mdd : matchingDisks){
-                            System.out.println(mdd.toString());
-                            System.out.println("Matching hashes/files:");
-                            List<Record> records = store.getRecords(mdd, byteHashes);
-                            for(Record record : records){
-                                String hash = new String(Hex.encodeHex(record.md5));
-                                System.out.println(hash+" "+record.path);
-                            }
-                            System.out.println("\n");
-                        }
-                    }
-                } catch (Exception e) {
-                    log.warn(e);
-                    System.out.println("" + e);
-                }
+                checkForHashes("MD5", args);
             }
 		});
-		commandHelp("findhash", "MD5 hashes",
-		        "Check all managed disks to see which ones contain the specified MD5 file hash. "+
-		        "Seperate multiple hashes by a space.");
+        commandHelp("findmd5", "MD5 hashes",
+                "Check all managed disks to see which ones contain the specified MD5 file hash(es). "+
+                "Seperate multiple hashes by a space.");
+
+        addCommand("findsha1", "(.+)", new Lambda() {
+            @Override
+            public void apply(String[] args) throws Exception {
+                checkForHashes("SHA-1", args);
+            }
+        });
+        commandHelp("findsha1", "SHA-1 hashes",
+                "Check all managed disks to see which ones contain the specified SHA-1 file hash(es). "+
+                "Seperate multiple hashes by a space.");
+
+        addCommand("findsha256", "(.+)", new Lambda() {
+            @Override
+            public void apply(String[] args) throws Exception {
+                checkForHashes("SHA-256", args);
+            }
+        });
+        commandHelp("findsha256", "SHA-256 hashes",
+                "Check all managed disks to see which ones contain the specified SHA-256 file hash(es). "+
+                "Seperate multiple hashes by a space.");
+
+	}
+
+	/**
+	 * Run a check for hashes of a specific type
+	 * @param algorithm
+	 * @param args the hashes, in hex
+	 */
+	private void checkForHashes(String algorithm, String[] args){
+	    try {
+            // Get and verify the hashes
+            String input = args[0];
+            String[] hashes = input.split("\\s+");
+
+            // Check which managed disks have file hash data
+            Collection<ManagedDiskDescriptor> disks = store.enumerate();
+            for (ManagedDiskDescriptor mdd : disks) {
+                // Let the user know which disks are missing file hash
+                // data
+                if (!store.hasFileRecords(mdd)) {
+                    System.out.println("Warning: disk is missing file hash data: " + mdd);
+                }
+            }
+
+            // Build the list of hashes in bytes
+            List<byte[]> byteHashes = new ArrayList<byte[]>(hashes.length);
+            for (String hash : hashes) {
+                byteHashes.add(Hex.decodeHex(hash.toCharArray()));
+            }
+
+            // Start looking for the hashes
+            List<ManagedDiskDescriptor> matchingDisks = store.checkForHashes(algorithm, byteHashes);
+
+            // Report our results
+            if(matchingDisks.isEmpty()){
+                System.out.println("Hash not found.");
+            } else {
+                System.out.println("Hash found on the following disks:");
+                for(ManagedDiskDescriptor mdd : matchingDisks){
+                    System.out.println(mdd.toString());
+                    System.out.println("Matching MD5|SHA1|SHA256|Size|Path:");
+                    List<Record> records = store.getRecords(mdd, algorithm, byteHashes);
+                    for(Record record : records){
+                        String md5 = new String(Hex.encodeHex(record.md5));
+                        String sha1 = new String(Hex.encodeHex(record.sha1));
+                        String sha256 = new String(Hex.encodeHex(record.sha256));
+                        System.out.println(md5+"|"+sha1+"|"+sha256+"|"+record.size+"|"+record.path);
+                    }
+                    System.out.println("\n");
+                }
+            }
+        } catch (Exception e) {
+            log.warn(e);
+            System.out.println("" + e);
+        }
 	}
 
 	static protected void printUsage( Options os, String usage,

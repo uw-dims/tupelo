@@ -221,7 +221,7 @@ public class DataServlet extends HttpServlet {
 	}
 
     /**
-     * Check which, if any, disks have the MD5 hashes specified in the request
+     * Check which, if any, disks have the hashes specified in the request
      * @param req
      * @param res
      * @param details
@@ -230,13 +230,14 @@ public class DataServlet extends HttpServlet {
      */
 	private void checkForHash(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         List<byte[]> hashes = getHashesFromRequest(req, res);
+        String algorithm = req.getHeader("algorithm");
         // If hashes is null, stop now
         if(hashes == null){
             return;
         }
 
 	    // Get the info from the store
-	    List<ManagedDiskDescriptor> disks = store.checkForHashes(hashes);
+	    List<ManagedDiskDescriptor> disks = store.checkForHashes(algorithm, hashes);
 
 	    // Shove it back
 	    if(Utils.acceptsJavaObjects(req)){
@@ -256,6 +257,7 @@ public class DataServlet extends HttpServlet {
     private void getRecordDetails(HttpServletRequest req, HttpServletResponse res, String details)
             throws IOException, ServletException {
         List<byte[]> hashes = getHashesFromRequest(req, res);
+        String algorithm = req.getHeader("algorithm");
         // If hashes is null, stop now
         if(hashes == null){
             return;
@@ -272,7 +274,7 @@ public class DataServlet extends HttpServlet {
         }
 
         // Get the records
-        List<Record> records = store.getRecords(mdd, hashes);
+        List<Record> records = store.getRecords(mdd, algorithm, hashes);
         if(Utils.acceptsJson(req)){
             respondJson(res, records);
         } else {
