@@ -47,34 +47,37 @@ And a response expample::
 File Hash Request
 ******************
 
-To send a request to get details about any files that match a specific MD5 hash,
+To send a request to get details about any files that match a specific hash,
 send a request on the `tupelo` exchange with a binding key of `who-has`.
-Currently only MD5 hashes are supported, and you can send as many hashes as you want to look for.
+Currently MD5, SHA-1, or SHA-256 hashes are supported, and you can send as many hashes as you want to look for.
+All hashes must be the same type.
 
 The message's appdata structure is as follows::
 
  {
-    "algorithm" : "md5",
+    "algorithm" : "MD5|SHA-1|SHA-256",
     "hashes" : ["hash1hex", "hash2hex" "ect..." ]
  }
 
 The response's appdata will contain the following::
 
- {
-    "algorithm" : "md5",
+  {
+    "algorithm": "MD5",
     "hits": [
-        {
-            "hash": "hashHex",
-            "descriptor": "(Disk Descriptor)",
-            "path": "/path/to/file1"
+      {
+        "md5": "<MD5 Hash>",
+        "sha1": "<SHA-1 Hash>",
+        "sha256": "<SHA-256 Hash>",
+        "descriptor": {
+          "diskID": "<Disk ID>",
+          "session": "<Session>"
         },
-        {
-            "hash": "hashHex",
-            "descriptor": "(Disk Descriptor)",
-            "path": "/path/to/file2"
-        }
+        "path": "/path/to/file",
+        "size": 1024
+      },
+      ...
     ]
- }
+  }
 
 Note that searching for hashes only works on images which have file records associated with the image.
 The Tupelo server periodically checks for and generates these records, but it is a time consuming process,
