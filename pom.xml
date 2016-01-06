@@ -47,7 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	<groupId>edu.uw.apl</groupId>
 	<artifactId>tupelo-parent</artifactId>
-	<version>1.2.8</version>
+	<version>1.2.9</version>
 	<packaging>pom</packaging>
 
 	<name>Tupelo Disk Management - Parent</name>
