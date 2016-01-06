@@ -99,6 +99,15 @@ public class ContextListener implements ServletContextListener {
 	 */
 	static public final String DISK_FHASH_KEY = "filerecord.service";
 
+	/**
+	 * How long (In seconds) to sleep between connection attempts
+	 */
+	private static final int AMQP_RECONNECT_TIME = 15;
+
+	/**
+	 * How many consecutive AMQP reconnection attempts to make before giving up
+	 */
+	private static final int AMQP_RECONNECT_ATTEMPTS = 100;
 
 	public ContextListener() {
 		log = LogFactory.getLog( getClass().getPackage().getName() );
@@ -262,7 +271,7 @@ public class ContextListener implements ServletContextListener {
                 try {
                     Date lastConnectTry;
                     int reconnectCount = 0;
-                    while (reconnectCount < 10) {
+                    while (reconnectCount < AMQP_RECONNECT_ATTEMPTS) {
                         lastConnectTry = new Date();
                         try {
                             fhs.start();
@@ -281,13 +290,13 @@ public class ContextListener implements ServletContextListener {
                             } else {
                                 reconnectCount = 1;
                             }
-                            log.info("Waiting 10 sec to reconnect to AMQP");
-                            Thread.sleep(10 * 1000);
+                            log.info("Waiting "+AMQP_RECONNECT_TIME+" sec to reconnect to AMQP");
+                            Thread.sleep(AMQP_RECONNECT_TIME * 1000);
                         } catch (Exception e) {
                             // Ignore
                         }
                     }
-                    log.warn("More than 10 failed AMQP connection attempts, stopping FileHashService");
+                    log.warn("More than "+AMQP_RECONNECT_ATTEMPTS+" failed AMQP connection attempts, stopping FileHashService");
                 } catch (Exception e) {
                     log.warn("Fatal exception in AMQP FileHashService, disabling", e);
                 }
