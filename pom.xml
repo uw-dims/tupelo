@@ -47,7 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	<groupId>edu.uw.apl</groupId>
 	<artifactId>tupelo-parent</artifactId>
-	<version>1.2.8</version>
+	<version>1.2.9</version>
 	<packaging>pom</packaging>
 
 	<name>Tupelo Disk Management - Parent</name>
@@ -94,12 +94,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			<dependency>
 				<groupId>edu.uw.apl.commons</groupId>
 				<artifactId>tsk4j-digests</artifactId>
-				<version>413.3.1</version>
+				<version>413.3.2</version>
 			</dependency>
             <dependency>
                 <groupId>edu.uw.apl.commons</groupId>
                 <artifactId>tsk4j-core</artifactId>
-                <version>413.3.1</version>
+                <version>413.3.2</version>
             </dependency>
 			<dependency>
 				<groupId>commons-cli</groupId>

@@ -76,13 +76,12 @@ public class Info {
 	}
 
 	static void showFileHashResponse( Gson gson ) {
-
 		FileHashResponse fhr = new FileHashResponse( "md5" );
 		byte[] hash1 = "12345678901234567890".getBytes();
 		ManagedDiskDescriptor mdd = new ManagedDiskDescriptor
 			( "someDiskID", Session.testSession() );
 		String path = "/path/to/the/located/file";
-		fhr.add( hash1, mdd, path );
+		fhr.add( hash1, null, null, 10, mdd, path );
 
 		RPCObject<FileHashResponse> fhrRPC = RPCObject.asRPCObject( fhr );
 		String fhrs = gson.toJson( fhrRPC );

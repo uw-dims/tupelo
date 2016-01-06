@@ -467,21 +467,22 @@ public class HttpStoreProxy implements Store {
     }
 
     @Override
-    public List<ManagedDiskDescriptor> checkForHash(byte[] hash) throws IOException {
+    public List<ManagedDiskDescriptor> checkForHash(String algorithm, byte[] hash) throws IOException {
         List<byte[]> hashes = new ArrayList<byte[]>(1);
         hashes.add(hash);
-        return checkForHashes(hashes);
+        return checkForHashes(algorithm, hashes);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<ManagedDiskDescriptor> checkForHashes(List<byte[]> hashes) throws IOException {
+    public List<ManagedDiskDescriptor> checkForHashes(String algorithm, List<byte[]> hashes) throws IOException {
         HttpPost post = new HttpPost(server + "disks/data/filerecord/check");
         post.addHeader( "Accept", JAVA_TYPE );
         log.debug(post.getRequestLine());
 
         // Get the body ready
         post.setHeader("content-type", JSON_TYPE);
+        post.setHeader("algorithm", algorithm);
         post.setEntity( new StringEntity(gson.toJson(hashes)) );
 
         // Make the request
@@ -501,9 +502,10 @@ public class HttpStoreProxy implements Store {
     }
 
     @Override
-    public List<Record> getRecords(ManagedDiskDescriptor mdd, List<byte[]> hashes) throws IOException {
+    public List<Record> getRecords(ManagedDiskDescriptor mdd, String algorithm, List<byte[]> hashes) throws IOException {
         HttpPost post = new HttpPost(server + "disks/data/filerecord/"+mdd.getDiskID()+"/"+mdd.getSession());
         post.addHeader("Accept", JSON_TYPE);
+        post.addHeader("algorithm", algorithm);
         log.debug(post.getRequestLine());
 
         // Get the body ready

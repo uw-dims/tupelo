@@ -115,6 +115,22 @@ public class DiskFileRecordService {
     }
 
     /**
+     * Runs checkVersion on each FileRecordStore
+     */
+    public synchronized void checkFileRecordStoreVersion(){
+        log.debug("Checking FileRecordStore versions");
+        try{
+            Collection<ManagedDiskDescriptor> allDisks = store.enumerate();
+            for(ManagedDiskDescriptor mdd : allDisks){
+                FileRecordStore fileRecordStore = store.getRecordStore(mdd);
+                fileRecordStore.checkVersion();
+            }
+        } catch(Exception e){
+            log.warn("Exception checking FileRecordStore versions", e);
+        }
+    }
+
+    /**
      * Check for disks without file hashes, queue them, and start processing them.
      */
     public synchronized void checkForUnhashedDisks(){
@@ -147,6 +163,9 @@ public class DiskFileRecordService {
             } catch(InterruptedException e){
                 // Ignore
             }
+
+            // Check the FileRecordStore versions
+            checkFileRecordStoreVersion();
 
             do{
                 // Check for unhashed disks

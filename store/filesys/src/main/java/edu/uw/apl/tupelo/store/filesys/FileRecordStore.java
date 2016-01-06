@@ -33,8 +33,12 @@
  */
 package edu.uw.apl.tupelo.store.filesys;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -59,8 +63,16 @@ import edu.uw.apl.tupelo.model.ManagedDiskDescriptor;
 public class FileRecordStore implements Closeable {
 	private static final Log log = LogFactory.getLog(FileRecordStore.class);
 
+	private static final String MD5 = "md5";
+	private static final String SHA1= "sha-1";
+	private static final String SHA256 = "sha-256";
+
 	// The name of the database file
 	private static final String DB_FILE = "fileRecord.sqlite";
+	// Name of the version file
+	private static final String DB_VERSION_FILE = "fileRecord.version";
+	// The DB version
+	private static final int VERSION = 2;
 
 	// SQL Table/column names
 	private static final String TABLE_NAME = "records";
@@ -68,6 +80,10 @@ public class FileRecordStore implements Closeable {
 	private static final String PATH_COL = "path";
 	// byte[]
 	private static final String MD5_COL = "md5";
+	// byte[]
+	private static final String SHA1_COL = "sha1";
+	// byte[]
+	private static final String SHA256_COL = "sha256";
 	// long
 	private static final String INODE_COL = "inode";
 	// short
@@ -96,6 +112,8 @@ public class FileRecordStore implements Closeable {
 			"CREATE TABLE "+TABLE_NAME+" ("+
 			PATH_COL+" STRING, "+
 			MD5_COL+" BLOB, "+
+			SHA1_COL+" BLOB, "+
+			SHA256_COL+" BLOB, "+
 			INODE_COL+" INTEGER, "+
 			ATTR_TYPE_COL+" INTEGER, "+
 			ATTR_ID_COL+" INTEGER, "+
@@ -114,28 +132,50 @@ public class FileRecordStore implements Closeable {
 	// Insert SQL statment
 	private static final String INSERT_STATEMENT =
 			"INSERT INTO "+TABLE_NAME+" ("+
-			PATH_COL+", "+MD5_COL+", "+INODE_COL+", "+ ATTR_TYPE_COL+", "+
+			PATH_COL+", "+MD5_COL+", "+SHA1_COL+", "+SHA256_COL+", "+INODE_COL+", "+ ATTR_TYPE_COL+", "+
 			ATTR_ID_COL+", "+NAME_TYPE_COL+", "+META_TYPE_COL+", "+PERM_COL+", "+
 			UID_COL+", "+GID_COL+", "+SIZE_COL+", "+ATIME_COL+", "+MTIME_COL+", "
-			+CTIME_COL+", "+CRTIME_COL+") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-	// Count the number of hash statement
-	private static final String COUNT_HASH_STATEMENT =
+			+CTIME_COL+", "+CRTIME_COL+") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+	// Count the number of hashes statement
+	private static final String COUNT_MD5_STATEMENT =
 			"SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+MD5_COL+" = ?";
+    private static final String COUNT_SHA1_STATEMENT =
+            "SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+SHA1_COL+" = ?";
+    private static final String COUNT_SHA256_STATEMENT =
+            "SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+SHA256_COL+" = ?";
+
 	// This needs a ? added for each value and then needs to have a closing )
-	private static final String COUNT_HASH_IN_STATEMENT =
+	private static final String COUNT_MD5_IN_STATEMENT =
 	        "SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+MD5_COL+" IN (";
+    private static final String COUNT_SHA1_IN_STATEMENT =
+            "SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+SHA1_COL+" IN (";
+    private static final String COUNT_SHA256_IN_STATEMENT =
+            "SELECT COUNT(*) FROM "+TABLE_NAME+" WHERE "+SHA256_COL+" IN (";
+
+    // Select statement
+    private static final String SELECT_RECORD_BY_MD5 =
+            "SELECT * FROM "+TABLE_NAME+" WHERE "+MD5_COL+" = ?";
+    private static final String SELECT_RECORD_BY_SHA1 =
+            "SELECT * FROM "+TABLE_NAME+" WHERE "+SHA1_COL+" = ?";
+    private static final String SELECT_RECORD_BY_SHA256 =
+            "SELECT * FROM "+TABLE_NAME+" WHERE "+SHA256_COL+" = ?";
+
+    // Select from multiple hashes
+    // This needs a ? added for each potential hash, and a closing )
+    private static final String SELECT_RECORD_BY_MD5_HASHES =
+            "SELECT * FROM "+TABLE_NAME+" WHERE "+MD5_COL+" IN (";
+    private static final String SELECT_RECORD_BY_SHA1_HASHES =
+            "SELECT * FROM "+TABLE_NAME+" WHERE "+SHA1_COL+" IN (";
+    private static final String SELECT_RECORD_BY_SHA256_HASHES =
+            "SELECT * FROM "+TABLE_NAME+" WHERE "+SHA256_COL+" IN (";
+
 	// Count all rows statement
 	private static final String COUNT_STATEMENT =
 			"SELECT COUNT(*) FROM "+TABLE_NAME;
-	// Select statement
-	private static final String SELECT_RECORD_BY_HASH =
-	        "SELECT * FROM "+TABLE_NAME+" WHERE "+MD5_COL+" = ?";
-	// Select from multiple hashes
-	// This needs a ? added for each potential hash, and a closing )
-    private static final String SELECT_RECORD_BY_HASHES =
-            "SELECT * FROM "+TABLE_NAME+" WHERE "+MD5_COL+" IN (";
 
 	private File sqlFile;
+	private File versionFile;
 	private ManagedDiskDescriptor mdd;
 	private Connection connection;
 
@@ -153,6 +193,7 @@ public class FileRecordStore implements Closeable {
 
 			// Get the file name
 			sqlFile = new File(dataDir, DB_FILE);
+			versionFile = new File(dataDir, DB_VERSION_FILE);
 			// If the file doesn't already exist, set up the tables
 			boolean setup = !sqlFile.exists();
 
@@ -166,6 +207,43 @@ public class FileRecordStore implements Closeable {
 		} catch(SQLException e){
 			throw new IOException(e);
 		}
+	}
+
+	/**
+	 * Check that the DB version matches the system version.
+	 * If it does not, drop and re-create the table.
+	 * @throws IOException
+	 */
+	public void checkVersion() throws IOException {
+	    boolean reInit = false;
+	    if(!versionFile.exists()){
+	        // Check version failed. Delete and re-init
+	        reInit = true;
+	    } else {
+	        BufferedReader reader = new BufferedReader(new FileReader(versionFile));
+	        int version = Integer.parseInt(reader.readLine());
+	        reader.close();
+	        if(version < VERSION){
+	            log.info("FileRecordStore version "+version+" less than system version "+VERSION);
+	            reInit = true;
+	        }
+	    }
+
+        if (reInit) {
+            try {
+                log.info("Re-creating FileRecordStore");
+                // Close the connection and delete the file.
+                connection.close();
+                sqlFile.delete();
+                // Re-open the connection
+                connection = DriverManager.getConnection(JDBC.PREFIX + sqlFile.getAbsolutePath());
+                connection.setAutoCommit(false);
+                // Re-run init
+                init();
+            } catch (SQLException e) {
+                log.warn("SQLiteException re-opening the connection", e);
+            }
+        }
 	}
 
 	/**
@@ -199,19 +277,21 @@ public class FileRecordStore implements Closeable {
             for (Record record : records) {
                 insert.setString(1, record.path);
                 insert.setBytes(2, record.md5);
-                insert.setLong(3, record.inode);
-                insert.setShort(4, record.attrType);
-                insert.setShort(5, record.attrId);
-                insert.setByte(6, record.nameType);
-                insert.setByte(7, record.metaType);
-                insert.setInt(8, record.perms);
-                insert.setInt(9, record.uid);
-                insert.setInt(10, record.gid);
-                insert.setLong(11, record.size);
-                insert.setInt(12, record.atime);
-                insert.setInt(13, record.mtime);
-                insert.setInt(14, record.ctime);
-                insert.setInt(15, record.crtime);
+                insert.setBytes(3, record.sha1);
+                insert.setBytes(4, record.sha256);
+                insert.setLong(5, record.inode);
+                insert.setShort(6, record.attrType);
+                insert.setShort(7, record.attrId);
+                insert.setByte(8, record.nameType);
+                insert.setByte(9, record.metaType);
+                insert.setInt(10, record.perms);
+                insert.setInt(11, record.uid);
+                insert.setInt(12, record.gid);
+                insert.setLong(13, record.size);
+                insert.setInt(14, record.atime);
+                insert.setInt(15, record.mtime);
+                insert.setInt(16, record.ctime);
+                insert.setInt(17, record.crtime);
 
                 insert.addBatch();
 
@@ -240,9 +320,25 @@ public class FileRecordStore implements Closeable {
 	 * @param hash
 	 * @return
 	 */
-	public boolean containsFileHash(byte[] hash) throws IOException {
+	public boolean containsFileHash(String algorithm, byte[] hash) throws IOException {
 		try{
-			PreparedStatement query = connection.prepareStatement(COUNT_HASH_STATEMENT);
+		    // Get the correct query string
+		    String baseQuery = null;
+            switch(algorithm.toLowerCase()){
+            case MD5:
+                baseQuery = COUNT_MD5_STATEMENT;
+                break;
+            case SHA1:
+                baseQuery = COUNT_SHA1_STATEMENT;
+                break;
+            case SHA256:
+                baseQuery = COUNT_SHA256_STATEMENT;
+                break;
+           default:
+                throw new IllegalArgumentException("Invalid hash algorithm: "+algorithm);
+            }
+
+			PreparedStatement query = connection.prepareStatement(baseQuery);
 			query.setBytes(1, hash);
 			query.closeOnCompletion();
 			ResultSet result = query.executeQuery();
@@ -261,7 +357,7 @@ public class FileRecordStore implements Closeable {
 	 * @return
 	 * @throws IOException
 	 */
-    public boolean containsFileHash(List<byte[]> hashes) throws IOException {
+    public boolean containsFileHash(String algorithm, List<byte[]> hashes) throws IOException {
         if (hashes == null || hashes.isEmpty()) {
             throw new IllegalArgumentException("Array must not be empty");
         }
@@ -269,12 +365,27 @@ public class FileRecordStore implements Closeable {
         // For a single hash, use the search for one hash method because it
         // could be faster
         if (hashes.size() == 1) {
-            return containsFileHash(hashes.get(0));
+            return containsFileHash(algorithm, hashes.get(0));
         }
 
         try {
+            String baseQuery = null;
+            switch(algorithm.toLowerCase()){
+            case MD5:
+                baseQuery = COUNT_MD5_IN_STATEMENT;
+                break;
+            case SHA1:
+                baseQuery = COUNT_SHA1_IN_STATEMENT;
+                break;
+            case SHA256:
+                baseQuery = COUNT_SHA256_IN_STATEMENT;
+                break;
+           default:
+                throw new IllegalArgumentException("Invalid hash algorithm: "+algorithm);
+            }
+
             // The query string needs to be built
-            StringBuilder queryBuilder = new StringBuilder(COUNT_HASH_IN_STATEMENT);
+            StringBuilder queryBuilder = new StringBuilder(baseQuery);
             for (int i = 0; i < (hashes.size() - 1); i++) {
                 queryBuilder.append("?, ");
             }
@@ -308,6 +419,8 @@ public class FileRecordStore implements Closeable {
 	    /*
             PATH_COL+" STRING, "+
             MD5_COL+" BLOB, "+
+            SHA1_COL+" BLOB, "+
+            SHA256_COL+" BLOB, "+
             INODE_COL+" INTEGER, "+
             ATTR_TYPE_COL+" INTEGER, "+
             ATTR_ID_COL+" INTEGER, "+
@@ -326,19 +439,21 @@ public class FileRecordStore implements Closeable {
 			PreparedStatement insert = connection.prepareStatement(INSERT_STATEMENT);
 			insert.setString(1, record.path);
 			insert.setBytes(2, record.md5);
-			insert.setLong(3, record.inode);
-			insert.setShort(4, record.attrType);
-			insert.setShort(5, record.attrId);
-			insert.setByte(6, record.nameType);
-			insert.setByte(7, record.metaType);
-			insert.setInt(8, record.perms);
-			insert.setInt(9, record.uid);
-			insert.setInt(10, record.gid);
-			insert.setLong(11, record.size);
-			insert.setInt(12, record.atime);
-			insert.setInt(13, record.mtime);
-			insert.setInt(14, record.ctime);
-			insert.setInt(15, record.crtime);
+			insert.setBytes(3, record.sha1);
+			insert.setBytes(4, record.sha256);
+			insert.setLong(5, record.inode);
+			insert.setShort(6, record.attrType);
+			insert.setShort(7, record.attrId);
+			insert.setByte(8, record.nameType);
+			insert.setByte(9, record.metaType);
+			insert.setInt(10, record.perms);
+			insert.setInt(11, record.uid);
+			insert.setInt(12, record.gid);
+			insert.setLong(13, record.size);
+			insert.setInt(14, record.atime);
+			insert.setInt(15, record.mtime);
+			insert.setInt(16, record.ctime);
+			insert.setInt(17, record.crtime);
 			insert.execute();
 			insert.close();
 		} catch(SQLException e){
@@ -347,15 +462,31 @@ public class FileRecordStore implements Closeable {
 	}
 
 	/**
-	 * Get the list of {@link Record} objects with a matching MD5 hash
-	 * @param hash the MD5 hash
+	 * Get the list of {@link Record} objects with a matching hash
+	 * @param algorithm the hash algorithm
+	 * @param hash the hash
 	 * @return the list of records
 	 * @throws IOException
 	 */
-    public List<Record> getRecordsFromHash(byte[] hash) throws IOException {
+    public List<Record> getRecordsFromHash(String algorithm, byte[] hash) throws IOException {
         try {
+            String baseQuery = null;
+            switch(algorithm.toLowerCase()){
+            case MD5:
+                baseQuery = SELECT_RECORD_BY_MD5;
+                break;
+            case SHA1:
+                baseQuery = SELECT_RECORD_BY_SHA1;
+                break;
+            case SHA256:
+                baseQuery = SELECT_RECORD_BY_SHA256;
+                break;
+           default:
+                throw new IllegalArgumentException("Invalid hash algorithm: "+algorithm);
+            }
+
             // Prep the query
-            PreparedStatement query = connection.prepareStatement(SELECT_RECORD_BY_HASH);
+            PreparedStatement query = connection.prepareStatement(baseQuery);
             query.setBytes(1, hash);
             query.closeOnCompletion();
 
@@ -375,19 +506,36 @@ public class FileRecordStore implements Closeable {
     }
 
     /**
-     * Get the list of {@link Record} objects with a matching MD5 hash
-     * @param hash the MD5 hash
+     * Get the list of {@link Record} objects with a matching hashes
+     * @param algorithm the algorithm type
+     * @param hash the hashes
      * @return the list of records
      * @throws IOException
      */
-    public List<Record> getRecordsFromHashes(List<byte[]> hashes) throws IOException {
+    public List<Record> getRecordsFromHashes(String algorithm, List<byte[]> hashes) throws IOException {
         try {
             // Use the single lookup method for a single hash
             if (hashes.size() == 1) {
-                return getRecordsFromHash(hashes.get(0));
+                return getRecordsFromHash(algorithm, hashes.get(0));
             }
+
+            String baseQuery = null;
+            switch(algorithm.toLowerCase()){
+            case MD5:
+                baseQuery = SELECT_RECORD_BY_MD5_HASHES;
+                break;
+            case SHA1:
+                baseQuery = SELECT_RECORD_BY_SHA1_HASHES;
+                break;
+            case SHA256:
+                baseQuery = SELECT_RECORD_BY_SHA256_HASHES;
+                break;
+           default:
+                throw new IllegalArgumentException("Invalid hash algorithm: "+algorithm);
+            }
+
             // Build the query string
-            StringBuilder queryBuilder = new StringBuilder(SELECT_RECORD_BY_HASHES);
+            StringBuilder queryBuilder = new StringBuilder(baseQuery);
             for (int i = 0; i < (hashes.size() - 1); i++) {
                 queryBuilder.append("?, ");
             }
@@ -424,7 +572,9 @@ public class FileRecordStore implements Closeable {
      */
     private Record getRecordFromResult(ResultSet result) throws SQLException {
         String path = result.getString(PATH_COL);
-        byte[] hash = result.getBytes(MD5_COL);
+        byte[] md5 = result.getBytes(MD5_COL);
+        byte[] sha1 = result.getBytes(SHA1_COL);
+        byte[] sha256 = result.getBytes(SHA256_COL);
         long inode = result.getLong(INODE_COL);
         int attrType = result.getInt(ATTR_TYPE_COL);
         int attrId = result.getInt(ATTR_ID_COL);
@@ -440,7 +590,7 @@ public class FileRecordStore implements Closeable {
         int crtime = result.getInt(CRTIME_COL);
 
         // Create the record object
-        return new Record(hash, path, inode, attrType, attrId, nameType, metaType, perms, uid,
+        return new Record(md5, sha1, sha256, path, inode, attrType, attrId, nameType, metaType, perms, uid,
                 gid, size, atime, mtime, ctime, crtime);
 
     }
@@ -454,6 +604,16 @@ public class FileRecordStore implements Closeable {
 		Statement statement = connection.createStatement();
 		statement.executeUpdate(CREATE_STATEMENT);
 		connection.commit();
+
+		// Write the version info
+		try{
+		    BufferedWriter writer = new BufferedWriter(new FileWriter(versionFile));
+		    writer.write(""+VERSION);
+		    writer.flush();
+		    writer.close();
+		} catch(IOException e){
+		    log.error("IOException writing FileREcordStore version information", e);
+		}
 	}
 
 	@Override

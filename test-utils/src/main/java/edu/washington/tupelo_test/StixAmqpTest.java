@@ -163,7 +163,7 @@ public class StixAmqpTest {
 
         System.out.println("Tupelo Hits:");
         for (FileHashResponse.Hit h : hashResponse.hits) {
-            String hashHex = new String(Hex.encodeHex(h.hash));
+            String hashHex = new String(Hex.encodeHex(h.md5));
             System.out.println(hashHex + " " + h.descriptor + " " + h.path);
         }
 
@@ -179,7 +179,7 @@ public class StixAmqpTest {
         List<String> hashes = new ArrayList<String>(hashResponse.hits.size());
         List<String> fileNames = new ArrayList<String>(hashResponse.hits.size());
         for (FileHashResponse.Hit hit : hashResponse.hits) {
-            String hashHex = new String(Hex.encodeHex(hit.hash));
+            String hashHex = new String(Hex.encodeHex(hit.md5));
             String fileName = hit.path;
             hashes.add(hashHex);
             fileNames.add(fileName);

@@ -85,7 +85,7 @@ public class RecordStoreTest extends junit.framework.TestCase {
 		// Add the filename/hash
 		System.out.println("Adding a file record");
 
-		Record record = new Record(digest, FILE_NAME, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+		Record record = new Record(digest, null, null, FILE_NAME, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 		store.addRecord(record);
 
 		System.out.println("Store should have data now");
@@ -94,7 +94,7 @@ public class RecordStoreTest extends junit.framework.TestCase {
 
 		// It should find the hash we just added
 		System.out.println("Store should find the hash we just added");
-		assertEquals(store.containsFileHash(digest), true);
+		assertEquals(store.containsFileHash("MD5", digest), true);
 
 		// Test a hash that isnt in the table
 		MD5.update(this.getClass().getName().getBytes());
@@ -102,7 +102,7 @@ public class RecordStoreTest extends junit.framework.TestCase {
 		MD5.reset();
 
 		System.out.println("Store should not find hash that isn't in it");
-		assertEquals(store.containsFileHash(badHash), false);
+		assertEquals(store.containsFileHash("MD5", badHash), false);
 	}
 
 	@Override

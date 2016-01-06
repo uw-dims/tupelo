@@ -62,8 +62,8 @@ public class FileHashResponse {
 		hits = new ArrayList<Hit>();
 	}
 
-	public void add( byte[] hash, ManagedDiskDescriptor mdd, String path ) {
-		Hit h = new Hit( hash, mdd, path );
+	public void add( byte[] md5, byte[] sha1, byte[] sha256, long size, ManagedDiskDescriptor mdd, String path ) {
+		Hit h = new Hit( md5, sha1, sha256, size, mdd, path );
 		hits.add( h );
 	}
 
@@ -77,20 +77,26 @@ public class FileHashResponse {
 	 */
 	   
 	static public class Hit {
-        public final byte[] hash;
+        public final byte[] md5;
+        public final byte[] sha1;
+        public final byte[] sha256;
         public final ManagedDiskDescriptor descriptor;
         public final String path;
+        public final long size;
 
-		Hit( byte[] hash, ManagedDiskDescriptor mdd, String path ) {
-			this.hash = hash;
+		Hit( byte[] md5, byte[] sha1, byte[] sha256, long size, ManagedDiskDescriptor mdd, String path ) {
+		    this.size = size;
+			this.md5 = md5;
+			this.sha1 = sha1;
+			this.sha256 = sha256;
 			this.descriptor = mdd;
 			this.path = path;
 		}
 
 		@Override
 		public String toString() {
-			String hashHex = new String( Hex.encodeHex( hash ) );
-			return "Hash: "+ hashHex + ", descriptor" + descriptor +
+			String hashHex = new String( Hex.encodeHex( md5 ) );
+			return "MD5: "+ hashHex + ", descriptor" + descriptor +
 				", path: " + path;
 		}
 	}
