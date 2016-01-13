@@ -96,7 +96,7 @@ public class FileHashClient {
     private List<String> hashes;
 
     static final String EXCHANGE = "tupelo";
-    private static final String[] VALID_HASHTYPES = {"MD5", "SHA-1", "SHA-256"};
+    private static final String[] VALID_HASHTYPES = {"MD5", "SHA1", "SHA256"};
 
 	static public void main( String[] args ) throws Exception {
 		FileHashClient main = new FileHashClient();
@@ -122,7 +122,7 @@ public class FileHashClient {
 	
 	public void readArgs( String[] args ) throws IOException {
 		Options os = new Options();
-		os.addOption("t", true, "Hash type (MD5, SHA-1, or SHA-256). Default is MD5.");
+		os.addOption("t", true, "Hash type (MD5, SHA1, or SHA256). Default is MD5.");
 		os.addOption( "d", false, "Debug" );
 		os.addOption( "v", false, "Verbose" );
 		os.addOption( "u", true,
@@ -162,7 +162,7 @@ public class FileHashClient {
 		    // If the type is invalid, say so and exit
 		    if(!valid){
 		        System.err.println("Error: Invalid hash type: "+hashtype);
-		        System.err.println("Valid types are 'MD5', 'SHA-1', or 'SHA-256' (Case insensitive).");
+		        System.err.println("Valid types are 'MD5', 'SHA1', or 'SHA256' (Case insensitive).");
 		        System.exit(-1);
 		    }
 		}
@@ -243,7 +243,7 @@ public class FileHashClient {
 		Type fhrType = new TypeToken<RPCObject<FileHashResponse>>(){}.getType();
 		RPCObject<FileHashResponse> rpc2 = gson.fromJson( json, fhrType );
 		FileHashResponse fhr = rpc2.appdata;
-		System.out.println("Hits: (Disk Descriptor) MD5|SHA-1|SHA-256|Size|Path");
+		System.out.println("Hits: (Disk Descriptor) MD5|SHA1|SHA256|Size|Path");
 		for( FileHashResponse.Hit h : fhr.hits ) {
 			String md5 = new String( Hex.encodeHex( h.md5 ) );
 			String sha1 = new String( Hex.encodeHex( h.sha1 ) );
