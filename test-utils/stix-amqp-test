@@ -9,7 +9,7 @@ ARTIFACT=tupelo-test
 JARNAME=`ls target | grep $ARTIFACT | sort -n -r | head -1`
 JARPATH=target/$JARNAME
 
-PACKAGE=edu.washington.tupelo_test
+PACKAGE=edu.uw.apl.tupelo_test
 CLAZZ=StixAmqpTest
 
 exec java -classpath $JARPATH $PACKAGE.$CLAZZ "$@"

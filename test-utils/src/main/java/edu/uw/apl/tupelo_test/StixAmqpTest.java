@@ -1,4 +1,30 @@
-package edu.washington.tupelo_test;
+/**
+ * Copyright © 2016, University of Washington
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the University of Washington nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL UNIVERSITY OF WASHINGTON BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+package edu.uw.apl.tupelo_test;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -26,6 +52,8 @@ import com.rabbitmq.client.QueueingConsumer;
 import com.rabbitmq.client.AMQP.BasicProperties;
 
 import edu.uw.apl.stix.cli.Extractor;
+import edu.uw.apl.stix.cli.FileInfoExtractor;
+import edu.uw.apl.stix.objects.FileObjectObservable;
 import edu.uw.apl.stix.utils.HashComposers;
 import edu.uw.apl.stix.utils.HashExtractors;
 import edu.uw.apl.tupelo.amqp.objects.FileHashQuery;
@@ -176,16 +204,27 @@ public class StixAmqpTest {
     public void writeStixOutput() throws Exception {
         System.out.println("Writing STIX output");
 
-        List<String> hashes = new ArrayList<String>(hashResponse.hits.size());
-        List<String> fileNames = new ArrayList<String>(hashResponse.hits.size());
+        List<FileObjectObservable> fileObservables = new ArrayList<FileObjectObservable>(hashResponse.hits.size());
         for (FileHashResponse.Hit hit : hashResponse.hits) {
-            String hashHex = new String(Hex.encodeHex(hit.md5));
-            String fileName = hit.path;
-            hashes.add(hashHex);
-            fileNames.add(fileName);
+            FileObjectObservable observable = new FileObjectObservable();
+            observable.setFileName(hit.path);
+            observable.setFileSize(hit.size);
+            if(hit.md5 != null){
+                String md5Hash = new String(Hex.encodeHex(hit.md5));
+                observable.addHash("MD5", md5Hash);
+            }
+            if(hit.sha1 != null){
+                String sha1Hash = new String(Hex.encodeHex(hit.sha1));
+                observable.addHash("SHA1", sha1Hash);
+            }
+            if(hit.sha256 != null){
+                String sha256Hash = new String(Hex.encodeHex(hit.sha256));
+                observable.addHash("SHA256", sha256Hash);
+            }
+            fileObservables.add(observable);
         }
 
-        STIXPackage s = HashComposers.composeMD5HashObservables(fileNames, hashes);
+        STIXPackage s = HashComposers.composeFileObjectObservables(fileObservables);
         String xmlString = s.toXMLString(true);
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
@@ -198,10 +237,12 @@ public class StixAmqpTest {
 
     public void getHashes() throws Exception {
         System.out.println("Reading hashes from STIX " + inFile.getName());
-        List<STIXPackage> stixPackages = Extractor.getStixPackages(inFile);
+        Extractor extractor = new FileInfoExtractor();
+        List<STIXPackage> stixPackages = extractor.getStixPackages(inFile);
         for (STIXPackage stixPackage : stixPackages) {
             hashes.addAll(HashExtractors.extractMD5HexBinary(stixPackage));
         }
+        extractor.close();
 
         System.out.println("Read " + hashes.size() + " hashes");
     }

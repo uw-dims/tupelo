@@ -77,6 +77,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 				<skipTests>false</skipTests>
 			</properties>
 		</profile>
+		<profile>
+			<id>package-test</id>
+			<modules>
+				<module>test-utils</module>
+			</modules>
+		</profile>
 	</profiles>
 
 
