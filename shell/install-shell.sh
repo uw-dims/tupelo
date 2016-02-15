@@ -14,7 +14,7 @@ echo "Installing to $INSTALL_BASE"
 
 if [ -d "$JAR_PATH" ]; then
     echo "Existing jar path found, cleaning"
-    rm -f "$JAR_PATH/*"
+    rm -f $JAR_PATH/*
 fi
 
 # Copy all the jars and properties into the lib folder
