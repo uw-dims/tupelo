@@ -88,11 +88,14 @@ import edu.uw.apl.tupelo.utils.Discovery;
  * @see RPCObject
  */
 public class FileHashClient {
+    static boolean DEBUG = false;
+    static boolean VERBOSE = false;
+
     private String brokerUrl;
     private Gson gson;
     private Logger log;
     private String hashtype = "MD5";
-    static boolean debug, verbose;
+    private boolean jsonOutput = false;
     private List<String> hashes;
 
     static final String EXCHANGE = "tupelo";
@@ -105,7 +108,7 @@ public class FileHashClient {
 			main.start();
 		} catch( Exception e ) {
 			System.err.println( e );
-			if( debug )
+			if( DEBUG )
 				e.printStackTrace();
 			System.exit(-1);
 		}
@@ -113,8 +116,7 @@ public class FileHashClient {
 
 	FileHashClient() {
 		log = Logger.getLogger( getClass() );
-		boolean withPrettyPrinting = true;
-		gson = Utils.createGson( withPrettyPrinting );
+		gson = Utils.createGson( true );
 		hashes = new ArrayList<String>();
 		brokerUrl = Discovery.locatePropertyValue( "amqp.url" );
 	}
@@ -122,15 +124,16 @@ public class FileHashClient {
 	
 	public void readArgs( String[] args ) throws IOException {
 		Options os = new Options();
-		os.addOption("t", true, "Hash type (MD5, SHA1, or SHA256). Default is MD5.");
+		os.addOption( "t", true, "Hash type (MD5, SHA1, or SHA256). Default is MD5.");
 		os.addOption( "d", false, "Debug" );
 		os.addOption( "v", false, "Verbose" );
 		os.addOption( "u", true,
 					  "Broker url. Can also be located on path and in resource" );
+		os.addOption( "json", false, "Change output format to JSON. Default output is pipe-delimited CSV");
 		os.addOption( "V", false, "show version number and exit" );
 
 		final String USAGE =
-			FileHashClient.class.getName() + " [-d] [-v] [-u brokerURL] [-V] hashstring+";
+			FileHashClient.class.getName() + "[-t hashType] [-o output type] [-d] [-v] [-u brokerURL] [-V] hashstring+";
 		final String HEADER = "";
 		final String FOOTER = "";
 		
@@ -148,6 +151,9 @@ public class FileHashClient {
 			System.out.println( p.getName() + "/" + version );
 			System.exit(0);
 		}
+        if (cl.hasOption("json")) {
+            jsonOutput = true;
+        }
 		if(cl.hasOption("t")){
 		    hashtype = cl.getOptionValue("t");
 
@@ -166,12 +172,12 @@ public class FileHashClient {
 		        System.exit(-1);
 		    }
 		}
-		debug = cl.hasOption( "d" );
-		verbose = cl.hasOption( "v" );
+		DEBUG = cl.hasOption( "d" );
+		VERBOSE = DEBUG || cl.hasOption( "v" );
 		if( cl.hasOption( "u" ) ) {
 			brokerUrl = cl.getOptionValue( "u" );
 		}
-		if(debug){
+		if(DEBUG){
 		    log.info( "BrokerUrl: " + brokerUrl );
 		}
 
@@ -225,8 +231,9 @@ public class FileHashClient {
 		RPCObject<FileHashQuery> rpc1 = RPCObject.asRPCObject( fhq,
 															   "filehash" );
 		String json = gson.toJson( rpc1 );
-		log.info( "Sending request '" + json + "'" );
-		
+		if(VERBOSE){
+		    log.info( "Sending request '" + json + "'" );
+		}
 		channel.basicPublish( EXCHANGE, "who-has", bp, json.getBytes() );
 
         QueueingConsumer consumer = new QueueingConsumer(channel);
@@ -238,23 +245,39 @@ public class FileHashClient {
 		
 		// look: check contentType
 		json = message;
-		log.info( "Received reply '" + json + "'" );
+		if(VERBOSE){
+		    log.info( "Received reply '" + json + "'" );
+		}
 
 		Type fhrType = new TypeToken<RPCObject<FileHashResponse>>(){}.getType();
 		RPCObject<FileHashResponse> rpc2 = gson.fromJson( json, fhrType );
 		FileHashResponse fhr = rpc2.appdata;
-		System.out.println("Hits: (Disk Descriptor) MD5|SHA1|SHA256|Size|Path");
-		for( FileHashResponse.Hit h : fhr.hits ) {
-			String md5 = new String( Hex.encodeHex( h.md5 ) );
-			String sha1 = new String( Hex.encodeHex( h.sha1 ) );
-			String sha256 = new String( Hex.encodeHex( h.sha256 ) );
-			System.out.println(h.descriptor+" "+md5+"|"+sha1+"|"+sha256+"|"+h.size+"|"+h.path);
+		if(jsonOutput){
+		    // Use GSON to print the json
+		    System.out.println(gson.toJson(fhr));
+		} else {
+		    // Pipe-separated CSV
+	        System.out.println("Disk Descriptor|MD5|SHA1|SHA256|Size|Path");
+	        for( FileHashResponse.Hit h : fhr.hits ) {
+	            String md5 = new String( Hex.encodeHex( h.md5 ) );
+	            String sha1 = new String( Hex.encodeHex( h.sha1 ) );
+	            String sha256 = new String( Hex.encodeHex( h.sha256 ) );
+	            System.out.println(h.descriptor+"|"+md5+"|"+sha1+"|"+sha256+"|"+h.size+"|"+h.path);
+	        }
 		}
 
+		// Clean up
 		channel.close();
 		connection.close();
 	}
-	
+
+	/**
+	 * Print the usage in a nice, 80-character wide format
+	 * @param os
+	 * @param usage
+	 * @param header
+	 * @param footer
+	 */
 	static private void printUsage( Options os, String usage,
 									String header, String footer ) {
 		HelpFormatter hf = new HelpFormatter();
