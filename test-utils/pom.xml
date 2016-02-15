@@ -48,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	<version>1.2.9</version>
 	<packaging>jar</packaging>
 
-	<name>Tupelo AMQP Test package</name>
+	<name>Tupelo Test package</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
