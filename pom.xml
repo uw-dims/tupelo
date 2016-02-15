@@ -47,7 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	<groupId>edu.uw.apl</groupId>
 	<artifactId>tupelo-parent</artifactId>
-	<version>1.2.9</version>
+	<version>1.2.10</version>
 	<packaging>pom</packaging>
 
 	<name>Tupelo Disk Management - Parent</name>
@@ -76,6 +76,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			<properties>
 				<skipTests>false</skipTests>
 			</properties>
+		</profile>
+		<profile>
+			<id>package-test</id>
+			<modules>
+				<module>test-utils</module>
+			</modules>
 		</profile>
 	</profiles>
 

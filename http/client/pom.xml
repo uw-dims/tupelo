@@ -43,12 +43,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <parent>
     <groupId>edu.uw.apl</groupId>
     <artifactId>tupelo-http-parent</artifactId>
-    <version>1.2.9</version>
+    <version>1.2.10</version>
   </parent>
 
   <groupId>edu.uw.apl</groupId>
   <artifactId>tupelo-http-client</artifactId>
-  <version>1.2.9</version>
+  <version>1.2.10</version>
   <name>Tupelo Disk Management - Http Store Proxy</name>
 
   <dependencies>

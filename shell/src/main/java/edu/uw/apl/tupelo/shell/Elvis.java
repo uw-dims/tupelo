@@ -406,21 +406,21 @@ public class Elvis extends Shell {
         addCommand("findsha1", "(.+)", new Lambda() {
             @Override
             public void apply(String[] args) throws Exception {
-                checkForHashes("SHA-1", args);
+                checkForHashes("SHA1", args);
             }
         });
-        commandHelp("findsha1", "SHA-1 hashes",
-                "Check all managed disks to see which ones contain the specified SHA-1 file hash(es). "+
+        commandHelp("findsha1", "SHA1 hashes",
+                "Check all managed disks to see which ones contain the specified SHA1 file hash(es). "+
                 "Seperate multiple hashes by a space.");
 
         addCommand("findsha256", "(.+)", new Lambda() {
             @Override
             public void apply(String[] args) throws Exception {
-                checkForHashes("SHA-256", args);
+                checkForHashes("SHA256", args);
             }
         });
-        commandHelp("findsha256", "SHA-256 hashes",
-                "Check all managed disks to see which ones contain the specified SHA-256 file hash(es). "+
+        commandHelp("findsha256", "SHA256 hashes",
+                "Check all managed disks to see which ones contain the specified SHA256 file hash(es). "+
                 "Seperate multiple hashes by a space.");
 
 	}

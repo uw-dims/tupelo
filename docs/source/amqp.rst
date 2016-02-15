@@ -49,13 +49,13 @@ File Hash Request
 
 To send a request to get details about any files that match a specific hash,
 send a request on the `tupelo` exchange with a binding key of `who-has`.
-Currently MD5, SHA-1, or SHA-256 hashes are supported, and you can send as many hashes as you want to look for.
+Currently MD5, SHA1, or SHA256 hashes are supported, and you can send as many hashes as you want to look for.
 All hashes must be the same type.
 
 The message's appdata structure is as follows::
 
  {
-    "algorithm" : "MD5|SHA-1|SHA-256",
+    "algorithm" : "MD5|SHA1|SHA256",
     "hashes" : ["hash1hex", "hash2hex" "ect..." ]
  }
 
@@ -66,8 +66,8 @@ The response's appdata will contain the following::
     "hits": [
       {
         "md5": "<MD5 Hash>",
-        "sha1": "<SHA-1 Hash>",
-        "sha256": "<SHA-256 Hash>",
+        "sha1": "<SHA1 Hash>",
+        "sha256": "<SHA256 Hash>",
         "descriptor": {
           "diskID": "<Disk ID>",
           "session": "<Session>"

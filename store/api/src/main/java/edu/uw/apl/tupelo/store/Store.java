@@ -98,7 +98,7 @@ public interface Store {
 
 	/**
 	 * Check if which, if any, managed disks contain the specified file hash
-	 * @param algorithm the hash algorithm (MD5, SHA-1, SHA-256 only)
+	 * @param algorithm the hash algorithm (MD5, SHA1, SHA256 only)
 	 * @param hash the hash
 	 * @return the list of ManagedDiskDescriptors that contain the hash
 	 */
@@ -106,7 +106,7 @@ public interface Store {
 
     /**
      * Check if which, if any, managed disks contain the specified file hashes
-     * @param algorithm the hash algorithm (MD5, SHA-1, SHA-256 only)
+     * @param algorithm the hash algorithm (MD5, SHA1, SHA256 only)
      * @param hashes the hashes
      * @return the list of ManagedDiskDescriptors that contain the hash
      */
@@ -122,7 +122,7 @@ public interface Store {
 	/**
 	 * Get the {@link Record}s for any files for the managed disk with one of the provided hashes
 	 * @param mdd the disk
-	 * @param algorithm the hash algorithm (MD5, SHA-1, SHA-256 only)
+	 * @param algorithm the hash algorithm (MD5, SHA1, SHA256 only)
 	 * @param hashes the MD5 hashes to look up
 	 * @return
 	 */
