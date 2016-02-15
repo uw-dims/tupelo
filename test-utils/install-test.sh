@@ -38,7 +38,7 @@ chmod a+rx "$INSTALL_BASE/bin"
 chmod a+rx "$JAR_PATH/../"
 chmod a+rx "$JAR_PATH"
 # Make sure the elvis script has +x
-chmod a+x "$INSTALL_BASE/bin/tupelo.*"
+chmod a+x $INSTALL_BASE/bin/tupelo.*
 
 echo "Installed to $INSTALL_BASE"
 echo "Add '$INSTALL_BASE/bin' to your path"
