@@ -28,7 +28,7 @@ cp *.properties "$JAR_PATH" 2> /dev/null || :
 
 # Copy the elvis script into the bin folder
 mkdir -p "$INSTALL_BASE/bin"
-cp tupelo.stix.amqp.test "$INSTALL_BASE/bin"
+cp tupelo.* "$INSTALL_BASE/bin"
 
 # Set permissions
 # Don't use recursive changes, be explicit
@@ -38,7 +38,7 @@ chmod a+rx "$INSTALL_BASE/bin"
 chmod a+rx "$JAR_PATH/../"
 chmod a+rx "$JAR_PATH"
 # Make sure the elvis script has +x
-chmod a+x "$INSTALL_BASE/bin/tupelo.stix.amqp.test"
+chmod a+x "$INSTALL_BASE/bin/tupelo.*"
 
 echo "Installed to $INSTALL_BASE"
 echo "Add '$INSTALL_BASE/bin' to your path"
