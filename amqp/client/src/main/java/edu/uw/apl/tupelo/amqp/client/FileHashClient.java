@@ -88,6 +88,8 @@ import edu.uw.apl.tupelo.utils.Discovery;
  * @see RPCObject
  */
 public class FileHashClient {
+    private static final String KEY= "who-has";
+    private static final long TIMEOUT = 20 * 1000;
     static boolean DEBUG = false;
     static boolean VERBOSE = false;
 
@@ -234,7 +236,23 @@ public class FileHashClient {
 		if(VERBOSE){
 		    log.info( "Sending request '" + json + "'" );
 		}
-		channel.basicPublish( EXCHANGE, "who-has", bp, json.getBytes() );
+		// Create a timeout thread
+		Thread thread = new Thread(){
+		    @Override
+		    public void run(){
+		        try{
+		            Thread.sleep(TIMEOUT);
+		            // If it reaches here, quit
+		            System.out.println("Error - timed out");
+		            System.exit(1);
+		        } catch(Exception e){
+		            // Ignore - We were interrupted
+		        }
+		    }
+		};
+		thread.start();
+
+		channel.basicPublish( EXCHANGE, KEY, bp, json.getBytes() );
 
         QueueingConsumer consumer = new QueueingConsumer(channel);
 		boolean autoAck = true;
@@ -242,6 +260,8 @@ public class FileHashClient {
 
 		QueueingConsumer.Delivery delivery = consumer.nextDelivery();
 		String message = new String(delivery.getBody());
+		// Kill the timeout thread
+		thread.interrupt();
 		
 		// look: check contentType
 		json = message;

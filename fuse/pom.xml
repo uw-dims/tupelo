@@ -42,11 +42,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <parent>
     <groupId>edu.uw.apl</groupId>
     <artifactId>tupelo-parent</artifactId>
-    <version>1.2.10</version>
+    <version>1.2.11</version>
   </parent>
 
   <artifactId>tupelo-fuse</artifactId>
-  <version>1.2.10</version>
+  <version>1.2.11</version>
   <packaging>jar</packaging>
 
   <name>Tupelo Disk Management - Mountable FileSystem via Fuse</name>
@@ -78,13 +78,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <groupId>${project.groupId}</groupId>
       <artifactId>tupelo-store-filesys</artifactId>
       <version>${project.version}</version>
-<!--      <scope>test</scope> -->
     </dependency>
 
+    <!-- Switched to Jitpack, whichuses the GitHub repository name
     <dependency>
       <groupId>fuse4j</groupId>
       <artifactId>fuse4j-core</artifactId>
       <version>3.0.0</version>
+    </dependency>
+    -->
+    <dependency>
+        <groupId>com.github.uw-dims.fuse4j</groupId>
+        <artifactId>fuse4j-core</artifactId>
+        <version>3.0.1</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
