@@ -78,13 +78,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <groupId>${project.groupId}</groupId>
       <artifactId>tupelo-store-filesys</artifactId>
       <version>${project.version}</version>
-<!--      <scope>test</scope> -->
     </dependency>
 
+    <!-- Switched to Jitpack, whichuses the GitHub repository name
     <dependency>
       <groupId>fuse4j</groupId>
       <artifactId>fuse4j-core</artifactId>
       <version>3.0.0</version>
+    </dependency>
+    -->
+    <dependency>
+        <groupId>com.github.uw-dims.fuse4j</groupId>
+        <artifactId>fuse4j-core</artifactId>
+        <version>3.0.1</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>

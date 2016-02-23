@@ -55,11 +55,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   </build>
 	<dependencies>
 		<dependency>
-			<groupId>edu.uw.apl.commons</groupId>
+			<groupId>com.github.uw-dims.tsk4j</groupId>
 			<artifactId>tsk4j-core</artifactId>
 		</dependency>
         <dependency>
-            <groupId>edu.uw.apl.commons</groupId>
+            <groupId>com.github.uw-dims.tsk4j</groupId>
             <artifactId>tsk4j-digests</artifactId>
         </dependency>
 	</dependencies>

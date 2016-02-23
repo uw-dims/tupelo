@@ -63,11 +63,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <version>${project.version}</version>
     </dependency>
     <dependency>
-        <groupId>edu.uw.apl.commons</groupId>
+        <groupId>com.github.uw-dims.tsk4j</groupId>
         <artifactId>tsk4j-core</artifactId>
     </dependency>
     <dependency>
-        <groupId>edu.uw.apl.commons</groupId>
+        <groupId>com.github.uw-dims.tsk4j</groupId>
         <artifactId>tsk4j-digests</artifactId>
     </dependency>
     <dependency>
